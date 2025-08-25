@@ -1,23 +1,15 @@
-function TermsPage() {
+function AboutPage() {
   return (
     <div className="max-w-xl mx-auto prose prose-blue">
-      <h2>Welcome</h2>
+      <h2>Welcome to Bela Bomberman</h2>
       <p>
-        You&apos;re viewing the{" "}
-        <a
-          href="https://headlessdropshipping.com/"
-          title="Learn more about Headless Dropshipping"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Headless Dropshipping Starter
-        </a>{" "}
-        by Jamie Barton.
+        Welcome to our official merchandise store! We&apos;re excited to bring you
+        high-quality apparel and accessories featuring the iconic Bela Bomberman brand.
       </p>
       <p>
-        Build your own Headless eCommerce storefront with Next.js and Snipcart,
-        and deliver swag powered by Printful. End to end commerce, styled using
-        TailwindCSS and deployed on Vercel.
+        All our products are made with premium materials and printed on-demand,
+        ensuring the highest quality for every order. From comfortable t-shirts
+        to stylish hoodies, we have something for every Bomberman fan.
       </p>
     </div>
   );

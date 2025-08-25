@@ -1,11 +1,11 @@
 const description =
-  "Launch your own fully automated store with Snipcart, Printful, and Next.js";
-const title = "Your SWAG store";
-const url = "https://swag.nextdropshippingstarter.com";
+  "Official Bela Bomberman merchandise store. High-quality apparel and accessories featuring the iconic Bomberman brand.";
+const title = "Bela Bomberman Store";
+const url = "https://belabomberman.com";
 
 const seo = {
   title,
-  titleTemplate: "%s | Headless Dropshipping Starter",
+  titleTemplate: "%s | Bela Bomberman",
   description,
   openGraph: {
     description,
@@ -14,8 +14,8 @@ const seo = {
     url,
   },
   twitter: {
-    handle: "@notrab",
-    site: "@notrab",
+    handle: "@belabomberman",
+    site: "@belabomberman",
   },
 };
 

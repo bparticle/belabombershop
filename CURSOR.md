@@ -1,11 +1,11 @@
-# Headless Dropshipping Starter - Codebase Documentation
+# Bela Bomberman Store - Codebase Documentation
 
 ## 🏗️ Project Overview
 
-This is a **headless eCommerce storefront** built with Next.js that integrates **Printful** (print-on-demand fulfillment) with **Snipcart** (shopping cart & checkout) to create a complete dropshipping solution. The application allows users to sell custom merchandise without holding inventory.
+This is a **headless eCommerce storefront** for the **Bela Bomberman** brand, built with Next.js that integrates **Printful** (print-on-demand fulfillment) with **Snipcart** (shopping cart & checkout) to create a complete dropshipping solution. The application sells official Bela Bomberman merchandise without holding inventory.
 
-**Live Demo**: https://demo.headlessdropshipping.com  
-**Creator**: Jamie Barton (@notrab) - https://notrab.dev
+**Live Demo**: https://belabomberman.com  
+**Brand**: Bela Bomberman - Official Merchandise Store
 
 ## 🛠️ Tech Stack
 
