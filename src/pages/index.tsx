@@ -15,9 +15,9 @@ type IndexPageProps = {
 const IndexPage: React.FC<IndexPageProps> = ({ products }) => (
   <>
     <div className="text-center pb-6 md:pb-12">
-      <h1 className="text-xl md:text-3xl lg:text-5xl font-bold">
-        All products
-      </h1>
+             <h1 className="text-xl md:text-3xl lg:text-5xl font-bold">
+         Bela Bomberman Collection
+       </h1>
     </div>
 
     <ProductGrid products={products} />
