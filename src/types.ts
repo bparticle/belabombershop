@@ -90,9 +90,36 @@ export interface ISyncProduct {
   synced: number;
 }
 
+export interface PrintfulVariant {
+  id: number;
+  external_id: string;
+  name: string;
+  retail_price: string;
+  currency: string;
+  files: Array<{
+    id: number;
+    type: string;
+    url: string;
+    preview_url: string;
+  }>;
+  options: Array<{
+    id: string;
+    value: string;
+  }>;
+  size: string | null;
+  color: string | null;
+  is_enabled: boolean;
+  in_stock: boolean;
+  is_ignored: boolean;
+}
+
 export interface PrintfulProduct {
   id: string;
+  external_id: string;
   name: string;
+  thumbnail_url: string;
+  is_ignored: boolean;
+  variants: PrintfulVariant[];
 }
 
 export type PrintfulShippingItem = {

@@ -11,25 +11,33 @@ const Product = (product) => {
   const { isSaved } = useWishlistState();
 
   const { id, name, variants } = product;
+  
+  // Debug logging
+  console.log('Product component received:', { id, name, variants });
+  
   const [firstVariant] = variants;
   const oneStyle = variants.length === 1;
 
   const [activeVariantExternalId, setActiveVariantExternalId] = useState(
-    firstVariant.external_id
+    firstVariant?.external_id || ''
   );
 
   const activeVariant = variants.find(
     (v) => v.external_id === activeVariantExternalId
   );
 
-  const activeVariantFile = activeVariant.files.find(
+  console.log('Active variant:', activeVariant);
+
+  const activeVariantFile = activeVariant?.files?.find(
     ({ type }) => type === "preview"
   );
 
-  const formattedPrice = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: activeVariant.currency,
-  }).format(activeVariant.retail_price);
+  const formattedPrice = activeVariant?.retail_price && activeVariant?.currency 
+    ? new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: activeVariant.currency,
+      }).format(activeVariant.retail_price)
+    : "Price not available";
 
   const addToWishlist = () => addItem(product);
 
@@ -63,14 +71,18 @@ const Product = (product) => {
         )}
       </button>
       <div className="flex items-center justify-center flex-1 sm:flex-shrink-0 w-full p-6">
-        {activeVariantFile && (
+        {activeVariantFile ? (
           <Image
             src={activeVariantFile.preview_url}
             width={250}
             height={250}
-            alt={`${activeVariant.name} ${name}`}
-            title={`${activeVariant.name} ${name}`}
+            alt={`${activeVariant?.name || 'Product'} ${name}`}
+            title={`${activeVariant?.name || 'Product'} ${name}`}
           />
+        ) : (
+          <div className="w-64 h-64 bg-gray-200 flex items-center justify-center text-gray-500">
+            No image available
+          </div>
         )}
       </div>
       <div className="flex-1 p-6 pt-0">
@@ -89,15 +101,16 @@ const Product = (product) => {
           disabled={oneStyle}
         />
         <button
-          className="snipcart-add-item w-full md:w-auto transition flex-shrink-0 py-2 px-4 border border-gray-300 hover:border-transparent shadow-sm text-sm font-medium bg-white text-gray-900 focus:text-white hover:bg-blue-600 hover:text-white focus:bg-blue-600 focus:outline-none rounded"
+          className="snipcart-add-item w-full md:w-auto transition flex-shrink-0 py-2 px-4 border border-gray-300 hover:border-transparent shadow-sm text-sm font-medium bg-white text-gray-900 focus:text-white hover:bg-blue-600 hover:text-white focus:bg-blue-600 focus:outline-none rounded disabled:opacity-50 disabled:cursor-not-allowed"
           data-item-id={activeVariantExternalId}
-          data-item-price={activeVariant.retail_price}
+          data-item-price={activeVariant?.retail_price || 0}
           data-item-url={`/api/products/${activeVariantExternalId}`}
-          data-item-description={activeVariant.name}
-          data-item-image={activeVariantFile.preview_url}
+          data-item-description={activeVariant?.name || name}
+          data-item-image={activeVariantFile?.preview_url || ''}
           data-item-name={name}
+          disabled={!activeVariant || !activeVariant.retail_price}
         >
-          Add to Cart
+          {activeVariant && activeVariant.retail_price ? 'Add to Cart' : 'Unavailable'}
         </button>
       </div>
     </article>
