@@ -15,4 +15,4 @@ function AboutPage() {
   );
 }
 
-export default TermsPage;
+export default AboutPage;

@@ -17,6 +17,10 @@
 - Fully Typed
 - Recover abandoned carts
 - One click deploy
+- Product detail pages with image galleries
+- Color and size variant selection
+- Product wishlist functionality
+- Responsive design
 - ... and more coming soon!
 
 ## Setup

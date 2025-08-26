@@ -1,10 +1,11 @@
 import { useState } from "react";
-import Image from "next/image";
+import Link from "next/link";
 
 import useWishlistDispatch from "../hooks/useWishlistDispatch";
 import useWishlistState from "../hooks/useWishlistState";
 
 import VariantPicker from "./VariantPicker";
+import SafeImage from "./SafeImage";
 
 const Product = (product) => {
   const { addItem } = useWishlistDispatch();
@@ -30,10 +31,10 @@ const Product = (product) => {
   const onWishlist = isSaved(id);
 
   return (
-    <article className="border border-gray-200 rounded bg-white flex flex-col relative">
+    <article className="border border-gray-200 rounded bg-white flex flex-col relative group hover:shadow-lg transition-shadow cursor-pointer">
       <button
         aria-label="Add to wishlist"
-        className="appearance-none absolute top-0 right-0 mt-3 mr-3 text-gray-300 focus:text-gray-500 hover:text-red-500 transition focus:outline-none"
+        className="appearance-none absolute top-0 right-0 mt-3 mr-3 text-gray-300 focus:text-gray-500 hover:text-red-500 transition focus:outline-none z-10"
         onClick={addToWishlist}
       >
         {onWishlist ? (
@@ -56,44 +57,62 @@ const Product = (product) => {
           </svg>
         )}
       </button>
-      <div className="flex items-center justify-center flex-1 sm:flex-shrink-0 w-full p-6">
-        {activeVariantFile ? (
-          <Image
-            src={activeVariantFile.preview_url}
-            width={250}
-            height={250}
-            alt={`${activeVariant?.name || 'Product'} ${name}`}
-            title={`${activeVariant?.name || 'Product'} ${name}`}
-          />
-        ) : (
-          <div className="w-64 h-64 bg-gray-200 flex items-center justify-center text-gray-500">
-            No image available
-          </div>
-        )}
-      </div>
-      <div className="flex-1 p-6 pt-0">
+      
+                           <Link href={`/product/${id}`} className="flex items-center justify-center flex-1 sm:flex-shrink-0 w-full p-6 cursor-pointer">
+          {activeVariantFile && activeVariantFile.preview_url ? (
+            <div className="w-full h-64 flex items-center justify-center">
+              <SafeImage
+                src={activeVariantFile.preview_url}
+                alt={`${activeVariant?.name || 'Product'} ${name}`}
+                title={`${activeVariant?.name || 'Product'} ${name}`}
+                width={300}
+                height={300}
+                className="group-hover:scale-105 transition-transform duration-200 object-contain max-w-full max-h-full"
+              />
+            </div>
+          ) : (
+            <div className="w-full h-64 bg-gray-200 flex items-center justify-center text-gray-500">
+              No image available
+            </div>
+          )}
+        </Link>
+      
+      <Link href={`/product/${id}`} className="flex-1 p-6 pt-0 cursor-pointer">
         <div className="text-center">
-          <p className="mb-1 font-semibold text-gray-900">{name}</p>
+          <p className="mb-1 font-semibold text-gray-900 hover:text-blue-600 transition-colors group-hover:text-blue-600">{name}</p>
         </div>
-      </div>
-      <div className="p-6 pt-0">
+      </Link>
+      <div className="p-6 pt-0 space-y-3">
         <VariantPicker
           variants={variants}
           onVariantChange={setActiveVariantExternalId}
           className="mb-4"
         />
-        <button
-          className="snipcart-add-item w-full transition flex-shrink-0 py-3 px-6 border border-gray-300 hover:border-transparent shadow-sm text-sm font-medium bg-white text-gray-900 focus:text-white hover:bg-blue-600 hover:text-white focus:bg-blue-600 focus:outline-none rounded disabled:opacity-50 disabled:cursor-not-allowed"
-          data-item-id={activeVariantExternalId}
-          data-item-price={activeVariant?.retail_price || 0}
-          data-item-url={`/api/products/${activeVariantExternalId}`}
-          data-item-description={activeVariant?.name || name}
-          data-item-image={activeVariantFile?.preview_url || ''}
-          data-item-name={name}
-          disabled={!activeVariant || !activeVariant.retail_price}
-        >
-          {activeVariant && activeVariant.retail_price ? 'Add to Cart' : 'Unavailable'}
-        </button>
+        
+        <div className="flex gap-2">
+          <Link
+            href={`/product/${id}`}
+            className="flex-1 transition flex-shrink-0 py-3 px-6 border border-gray-300 shadow-sm text-sm font-medium bg-white text-gray-900 hover:bg-gray-50 focus:outline-none rounded"
+          >
+            View Details
+          </Link>
+                     <button
+             className="snipcart-add-item flex-1 transition flex-shrink-0 py-3 px-6 border border-gray-300 hover:border-transparent shadow-sm text-sm font-medium bg-white text-gray-900 focus:text-white hover:bg-blue-600 hover:text-white focus:bg-blue-600 focus:outline-none rounded disabled:opacity-50 disabled:cursor-not-allowed"
+             data-item-id={activeVariantExternalId}
+             data-item-price={activeVariant?.retail_price || 0}
+             data-item-url={`/api/products/${activeVariantExternalId}`}
+             data-item-description={`${name} - ${activeVariant?.color || ''} ${activeVariant?.size || ''}`}
+             data-item-image={activeVariantFile?.preview_url && activeVariantFile.preview_url.trim() !== '' && activeVariantFile.preview_url.startsWith('http') ? activeVariantFile.preview_url : ''}
+             data-item-name={`${name} (${activeVariant?.color || ''} ${activeVariant?.size || ''})`}
+             data-item-custom1-value={activeVariant?.color || ''}
+             data-item-custom1-name="Color"
+             data-item-custom2-value={activeVariant?.size || ''}
+             data-item-custom2-name="Size"
+             disabled={!activeVariant || !activeVariant.retail_price}
+           >
+             {activeVariant && activeVariant.retail_price ? 'Add to Cart' : 'Unavailable'}
+           </button>
+        </div>
       </div>
     </article>
   );
