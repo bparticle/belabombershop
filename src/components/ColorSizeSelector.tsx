@@ -1,4 +1,5 @@
 import React from 'react';
+import ColorSelector from './ColorSelector';
 
 interface ColorSizeSelectorProps {
   variants: any[];
@@ -58,24 +59,13 @@ const ColorSizeSelector: React.FC<ColorSizeSelectorProps> = ({
   return (
     <div className="space-y-6">
       {/* Color Selection */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium text-gray-900">Select Color</h3>
-        <div className="flex flex-wrap gap-2">
-          {colors.map((color) => (
-            <button
-              key={color}
-              onClick={() => handleColorChange(color)}
-              className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
-                selectedColor === color
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              {color}
-            </button>
-          ))}
-        </div>
-      </div>
+      <ColorSelector
+        colors={colors}
+        selectedColor={selectedColor}
+        onColorChange={handleColorChange}
+        size="md"
+        showLabels={false}
+      />
 
       {/* Size Selection */}
       <div className="space-y-3">
