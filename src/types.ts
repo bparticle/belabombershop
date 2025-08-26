@@ -124,6 +124,8 @@ export interface PrintfulProduct {
   category?: string;
   tags?: string[];
   metadata?: Record<string, any>;
+  // Add description support
+  description?: string;
 }
 
 export type PrintfulShippingItem = {

@@ -53,6 +53,11 @@ export const getStaticProps: GetStaticProps = async () => {
           metadata: sync_product.metadata || {}
         });
 
+        // Extract description from metadata or use default
+        const description = sync_product.metadata?.description || 
+                          sync_product.metadata?.product_description ||
+                          `Premium quality ${sync_product.name || 'product'} featuring unique designs. Made with care and attention to detail, these pieces are perfect for everyday wear while showcasing your individual style.`;
+
         return {
           id: sync_product.id || '',
           external_id: sync_product.external_id || '',
@@ -62,6 +67,7 @@ export const getStaticProps: GetStaticProps = async () => {
           category: productCategory,
           tags: sync_product.tags || [],
           metadata: sync_product.metadata || {},
+          description: description,
           variants: sync_variants.map((variant: any) => ({
             id: variant.id || 0,
             external_id: variant.external_id || '',

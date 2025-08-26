@@ -45,7 +45,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
     );
   }
 
-  const { id, name, variants, category } = product;
+  const { id, name, variants, category, description } = product;
   
   const [firstVariant] = variants;
   const [activeVariantExternalId, setActiveVariantExternalId] = React.useState(
@@ -119,8 +119,8 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
   }, [activeVariantFile, activeVariant]);
 
   // Get unique colors and sizes
-  const colors = [...new Set(variants.map(v => v.color).filter(Boolean))];
-  const sizes = [...new Set(variants.map(v => v.size).filter(Boolean))];
+  const colors = Array.from(new Set(variants.map(v => v.color).filter(Boolean)));
+  const sizes = Array.from(new Set(variants.map(v => v.size).filter(Boolean)));
 
   // If no valid images found, show a placeholder
   const hasValidImages = allImages.length > 0;
@@ -280,22 +280,17 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
 
             {/* Product Description */}
             <div className="prose prose-sm text-gray-600">
-              <p>
-                Premium quality {name.toLowerCase()} featuring unique designs. Made with care and attention to detail, 
-                these pieces are perfect for everyday wear while showcasing your individual style.
-              </p>
-              <ul className="mt-4 space-y-2">
-                <li>• High-quality materials</li>
-                <li>• Comfortable fit</li>
-                <li>• Durable construction</li>
-                <li>• Machine washable</li>
-                {colors.length > 0 && (
-                  <li>• Available in {colors.length} color{colors.length > 1 ? 's' : ''}</li>
-                )}
-                {sizes.length > 0 && (
-                  <li>• Available in {sizes.length} size{sizes.length > 1 ? 's' : ''}</li>
-                )}
-              </ul>
+              <p>{description}</p>
+              {(colors.length > 0 || sizes.length > 0) && (
+                <ul className="mt-4 space-y-2">
+                  {colors.length > 0 && (
+                    <li>Available in {colors.length} color{colors.length > 1 ? 's' : ''}</li>
+                  )}
+                  {sizes.length > 0 && (
+                    <li>Available in {sizes.length} size{sizes.length > 1 ? 's' : ''}</li>
+                  )}
+                </ul>
+              )}
             </div>
 
             
@@ -404,6 +399,11 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
       metadata: sync_product.metadata || {}
     });
 
+    // Extract description from metadata or use default
+    const description = sync_product.metadata?.description || 
+                      sync_product.metadata?.product_description ||
+                      `Premium quality ${sync_product.name || 'product'} featuring unique designs. Made with care and attention to detail, these pieces are perfect for everyday wear while showcasing your individual style.`;
+
     const product: PrintfulProduct = {
       id: sync_product.id?.toString() || '',
       external_id: sync_product.external_id || '',
@@ -413,6 +413,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
       category: productCategory,
       tags: sync_product.tags || [],
       metadata: sync_product.metadata || {},
+      description: description,
       variants: sync_variants
         .filter((variant: any) => variant && variant.id) // Only include valid variants
         .map((variant: any) => ({
