@@ -10,21 +10,21 @@ const createOrder = async ({
   shippingRateUserDefinedId,
 }: SnipcartWebhookContent) => {
   const recipient = {
-    ...(shippingAddress.name && { name: shippingAddress.name }),
-    ...(shippingAddress.address1 && { address1: shippingAddress.address1 }),
-    ...(shippingAddress.address2 && { address2: shippingAddress.address2 }),
-    ...(shippingAddress.city && { city: shippingAddress.city }),
-    ...(shippingAddress.country && { country_code: shippingAddress.country }),
-    ...(shippingAddress.province && {
+    ...(shippingAddress?.name && { name: shippingAddress.name }),
+    ...(shippingAddress?.address1 && { address1: shippingAddress.address1 }),
+    ...(shippingAddress?.address2 && { address2: shippingAddress.address2 }),
+    ...(shippingAddress?.city && { city: shippingAddress.city }),
+    ...(shippingAddress?.country && { country_code: shippingAddress.country }),
+    ...(shippingAddress?.province && {
       state_code: shippingAddress.province,
     }),
-    ...(shippingAddress.postalCode && { zip: shippingAddress.postalCode }),
-    ...(shippingAddress.phone && { phone: shippingAddress.phone }),
+    ...(shippingAddress?.postalCode && { zip: shippingAddress.postalCode }),
+    ...(shippingAddress?.phone && { phone: shippingAddress.phone }),
     email,
   };
 
-  const printfulItems: PrintfulShippingItem[] = items.map(
-    (item): PrintfulShippingItem => ({
+  const printfulItems: PrintfulShippingItem[] = (items || []).map(
+    (item: any): PrintfulShippingItem => ({
       external_variant_id: item.id,
       quantity: item.quantity,
     })

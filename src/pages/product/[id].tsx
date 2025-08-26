@@ -373,7 +373,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
   try {
     const { result: productIds } = await printful.get("sync/products");
     
-    const paths = productIds.map(({ id }) => ({
+    const paths = productIds.map(({ id }: { id: string }) => ({
       params: { id: id.toString() },
     }));
 
@@ -433,7 +433,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
           retail_price: variant.retail_price || '0',
           currency: variant.currency || 'USD',
           files: Array.isArray(variant.files) 
-            ? variant.files.filter(file => 
+            ? variant.files.filter((file: any) => 
                 file && 
                 file.type === "preview" && // Only include preview images (actual product photos)
                 file.preview_url && 

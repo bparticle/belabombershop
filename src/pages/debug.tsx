@@ -1,9 +1,20 @@
 import { useState, useEffect } from "react";
 
+interface DebugData {
+  productIds?: any[];
+  rawSyncProduct?: any;
+  rawSyncVariants?: any[];
+  variantDetails?: Array<{
+    sync_variant: any;
+    store_variant?: any;
+    store_variant_error?: string;
+  }>;
+}
+
 const DebugPage = () => {
-  const [debugData, setDebugData] = useState(null);
+  const [debugData, setDebugData] = useState<DebugData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchDebugData = async () => {
@@ -11,8 +22,8 @@ const DebugPage = () => {
         const response = await fetch('/api/debug/printful-data');
         const data = await response.json();
         setDebugData(data);
-      } catch (err) {
-        setError(err.message);
+      } catch (err: any) {
+        setError(err?.message || 'An error occurred');
       } finally {
         setLoading(false);
       }

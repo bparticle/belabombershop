@@ -3,12 +3,17 @@ import Link from "next/link";
 
 import useWishlistDispatch from "../hooks/useWishlistDispatch";
 import useWishlistState from "../hooks/useWishlistState";
+import { PrintfulProduct } from "../types";
 
 import VariantPicker from "./VariantPicker";
 import SafeImage from "./SafeImage";
 import CategoryBadge from "./CategoryBadge";
 
-const Product = (product) => {
+interface ProductProps {
+  product: PrintfulProduct;
+}
+
+const Product: React.FC<ProductProps> = ({ product }) => {
   const { addItem } = useWishlistDispatch();
   const { isSaved } = useWishlistState();
 

@@ -5,12 +5,11 @@ import useLocalStorage from "../hooks/useLocalStorage";
 import type { PrintfulProduct } from "../types";
 
 interface InitialState {
-  items: [];
+  items: PrintfulProduct[];
 }
 
-interface WishlistProviderState extends InitialState {
-  addItem: (item: PrintfulProduct) => void;
-  removeItem: (id: PrintfulProduct["id"]) => void;
+interface WishlistProviderState {
+  items: PrintfulProduct[];
   isSaved: (id: PrintfulProduct["id"]) => boolean;
   hasItems: boolean;
 }
@@ -22,14 +21,17 @@ type Actions =
   | { type: typeof ADD_PRODUCT; payload: PrintfulProduct }
   | { type: typeof REMOVE_PRODUCT; payload: PrintfulProduct["id"] };
 
-export const WishlistStateContext = createContext(null);
-export const WishlistDispatchContext = createContext(null);
+export const WishlistStateContext = createContext<WishlistProviderState | null>(null);
+export const WishlistDispatchContext = createContext<{
+  addItem: (item: PrintfulProduct) => void;
+  removeItem: (id: PrintfulProduct["id"]) => void;
+} | null>(null);
 
 const initialState: InitialState = {
   items: [],
 };
 
-const reducer = (state: WishlistProviderState, { type, payload }: Actions) => {
+const reducer = (state: InitialState, { type, payload }: Actions): InitialState => {
   switch (type) {
     case ADD_PRODUCT:
       return { ...state, items: [...state.items, payload] };
@@ -50,7 +52,18 @@ export const WishlistProvider: React.FC<{ children?: React.ReactNode }> = ({
     "items-wishlist",
     JSON.stringify(initialState)
   );
-  const [state, dispatch] = useReducer(reducer, JSON.parse(savedWishlist));
+  
+  // Safely parse the saved wishlist
+  const getInitialState = () => {
+    try {
+      return JSON.parse(savedWishlist);
+    } catch (error) {
+      console.warn('Failed to parse saved wishlist, using initial state:', error);
+      return initialState;
+    }
+  };
+  
+  const [state, dispatch] = useReducer(reducer, getInitialState());
 
   useEffect(() => {
     saveWishlist(JSON.stringify(state));
@@ -79,7 +92,7 @@ export const WishlistProvider: React.FC<{ children?: React.ReactNode }> = ({
 
   return (
     <WishlistDispatchContext.Provider value={{ addItem, removeItem }}>
-      <WishlistStateContext.Provider value={{ ...state, isSaved, hasItems }}>
+      <WishlistStateContext.Provider value={{ items: state.items, isSaved, hasItems }}>
         {children}
       </WishlistStateContext.Provider>
     </WishlistDispatchContext.Provider>

@@ -11,7 +11,21 @@ const initialState = {
   },
 };
 
-const reducer = (state, action) => {
+interface SnipcartState {
+  cart: {
+    items: {
+      count: number;
+      items: any[];
+    };
+  };
+}
+
+interface SnipcartAction {
+  type: "SET";
+  payload: any;
+}
+
+const reducer = (state: SnipcartState, action: SnipcartAction): SnipcartState => {
   switch (action.type) {
     case "SET":
       return {
@@ -27,15 +41,42 @@ const useSnipcartCount = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   useEffect(() => {
-    if (hasSnipcart()) {
-      const unsubscribe = window.Snipcart.store.subscribe(() => {
-        const itemsCount = window.Snipcart.store.getState();
+    // Wait for Snipcart to be available
+    const checkSnipcart = () => {
+      if (hasSnipcart() && window.Snipcart.store) {
+        try {
+          const unsubscribe = window.Snipcart.store.subscribe(() => {
+            const itemsCount = window.Snipcart.store.getState();
+            dispatch({ type: "SET", payload: itemsCount });
+          });
 
-        dispatch({ type: "SET", payload: itemsCount });
-      });
+          return unsubscribe;
+        } catch (error) {
+          console.warn('Snipcart store not ready yet:', error);
+          return null;
+        }
+      }
+      return null;
+    };
 
-      return unsubscribe;
+    // Try immediately
+    let unsubscribe = checkSnipcart();
+    
+    // If not ready, try again after a short delay
+    if (!unsubscribe) {
+      const timer = setTimeout(() => {
+        unsubscribe = checkSnipcart();
+      }, 100);
+
+      return () => {
+        clearTimeout(timer);
+        if (unsubscribe) {
+          unsubscribe();
+        }
+      };
     }
+
+    return unsubscribe;
   }, []);
 
   return state;

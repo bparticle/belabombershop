@@ -39,15 +39,15 @@ const ColorCircle: React.FC<ColorCircleProps> = ({
     if (!isSelected) return null;
     
     const indicatorColor = isLight ? '#000000' : '#FFFFFF';
-    const indicatorSize = size === 'sm' ? 'w-3 h-3' : size === 'lg' ? 'w-4 h-4' : 'w-3.5 h-3.5';
+    const indicatorSize = size === 'sm' ? 'w-2.5 h-2.5' : size === 'lg' ? 'w-3.5 h-3.5' : 'w-3 h-3';
     
     return (
       <div 
-        className={`absolute inset-0 flex items-center justify-center ${indicatorSize}`}
+        className="absolute inset-0 flex items-center justify-center"
         style={{ color: indicatorColor }}
       >
         <svg
-          className="w-full h-full"
+          className={indicatorSize}
           fill="currentColor"
           viewBox="0 0 20 20"
           aria-hidden="true"

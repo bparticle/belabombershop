@@ -29,10 +29,10 @@ export default async function handler(
             sync_variant: variant,
             store_variant: variantDetail.result
           };
-        } catch (error) {
+        } catch (error: any) {
           return {
             sync_variant: variant,
-            store_variant_error: error.message
+            store_variant_error: error?.message || 'Unknown error'
           };
         }
       })
@@ -45,11 +45,11 @@ export default async function handler(
       rawSyncVariants: productDetail.result.sync_variants,
       rawSyncProduct: productDetail.result.sync_product
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Debug API Error:', error);
     res.status(500).json({
-      error: error.message,
-      stack: error.stack
+      error: error?.message || 'Unknown error',
+      stack: error?.stack
     });
   }
 }

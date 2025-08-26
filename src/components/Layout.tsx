@@ -6,7 +6,7 @@ import useSnipcartCount from "../hooks/useSnipcartCount";
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const { hasItems } = useWishlistState();
   const { cart } = useSnipcartCount();
-  const cartHasItems = cart.items.count !== 0;
+  const cartHasItems = cart?.items?.count !== 0;
 
   return (
     <>

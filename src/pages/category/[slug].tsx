@@ -167,7 +167,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
     const { result: productIds } = await printful.get("sync/products");
     
     const allProducts = await Promise.all(
-      productIds.map(async ({ id }) => {
+      productIds.map(async ({ id }: { id: string }) => {
         const productData = await printful.get(`sync/products/${id}`);
         return productData;
       })

@@ -33,7 +33,7 @@ export const getStaticProps: GetStaticProps = async () => {
     console.log('Product IDs:', productIds);
 
     const allProducts = await Promise.all(
-      productIds.map(async ({ id }) => {
+      productIds.map(async ({ id }: { id: string }) => {
         const productData = await printful.get(`sync/products/${id}`);
         console.log(`Product ${id} data:`, JSON.stringify(productData.result, null, 2));
         return productData;
@@ -93,12 +93,12 @@ export const getStaticProps: GetStaticProps = async () => {
         products: shuffle(products),
       },
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in getStaticProps:', error);
     return {
       props: {
         products: [],
-        error: error.message
+        error: error?.message || 'An error occurred'
       },
     };
   }

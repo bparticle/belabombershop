@@ -20,9 +20,9 @@ async function handler(
   res: NextApiResponse<Data | Error>
 ) {
   // Apply rate limiting
-  const identifier = req.headers['x-forwarded-for'] || 
-                    req.connection?.remoteAddress || 
-                    req.socket?.remoteAddress || 
+  const identifier = (req.headers['x-forwarded-for'] as string) || 
+                    (req.connection?.remoteAddress as string) || 
+                    (req.socket?.remoteAddress as string) || 
                     'unknown';
   const rateLimiter = createRateLimiter(RATE_LIMITS.API);
   const rateLimitResult = rateLimiter(identifier);
