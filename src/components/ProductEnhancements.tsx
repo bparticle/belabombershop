@@ -5,13 +5,21 @@ import SafeImage from './SafeImage';
 interface ProductEnhancementsProps {
   enhancement: ProductEnhancement;
   className?: string;
+  onImageClick?: (imageIndex: number) => void;
 }
 
 const ProductEnhancements: React.FC<ProductEnhancementsProps> = ({
   enhancement,
-  className = ''
+  className = '',
+  onImageClick
 }) => {
   if (!enhancement) return null;
+
+  const handleImageClick = (index: number) => {
+    if (onImageClick) {
+      onImageClick(index);
+    }
+  };
 
   return (
     <div className={`space-y-8 ${className}`}>
@@ -55,13 +63,36 @@ const ProductEnhancements: React.FC<ProductEnhancementsProps> = ({
             {enhancement.additionalImages.map((image, index) => (
               <div key={index} className="space-y-2">
                 <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                  <SafeImage
-                    src={image.url}
-                    alt={image.alt}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  />
+                  <button
+                    onClick={() => handleImageClick(index)}
+                    className="w-full h-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    aria-label={`View larger image: ${image.alt}`}
+                  >
+                    <SafeImage
+                      src={image.url}
+                      alt={image.alt}
+                      fill
+                      className="object-cover hover:opacity-90 transition-opacity"
+                      sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    />
+                    {/* Click indicator */}
+                    <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-10 transition-all duration-200 flex items-center justify-center">
+                      <svg
+                        className="w-8 h-8 text-white opacity-0 hover:opacity-100 transition-opacity"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
+                        />
+                      </svg>
+                    </div>
+                  </button>
                 </div>
                 {image.caption && (
                   <p className="text-xs text-gray-600 text-center">{image.caption}</p>

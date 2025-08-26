@@ -29,7 +29,7 @@ const ProductVariants: React.FC<ProductVariantsProps> = ({
             Color: {color}
           </h3>
           <div className="grid grid-cols-3 gap-2">
-            {colorVariants.map((variant) => (
+            {(colorVariants as any[]).map((variant) => (
               <button
                 key={variant.external_id}
                 onClick={() => onVariantChange(variant.external_id)}

@@ -162,7 +162,7 @@ const VariantPicker: React.FC<VariantPickerProps> = ({
               ? new Intl.NumberFormat("en-US", {
                   style: "currency",
                   currency: selectedVariant.currency,
-                }).format(selectedVariant.retail_price)
+                }).format(Number(selectedVariant.retail_price))
               : "Price not available"}
           </span>
         </div>

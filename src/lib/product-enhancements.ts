@@ -22,7 +22,6 @@ export const PRODUCT_ENHANCEMENTS: Record<string, ProductEnhancement> = {
     description: 'Premium cotton t-shirt with classic Bela Bomberman design. The Bomberman Youth Long Sleeve Tee is a wardrobe staple that’ll go great with casual, sporty, or loungewear looks. The shirt is made of airlume combed and ring-spun cotton and will feel soft and comfy.',
     shortDescription: 'Premium cotton t-shirt with classic Bela Bomberman design. Comfortable fit with durable print.',
     features: [
-      '100% organic cotton',
       'Comfortable, breathable fabric',
       'Vibrant, durable print'
     ],

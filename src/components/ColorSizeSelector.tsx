@@ -12,8 +12,8 @@ const ColorSizeSelector: React.FC<ColorSizeSelectorProps> = ({
   onVariantChange,
 }) => {
   // Get unique colors and sizes
-  const colors = [...new Set(variants.map(v => v.color).filter(Boolean))];
-  const sizes = [...new Set(variants.map(v => v.size).filter(Boolean))];
+  const colors = Array.from(new Set(variants.map(v => v.color).filter(Boolean)));
+  const sizes = Array.from(new Set(variants.map(v => v.size).filter(Boolean)));
 
   // Find the currently selected variant
   const activeVariant = variants.find(v => v.external_id === activeVariantExternalId);

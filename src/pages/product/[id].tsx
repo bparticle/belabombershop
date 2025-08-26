@@ -14,6 +14,7 @@ import ErrorBoundary from "../../components/ErrorBoundary";
 import SafeImage from "../../components/SafeImage";
 import CategoryBadge from "../../components/CategoryBadge";
 import ProductEnhancements from "../../components/ProductEnhancements";
+import ImageGalleryModal from "../../components/ImageGalleryModal";
 import useWishlistDispatch from "../../hooks/useWishlistDispatch";
 import useWishlistState from "../../hooks/useWishlistState";
 
@@ -26,35 +27,17 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
   const { addItem } = useWishlistDispatch();
   const { isSaved } = useWishlistState();
 
-  // Wrap everything in a try-catch to prevent any rendering errors
-  try {
-
-  // Validate product data
-  if (!product || !product.id || !product.name || !product.variants) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h1>
-          <p className="text-gray-600 mb-6">The requested product could not be loaded.</p>
-          <button
-            onClick={() => router.push('/')}
-            className="text-blue-600 hover:text-blue-800 transition-colors"
-          >
-            ← Back to Products
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  const { id, name, variants, category, description, enhancement } = product;
+  // Gallery state - moved to top to avoid hooks rules violations
+  const [galleryOpen, setGalleryOpen] = React.useState(false);
+  const [galleryStartIndex, setGalleryStartIndex] = React.useState(0);
   
-  const [firstVariant] = variants;
+  // All hooks must be called before any conditional returns
+  const [firstVariant] = product?.variants || [];
   const [activeVariantExternalId, setActiveVariantExternalId] = React.useState(
     firstVariant?.external_id || ''
   );
 
-  const activeVariant = variants.find(
+  const activeVariant = product?.variants?.find(
     (v) => v.external_id === activeVariantExternalId
   );
 
@@ -64,8 +47,10 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
 
   // Get all unique images from the product variants with strict validation
   // Only show actual product photos, not design files
-  const allImages = React.useMemo(() => {
-    return variants
+  const printfulImages = React.useMemo(() => {
+    if (!product || !product.variants) return [];
+    
+    return product.variants
       .flatMap(variant => variant.files || [])
       .filter(file => file && file.type && file.type === "preview") // Only show preview images (actual product photos)
       .filter(file => file.preview_url && typeof file.preview_url === 'string' && file.preview_url.trim() !== '')
@@ -73,12 +58,34 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
       .map(file => ({
         url: file.preview_url,
         type: file.type,
-        alt: `${name} - ${file.type} view`
+        alt: `${product.name} - ${file.type} view`
       }))
       .filter((image, index, self) => 
         index === self.findIndex(img => img.url === image.url)
       );
-  }, [variants, name]);
+  }, [product]);
+
+  // Combine Printful images with enhancement images for unified gallery
+  const allGalleryImages = React.useMemo(() => {
+    const printfulGalleryImages = printfulImages.map(image => ({
+      url: image.url,
+      alt: image.alt,
+      caption: image.type,
+      source: 'printful' as const
+    }));
+
+    const enhancementImages = product?.enhancement?.additionalImages?.map(image => ({
+      url: image.url,
+      alt: image.alt,
+      caption: image.caption,
+      source: 'enhancement' as const
+    })) || [];
+
+    return [...printfulGalleryImages, ...enhancementImages];
+  }, [printfulImages, product]);
+
+  // Use printfulImages for the existing image gallery logic
+  const allImages = printfulImages;
 
   const [selectedImage, setSelectedImage] = React.useState(() => {
     // Validate activeVariantFile URL
@@ -95,9 +102,6 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
     
     return '';
   });
-
-  const addToWishlist = () => addItem(product);
-  const onWishlist = isSaved(id);
 
   // Update selected image when variant changes
   React.useEffect(() => {
@@ -119,6 +123,51 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
       }
     }
   }, [activeVariantFile, activeVariant]);
+
+  // Validate product data
+  if (!product || !product.id || !product.name || !product.variants) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h1>
+          <p className="text-gray-600 mb-6">The requested product could not be loaded.</p>
+          <button
+            onClick={() => router.push('/')}
+            className="text-blue-600 hover:text-blue-800 transition-colors"
+          >
+            ← Back to Products
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const { id, name, variants, category, description, enhancement } = product;
+
+  const addToWishlist = () => addItem(product);
+  const onWishlist = isSaved(id);
+
+  // Gallery handlers
+  const handleMainImageClick = () => {
+    if (allGalleryImages.length > 0) {
+      const currentImageIndex = allGalleryImages.findIndex(img => img.url === selectedImage);
+      setGalleryStartIndex(currentImageIndex >= 0 ? currentImageIndex : 0);
+      setGalleryOpen(true);
+    }
+  };
+
+  const handleGalleryImageClick = (index: number) => {
+    setGalleryStartIndex(index);
+    setGalleryOpen(true);
+  };
+
+  const handleEnhancementImageClick = (enhancementIndex: number) => {
+    // Find the index of this enhancement image in the unified gallery
+    const printfulImageCount = printfulImages.length;
+    const galleryIndex = printfulImageCount + enhancementIndex;
+    setGalleryStartIndex(galleryIndex);
+    setGalleryOpen(true);
+  };
 
   // Get unique colors and sizes
   const colors = Array.from(new Set(variants.map(v => v.color).filter(Boolean)));
@@ -182,42 +231,73 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
           {/* Product Images */}
           <div className="space-y-4">
-                         {/* Main Image */}
-             <div className="relative aspect-square bg-white rounded-lg overflow-hidden border border-gray-200">
-               {hasValidImages && selectedImage ? (
-                 <SafeImage
-                   src={selectedImage}
-                   alt={`${name} - ${activeVariant?.color || ''} ${activeVariant?.size || ''}`}
-                   fill
-                   className="object-contain"
-                   sizes="(max-width: 768px) 100vw, 50vw"
-                   onError={(e) => {
-                     console.error('Image failed to load:', selectedImage);
-                     e.currentTarget.style.display = 'none';
-                   }}
-                 />
-               ) : (
-                 <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">
-                   No image available
-                 </div>
-               )}
-             </div>
+                                     {/* Main Image */}
+            <div className="relative aspect-square bg-white rounded-lg overflow-hidden border border-gray-200">
+              {hasValidImages && selectedImage ? (
+                <button
+                  onClick={handleMainImageClick}
+                  className="w-full h-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  aria-label="View larger image"
+                >
+                  <SafeImage
+                    src={selectedImage}
+                    alt={`${name} - ${activeVariant?.color || ''} ${activeVariant?.size || ''}`}
+                    fill
+                    className="object-contain cursor-pointer hover:opacity-95 transition-opacity"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    onError={(e) => {
+                      console.error('Image failed to load:', selectedImage);
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                  {/* Click indicator */}
+                  <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-10 transition-all duration-200 flex items-center justify-center">
+                    <svg
+                      className="w-12 h-12 text-white opacity-0 hover:opacity-100 transition-opacity"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
+                      />
+                    </svg>
+                  </div>
+                </button>
+              ) : (
+                <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">
+                  No image available
+                </div>
+              )}
+            </div>
 
-            {/* Image Gallery */}
-            {allImages.length > 1 && (
-              <div className="space-y-3">
-                <h3 className="text-sm font-medium text-gray-900">Product Views</h3>
-                <div className="grid grid-cols-4 gap-2">
-                  {allImages.map((image, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImage(image.url)}
-                      className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-colors ${
-                        selectedImage === image.url 
-                          ? 'border-blue-500' 
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                                         >
+                         {/* Image Gallery */}
+             {allImages.length > 1 && (
+               <div className="space-y-3">
+                 <h3 className="text-sm font-medium text-gray-900">Product Views</h3>
+                 <div className="grid grid-cols-4 gap-2">
+                   {allImages.map((image, index) => (
+                     <button
+                       key={index}
+                       onClick={() => {
+                         setSelectedImage(image.url);
+                         // Also open gallery with this image
+                         const galleryIndex = allGalleryImages.findIndex(img => img.url === image.url);
+                         if (galleryIndex >= 0) {
+                           setGalleryStartIndex(galleryIndex);
+                           setGalleryOpen(true);
+                         }
+                       }}
+                       className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-colors ${
+                         selectedImage === image.url 
+                           ? 'border-blue-500' 
+                           : 'border-gray-200 hover:border-gray-300'
+                       }`}
+                     >
                        {image.url && (
                          <SafeImage
                            src={image.url}
@@ -231,14 +311,16 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
                            }}
                          />
                        )}
-                      <div className="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs px-1 rounded">
-                        {image.type}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+                       <div className="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs px-1 rounded">
+                         {image.type}
+                       </div>
+                     </button>
+                   ))}
+                 </div>
+               </div>
+             )}
+
+
           </div>
 
           {/* Product Info */}
@@ -287,7 +369,10 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
 
             {/* Product Enhancements */}
             {enhancement && (
-              <ProductEnhancements enhancement={enhancement} />
+              <ProductEnhancements 
+                enhancement={enhancement} 
+                onImageClick={handleEnhancementImageClick}
+              />
             )}
 
             
@@ -319,38 +404,31 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
                {activeVariant && activeVariant.retail_price ? `Add to Cart - €${activeVariant.retail_price}` : 'Unavailable'}
              </button>
 
-            {/* Back to Products */}
-            <div className="pt-4 border-t border-gray-200">
-              <button
-                onClick={() => router.back()}
-                className="text-blue-600 hover:text-blue-800 transition-colors"
-              >
-                ← Back to Products
-              </button>
-            </div>
-          </div>
-                 </div>
+                         {/* Back to Products */}
+             <div className="pt-4 border-t border-gray-200">
+               <button
+                 onClick={() => router.back()}
+                 className="text-blue-600 hover:text-blue-800 transition-colors"
+               >
+                 ← Back to Products
+               </button>
+             </div>
+           </div>
+         </div>
+
+         {/* Unified Image Gallery Modal */}
+         {allGalleryImages.length > 0 && (
+           <ImageGalleryModal
+             images={allGalleryImages}
+             initialIndex={galleryStartIndex}
+             isOpen={galleryOpen}
+             onClose={() => setGalleryOpen(false)}
+           />
+         )}
        </div>
-      </ErrorBoundary>
-   );
-       } catch (error) {
-      console.error('Error rendering product detail page:', error);
-      return (
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Something went wrong</h1>
-            <p className="text-gray-600 mb-6">We encountered an error while loading this product.</p>
-            <button
-              onClick={() => router.push('/')}
-              className="text-blue-600 hover:text-blue-800 transition-colors"
-            >
-              ← Back to Products
-            </button>
-          </div>
-        </div>
-      );
-    }
- };
+     </ErrorBoundary>
+  );
+};
 
 export const getStaticPaths: GetStaticPaths = async () => {
   try {
