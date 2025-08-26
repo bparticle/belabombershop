@@ -14,29 +14,21 @@ const Layout = ({ children }) => {
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex items-center justify-between">
             <div className="md:w-1/3">
-                                             <nav className="flex items-center justify-start space-x-3 md:space-x-6">
-                  <Link href="/about">
-                    <a className="text-gray-800 hover:text-blue-600 p-1 transition">
-                      About
-                    </a>
-                  </Link>
-                  <Link href="/terms-of-sale">
-                    <a className="text-gray-800 hover:text-blue-600 p-1 transition">
-                      Terms of Sale
-                    </a>
-                  </Link>
-                </nav>
-            </div>
-            <div className="flex-1 flex items-center justify-center">
               <Link href="/">
                 <a className="flex items-center text-gray-900 hover:opacity-80 transition-opacity duration-200">
-                  <div className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 flex items-center justify-center mr-4 md:mr-6">
+                  <div className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 flex items-center justify-center">
                     <img
                       src="/bomberlogo_black.svg"
                       alt="Bomber Logo"
                       className="w-full h-full object-contain"
                     />
                   </div>
+                </a>
+              </Link>
+            </div>
+            <div className="flex-1 flex items-center justify-center">
+              <Link href="/">
+                <a className="flex items-center text-gray-900 hover:opacity-80 transition-opacity duration-200">
                   <img
                     src="/belabomberman_typeface.svg"
                     alt="Bela Bomberman"
