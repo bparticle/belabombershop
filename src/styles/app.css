@@ -114,3 +114,14 @@
 .snipcart__box {
   @apply bg-white;
 } */
+
+/* Custom Image Container Overrides */
+.image-container-height-constrained {
+  --next-image-max-width: none;
+  --next-image-max-height: 100%;
+}
+
+.image-container-height-constrained > span {
+  max-width: var(--next-image-max-width) !important;
+  max-height: var(--next-image-max-height) !important;
+}
