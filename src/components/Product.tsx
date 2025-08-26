@@ -62,7 +62,7 @@ const Product = (product) => {
       <Link href={`/product/${id}`}>
         <div className="flex items-center justify-center flex-1 sm:flex-shrink-0 w-full p-6 cursor-pointer">
           {activeVariantFile && activeVariantFile.preview_url ? (
-            <div className="w-full h-64 flex items-center justify-center image-container-height-constrained">
+            <div className="w-full h-64 flex items-center justify-center image-container-height-constrained p-4">
               <SafeImage
                 src={activeVariantFile.preview_url}
                 alt={`${activeVariant?.name || 'Product'} ${name}`}

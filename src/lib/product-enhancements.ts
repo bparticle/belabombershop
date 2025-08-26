@@ -48,22 +48,21 @@ export const PRODUCT_ENHANCEMENTS: Record<string, ProductEnhancement> = {
       metaDescription: 'Premium Bela Bomberman t-shirt made from organic cotton. Perfect for gaming enthusiasts and retro gaming fans.'
     }
   },
-  
-  'example-product-2': {
-    description: 'Comfortable hoodie featuring the iconic Bela Bomberman character. Made from premium cotton blend fabric that provides warmth and comfort. Features a classic pullover design with a spacious hood and front pocket. The high-quality print ensures the design stays vibrant wash after wash.',
-    shortDescription: 'Warm and comfortable hoodie with Bela Bomberman design. Perfect for cooler weather.',
+
+  '68ac95d1455845': {
+    description: 'Premium cotton t-shirt with original Bela Bomberman pufferfish design. What sets the Youth Classic Tee apart is its thick and durable fabric. Engineered to withstand the boundless energy of kids, the shirt promises longevity and resilience.',
+    shortDescription: 'Premium cotton t-shirt with original Bela Bomberman pufferfish design.',
     features: [
-      'Premium cotton blend',
-      'Warm and comfortable',
-      'Spacious hood',
-      'Front pocket',
-      'Durable print quality'
+      'Pre-shrunk fabric',
+      'Classic fit',
+      'Taped neck and shoulders',
+      'Tear-away tag',
+      'Made with OEKO-TEX certified low-impact dyes'
     ],
     specifications: {
-      material: '80% Cotton, 20% Polyester',
-      weight: '300 GSM',
+      material: '100% Cotton',
+      weight: '180 GSM',
       fit: 'Regular fit',
-      care: 'Machine wash cold, tumble dry low',
       printMethod: 'Direct to Garment (DTG)'
     },
     additionalImages: [
@@ -74,8 +73,8 @@ export const PRODUCT_ENHANCEMENTS: Record<string, ProductEnhancement> = {
       }
     ],
     seo: {
-      keywords: ['bela bomberman hoodie', 'gaming hoodie', 'warm hoodie', 'cotton blend', 'gaming apparel'],
-      metaDescription: 'Comfortable Bela Bomberman hoodie made from premium cotton blend. Perfect for gaming and casual wear.'
+      keywords: ['bela bomberman', 'cotton t-shirt', 'gaming apparel'],
+      metaDescription: 'Premium Bela Bomberman t-shirt made from organic cotton. Perfect for gaming enthusiasts and retro gaming fans.'
     }
   }
 };
@@ -133,11 +132,11 @@ export function getProductEnhancementKeys(): string[] {
  */
 export function enhanceProductData(printfulProduct: any): any {
   const enhancement = getProductEnhancement(printfulProduct.external_id);
-  
+
   if (!enhancement) {
     return printfulProduct;
   }
-  
+
   return {
     ...printfulProduct,
     // Override description if enhancement exists
@@ -161,6 +160,6 @@ export function getDefaultDescription(productName: string, category: string): st
     'home-living': `Beautiful ${productName.toLowerCase()} featuring our signature Bela Bomberman design. Adds personality and style to your home decor.`,
     default: `Premium quality ${productName.toLowerCase()} featuring our signature Bela Bomberman design. Made with care and attention to detail.`
   };
-  
+
   return templates[category as keyof typeof templates] || templates.default;
 }
