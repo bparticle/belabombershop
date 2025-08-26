@@ -19,36 +19,33 @@ export const PRODUCT_ENHANCEMENTS: Record<string, ProductEnhancement> = {
   // Example enhancements - replace with your actual product data
   // You can get the external_id from your Printful dashboard or API
   '68ad4d026311b3': {
-    description: 'This premium t-shirt features our signature Bela Bomberman design. Made from 100% organic cotton for ultimate comfort and breathability. The design showcases classic gaming nostalgia with vibrant colors and durable print quality. Perfect for casual wear, gaming events, or as a gift for retro gaming enthusiasts.',
-    shortDescription: 'Premium cotton t-shirt with classic Bela Bomberman design. Comfortable fit with vibrant, durable print.',
+    description: 'Premium cotton t-shirt with classic Bela Bomberman design. The Bomberman Youth Long Sleeve Tee is a wardrobe staple that’ll go great with casual, sporty, or loungewear looks. The shirt is made of airlume combed and ring-spun cotton and will feel soft and comfy.',
+    shortDescription: 'Premium cotton t-shirt with classic Bela Bomberman design. Comfortable fit with durable print.',
     features: [
       '100% organic cotton',
       'Comfortable, breathable fabric',
-      'Vibrant, durable print',
-      'Machine washable',
-      'Available in multiple sizes'
+      'Vibrant, durable print'
     ],
     specifications: {
-      material: '100% Organic Cotton',
+      material: '100% airlume combed and ring-spun cotton',
       weight: '180 GSM',
       fit: 'Regular fit',
-      care: 'Machine wash cold, tumble dry low',
       printMethod: 'Direct to Garment (DTG)'
     },
     additionalImages: [
       {
-        url: '/images/products/example-product-1-detail.jpg',
+        url: '/images/products/youth-long-sleeve-tee-black-front-68ad4bd544b85.png',
         alt: 'Close-up of Bela Bomberman design',
-        caption: 'Detailed view of the vibrant print'
+        caption: 'Folded shirt'
       },
       {
-        url: '/images/products/example-product-1-wear.jpg',
-        alt: 'T-shirt being worn',
-        caption: 'How it looks when worn'
+        url: '/images/products/youth-long-sleeve-tee-black-back-68acb5f5e81ba.png',
+        alt: 'Backside of the shirt',
+        caption: 'Backside'
       }
     ],
     seo: {
-      keywords: ['bela bomberman', 'gaming t-shirt', 'retro gaming', 'cotton t-shirt', 'gaming apparel'],
+      keywords: ['bela bomberman', 'cotton t-shirt', 'gaming apparel'],
       metaDescription: 'Premium Bela Bomberman t-shirt made from organic cotton. Perfect for gaming enthusiasts and retro gaming fans.'
     }
   },

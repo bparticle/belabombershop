@@ -26,7 +26,8 @@ const SafeImage: React.FC<SafeImageProps> = ({
   const isValidUrl = React.useMemo(() => {
     if (!src || typeof src !== 'string') return false;
     if (src.trim() === '') return false;
-    if (!src.startsWith('http')) return false;
+    // Allow both external URLs (http/https) and local paths (starting with /)
+    if (!src.startsWith('http') && !src.startsWith('/')) return false;
     return true;
   }, [src]);
 
@@ -40,21 +41,6 @@ const SafeImage: React.FC<SafeImageProps> = ({
   }
 
   // Render the image with proper props
-  if (fill) {
-    return (
-      <Image
-        src={src}
-        alt={alt}
-        fill
-        width={width || 300}
-        height={height || 300}
-        className={className}
-        sizes={sizes}
-        onError={onError}
-      />
-    );
-  }
-
   return (
     <Image
       src={src}
@@ -62,7 +48,9 @@ const SafeImage: React.FC<SafeImageProps> = ({
       width={width || 300}
       height={height || 300}
       className={className}
+      sizes={sizes}
       onError={onError}
+      {...(fill && { fill: true })}
     />
   );
 };

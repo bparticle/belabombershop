@@ -283,16 +283,6 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
             {/* Product Description */}
             <div className="prose prose-sm text-gray-600">
               <p>{description}</p>
-              {(colors.length > 0 || sizes.length > 0) && (
-                <ul className="mt-4 space-y-2">
-                  {colors.length > 0 && (
-                    <li>Available in {colors.length} color{colors.length > 1 ? 's' : ''}</li>
-                  )}
-                  {sizes.length > 0 && (
-                    <li>Available in {sizes.length} size{sizes.length > 1 ? 's' : ''}</li>
-                  )}
-                </ul>
-              )}
             </div>
 
             {/* Product Enhancements */}
