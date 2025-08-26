@@ -152,3 +152,38 @@ export interface ProductFilters {
   categories: CategoryFilter[];
   selectedCategory?: string;
 }
+
+// Product enhancement types
+export interface ProductImage {
+  url: string;
+  alt: string;
+  caption?: string;
+}
+
+export interface ProductSpecifications {
+  material?: string;
+  weight?: string;
+  fit?: string;
+  care?: string;
+  printMethod?: string;
+  [key: string]: string | undefined;
+}
+
+export interface ProductSEO {
+  keywords: string[];
+  metaDescription: string;
+}
+
+export interface ProductEnhancement {
+  description: string;
+  shortDescription?: string;
+  features?: string[];
+  specifications?: ProductSpecifications;
+  additionalImages?: ProductImage[];
+  seo?: ProductSEO;
+}
+
+// Enhanced product interface
+export interface EnhancedPrintfulProduct extends PrintfulProduct {
+  enhancement?: ProductEnhancement;
+}

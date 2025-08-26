@@ -6,17 +6,19 @@ import { printful } from "../../lib/printful-client";
 import { formatVariantName } from "../../lib/format-variant-name";
 import { PrintfulProduct } from "../../types";
 import { determineProductCategory } from "../../lib/category-config";
+import { enhanceProductData, getDefaultDescription } from "../../lib/product-enhancements";
 import VariantPicker from "../../components/VariantPicker";
 import ProductVariants from "../../components/ProductVariants";
 import ColorSizeSelector from "../../components/ColorSizeSelector";
 import ErrorBoundary from "../../components/ErrorBoundary";
 import SafeImage from "../../components/SafeImage";
 import CategoryBadge from "../../components/CategoryBadge";
+import ProductEnhancements from "../../components/ProductEnhancements";
 import useWishlistDispatch from "../../hooks/useWishlistDispatch";
 import useWishlistState from "../../hooks/useWishlistState";
 
 type ProductDetailPageProps = {
-  product: PrintfulProduct;
+  product: PrintfulProduct & { enhancement?: any };
 };
 
 const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
@@ -45,7 +47,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
     );
   }
 
-  const { id, name, variants, category, description } = product;
+  const { id, name, variants, category, description, enhancement } = product;
   
   const [firstVariant] = variants;
   const [activeVariantExternalId, setActiveVariantExternalId] = React.useState(
@@ -293,6 +295,11 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
               )}
             </div>
 
+            {/* Product Enhancements */}
+            {enhancement && (
+              <ProductEnhancements enhancement={enhancement} />
+            )}
+
             
 
                          {/* Color and Size Selector */}
@@ -399,12 +406,8 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
       metadata: sync_product.metadata || {}
     });
 
-    // Extract description from metadata or use default
-    const description = sync_product.metadata?.description || 
-                      sync_product.metadata?.product_description ||
-                      `Premium quality ${sync_product.name || 'product'} featuring unique designs. Made with care and attention to detail, these pieces are perfect for everyday wear while showcasing your individual style.`;
-
-    const product: PrintfulProduct = {
+    // Create base product object
+    const baseProduct = {
       id: sync_product.id?.toString() || '',
       external_id: sync_product.external_id || '',
       name: sync_product.name || 'Unnamed Product',
@@ -413,7 +416,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
       category: productCategory,
       tags: sync_product.tags || [],
       metadata: sync_product.metadata || {},
-      description: description,
+      description: getDefaultDescription(sync_product.name || 'Product', productCategory),
       variants: sync_variants
         .filter((variant: any) => variant && variant.id) // Only include valid variants
         .map((variant: any) => ({
@@ -440,6 +443,9 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
           is_ignored: variant.is_ignored ?? false,
         })),
     };
+
+    // Enhance product with local data
+    const product = enhanceProductData(baseProduct);
 
     // Ensure we have at least one valid variant
     if (product.variants.length === 0) {
