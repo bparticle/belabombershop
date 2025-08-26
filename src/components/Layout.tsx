@@ -96,14 +96,14 @@ const Layout = ({ children }) => {
       <footer className="max-w-6xl mx-auto px-6">
         <div className="py-6 border-t border-gray-100 text-center flex flex-col md:flex-row items-center justify-between">
           <p className="text-gray-600 text-sm md:text-base">
-            Powered by{" "}
+            Copyright 2025 {" "}
             <img
               src="/belabomberman_typeface.svg"
               alt="Bela Bomberman"
               className="inline h-5 md:h-6 lg:h-7 object-contain"
               style={{ maxWidth: '150px' }}
             />
-            , Built by{" "}
+             {" "}based on{" "}
             <a
               href="https://twitter.com/notrab"
               title="Follow the creator on Twitter"

@@ -1,6 +1,7 @@
 import type { NextApiResponse } from "next";
 
 import createOrder from "../../../lib/create-order";
+import { validateData, SnipcartWebhookRequestSchema } from "../../../lib/validation";
 
 import type { SnipcartRequest, SnipcartWebhookEvent } from "../../../types";
 
@@ -17,7 +18,9 @@ export default async function handler(
   const token = req.headers["x-snipcart-requesttoken"];
   console.log(token);
 
-  const { eventName, content } = req.body;
+  // Validate request body
+  const validatedBody = validateData(SnipcartWebhookRequestSchema, req.body);
+  const { eventName, content } = validatedBody;
 
   if (req.method !== "POST")
     return res.status(405).json({ message: "Method not allowed" });
@@ -25,21 +28,21 @@ export default async function handler(
   if (!allowedEvents.includes(eventName))
     return res.status(400).json({ message: "This event is not permitted" });
 
-  // if (!token) return res.status(401).json({ message: "Not Authorized" });
+  if (!token) return res.status(401).json({ message: "Not Authorized" });
 
-  // try {
-  //   const verifyToken = await fetch(
-  //     `https://app.snipcart.com/api/requestvalidation/${token}`
-  //   );
+  try {
+    const verifyToken = await fetch(
+      `https://app.snipcart.com/api/requestvalidation/${token}`
+    );
 
-  //   if (!verifyToken.ok)
-  //     return res.status(401).json({ message: "Not Authorization" });
-  // } catch (err) {
-  //   console.log(err);
-  //   return res
-  //     .status(500)
-  //     .json({ message: "Unable to verify Snipcart webhook token" });
-  // }
+    if (!verifyToken.ok)
+      return res.status(401).json({ message: "Not Authorized" });
+  } catch (err) {
+    console.error('Webhook verification error:', err);
+    return res
+      .status(500)
+      .json({ message: "Unable to verify Snipcart webhook token" });
+  }
 
   try {
     switch (eventName) {
@@ -56,7 +59,16 @@ export default async function handler(
 
     res.status(200).json({ message: "Done" });
   } catch (err) {
-    console.log(err);
+    console.error('Webhook handler error:', err);
+    
+    // Handle validation errors specifically
+    if (err instanceof Error && err.message.includes('Validation failed')) {
+      return res.status(400).json({ 
+        message: "Invalid request data",
+        error: err.message 
+      });
+    }
+    
     res.status(500).json({ message: "Something went wrong" });
   }
 }

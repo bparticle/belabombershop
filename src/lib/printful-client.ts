@@ -1,3 +1,7 @@
 import { PrintfulClient } from "printful-request";
+import { getEnv } from "./env-validation";
 
-export const printful = new PrintfulClient(process.env.PRINTFUL_API_KEY);
+// Validate environment variables early
+const env = getEnv();
+
+export const printful = new PrintfulClient(env.PRINTFUL_API_KEY);

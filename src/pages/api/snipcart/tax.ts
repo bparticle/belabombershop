@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { printful } from "../../../lib/printful-client";
+import { validateData, TaxCalculationRequestSchema } from "../../../lib/validation";
 import type { SnipcartTaxItem, PrintfulShippingItem } from "../../../types";
 
 interface SnipcartRequest extends NextApiRequest {
@@ -25,7 +26,9 @@ export default async function handler(
   req: SnipcartRequest,
   res: NextApiResponse<Data | Error>
 ) {
-  const { eventName, content } = req.body;
+  // Validate request body
+  const validatedBody = validateData(TaxCalculationRequestSchema, req.body);
+  const { eventName, content } = validatedBody;
 
   if (eventName !== "taxes.calculate") return res.status(200).end();
 
@@ -91,13 +94,28 @@ export default async function handler(
         },
       ],
     });
-  } catch ({ error }) {
-    console.log(error);
+  } catch (err) {
+    console.error('Tax API error:', err);
+    
+    // Handle validation errors specifically
+    if (err instanceof Error && err.message.includes('Validation failed')) {
+      return res.status(400).json({
+        errors: [
+          {
+            key: 'validation_error',
+            message: err.message,
+          },
+        ],
+      });
+    }
+    
+    // Handle other errors
+    const error = err as any;
     res.status(200).json({
       errors: [
         {
-          key: error?.reason,
-          message: error?.message,
+          key: error?.reason || 'unknown_error',
+          message: error?.message || 'An error occurred while calculating taxes',
         },
       ],
     });

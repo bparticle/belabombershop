@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { printful } from "../../../lib/printful-client";
+import { validateData, ShippingRateRequestSchema } from "../../../lib/validation";
 import type {
   SnipcartShippingRate,
   PrintfulShippingItem,
@@ -28,7 +29,9 @@ export default async function handler(
   req: SnipcartRequest,
   res: NextApiResponse<Data | Error>
 ) {
-  const { eventName, content } = req.body;
+  // Validate request body
+  const validatedBody = validateData(ShippingRateRequestSchema, req.body);
+  const { eventName, content } = validatedBody;
 
   if (eventName !== "shippingrates.fetch") return res.status(200).end();
   if (content.items.length === 0) return res.status(200).end();
@@ -75,13 +78,28 @@ export default async function handler(
         guaranteedDaysToDelivery: rate.maxDeliveryDays,
       })),
     });
-  } catch ({ error }) {
-    console.log(error);
+  } catch (err) {
+    console.error('Shipping API error:', err);
+    
+    // Handle validation errors specifically
+    if (err instanceof Error && err.message.includes('Validation failed')) {
+      return res.status(400).json({
+        errors: [
+          {
+            key: 'validation_error',
+            message: err.message,
+          },
+        ],
+      });
+    }
+    
+    // Handle other errors
+    const error = err as any;
     res.status(200).json({
       errors: [
         {
-          key: error?.reason,
-          message: error?.message,
+          key: error?.reason || 'unknown_error',
+          message: error?.message || 'An error occurred while calculating shipping rates',
         },
       ],
     });

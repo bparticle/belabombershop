@@ -208,11 +208,13 @@ You'll need your `PRINTFUL_API_KEY` and `NEXT_PUBLIC_SNIPCART_API_KEY` to deploy
 
 ## Running locally
 
-Copy the example `env.local` file, and add the necessary ENV variables.
+Copy the environment variables template file, and add the necessary ENV variables:
 
 ```bash
-cp .env.local.example .env.local
+cp env.example .env.local
 ```
+
+Edit `.env.local` and add your actual API keys and configuration values.
 
 You'll next want to install the project dependencies, and start the local server:
 
@@ -222,3 +224,80 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to see the storefront locally! 🚀
+
+## Development
+
+### Code Quality
+
+This project uses several tools to maintain code quality:
+
+- **ESLint**: Code linting with TypeScript and React rules
+- **Prettier**: Code formatting
+- **TypeScript**: Static type checking
+
+Run the validation script to check everything:
+
+```bash
+npm run validate
+```
+
+### Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+- `npm run lint:fix` - Fix ESLint errors automatically
+- `npm run format` - Format code with Prettier
+- `npm run format:check` - Check code formatting
+- `npm run type-check` - Run TypeScript type checking
+- `npm run validate` - Run all validation checks
+
+## Security Features
+
+This project includes several security enhancements:
+
+- **Environment Variable Validation**: All required environment variables are validated at startup
+- **Input Validation**: All API inputs are validated using Zod schemas
+- **Rate Limiting**: API endpoints are protected against abuse
+- **CORS Configuration**: Proper CORS headers for cross-origin requests
+- **Security Headers**: XSS protection, content type sniffing prevention, and more
+- **Webhook Verification**: Snipcart webhooks are properly verified
+- **Error Handling**: Comprehensive error handling with proper logging
+
+## Architecture
+
+### Key Components
+
+- **Next.js 14**: React framework with App Router
+- **TypeScript**: Static type checking
+- **Tailwind CSS**: Utility-first CSS framework
+- **Printful API**: Print-on-demand fulfillment
+- **Snipcart**: Headless e-commerce platform
+- **Zod**: Runtime type validation
+- **React Context**: State management
+
+### File Structure
+
+```
+src/
+├── components/          # React components
+├── context/            # React context providers
+├── hooks/              # Custom React hooks
+├── lib/                # Utility functions and configurations
+├── pages/              # Next.js pages and API routes
+├── styles/             # Global styles
+└── types.ts            # TypeScript type definitions
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run validation: `npm run validate`
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License.
