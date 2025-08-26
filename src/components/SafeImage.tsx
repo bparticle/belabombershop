@@ -40,7 +40,21 @@ const SafeImage: React.FC<SafeImageProps> = ({
     );
   }
 
-  // Render the image with proper props
+  // When fill is true, don't pass width and height props
+  if (fill) {
+    return (
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        className={className}
+        sizes={sizes}
+        onError={onError}
+      />
+    );
+  }
+
+  // Render the image with width and height when fill is false
   return (
     <Image
       src={src}
@@ -50,7 +64,6 @@ const SafeImage: React.FC<SafeImageProps> = ({
       className={className}
       sizes={sizes}
       onError={onError}
-      {...(fill && { fill: true })}
     />
   );
 };

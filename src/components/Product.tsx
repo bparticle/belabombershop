@@ -59,7 +59,7 @@ const Product = (product) => {
         )}
       </button>
       
-                           <Link href={`/product/${id}`}>
+      <Link href={`/product/${id}`}>
         <div className="flex items-center justify-center flex-1 sm:flex-shrink-0 w-full p-6 cursor-pointer">
           {activeVariantFile && activeVariantFile.preview_url ? (
             <div className="w-full h-64 flex items-center justify-center image-container-height-constrained">
