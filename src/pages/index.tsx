@@ -5,6 +5,7 @@ import shuffle from "lodash.shuffle";
 import { printful } from "../lib/printful-client";
 import { formatVariantName } from "../lib/format-variant-name";
 import { PrintfulProduct } from "../types";
+import { determineProductCategory } from "../lib/category-config";
 
 import ProductGrid from "../components/ProductGrid";
 
@@ -45,26 +46,36 @@ export const getStaticProps: GetStaticProps = async () => {
           variants: sync_variants
         });
 
-                 return {
-           id: sync_product.id || '',
-           external_id: sync_product.external_id || '',
-           name: sync_product.name || 'Unnamed Product',
-           thumbnail_url: sync_product.thumbnail_url || '',
-           is_ignored: sync_product.is_ignored ?? false,
-                     variants: sync_variants.map((variant: any) => ({
-             id: variant.id || 0,
-             external_id: variant.external_id || '',
-             name: formatVariantName(variant.name, variant.options, variant.size, variant.color),
-             retail_price: variant.retail_price || '0',
-             currency: variant.currency || 'USD',
-             files: variant.files || [],
-             options: variant.options || [],
-             size: variant.size || null,
-             color: variant.color || null,
-             is_enabled: variant.is_enabled ?? true,
-             in_stock: variant.in_stock ?? true,
-             is_ignored: variant.is_ignored ?? false,
-           })),
+                         // Determine product category based on metadata, tags, and name
+        const productCategory = determineProductCategory({
+          name: sync_product.name || '',
+          tags: sync_product.tags || [],
+          metadata: sync_product.metadata || {}
+        });
+
+        return {
+          id: sync_product.id || '',
+          external_id: sync_product.external_id || '',
+          name: sync_product.name || 'Unnamed Product',
+          thumbnail_url: sync_product.thumbnail_url || '',
+          is_ignored: sync_product.is_ignored ?? false,
+          category: productCategory,
+          tags: sync_product.tags || [],
+          metadata: sync_product.metadata || {},
+          variants: sync_variants.map((variant: any) => ({
+            id: variant.id || 0,
+            external_id: variant.external_id || '',
+            name: formatVariantName(variant.name, variant.options, variant.size, variant.color),
+            retail_price: variant.retail_price || '0',
+            currency: variant.currency || 'USD',
+            files: variant.files || [],
+            options: variant.options || [],
+            size: variant.size || null,
+            color: variant.color || null,
+            is_enabled: variant.is_enabled ?? true,
+            in_stock: variant.in_stock ?? true,
+            is_ignored: variant.is_ignored ?? false,
+          })),
         };
       }
     );

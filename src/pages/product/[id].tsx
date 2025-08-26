@@ -5,11 +5,13 @@ import { useRouter } from "next/router";
 import { printful } from "../../lib/printful-client";
 import { formatVariantName } from "../../lib/format-variant-name";
 import { PrintfulProduct } from "../../types";
+import { determineProductCategory } from "../../lib/category-config";
 import VariantPicker from "../../components/VariantPicker";
 import ProductVariants from "../../components/ProductVariants";
 import ColorSizeSelector from "../../components/ColorSizeSelector";
 import ErrorBoundary from "../../components/ErrorBoundary";
 import SafeImage from "../../components/SafeImage";
+import CategoryBadge from "../../components/CategoryBadge";
 import useWishlistDispatch from "../../hooks/useWishlistDispatch";
 import useWishlistState from "../../hooks/useWishlistState";
 
@@ -43,7 +45,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
     );
   }
 
-  const { id, name, variants } = product;
+  const { id, name, variants, category } = product;
   
   const [firstVariant] = variants;
   const [activeVariantExternalId, setActiveVariantExternalId] = React.useState(
@@ -243,6 +245,11 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
              <div className="flex items-start justify-between">
                <div>
                  <h1 className="text-3xl font-bold text-gray-900 mb-2">{name}</h1>
+                 {category && (
+                   <div className="mt-2">
+                     <CategoryBadge categoryId={category} size="md" />
+                   </div>
+                 )}
                </div>
               <button
                 aria-label="Add to wishlist"
@@ -390,12 +397,22 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
       return { notFound: true };
     }
 
+    // Determine product category based on metadata, tags, and name
+    const productCategory = determineProductCategory({
+      name: sync_product.name || '',
+      tags: sync_product.tags || [],
+      metadata: sync_product.metadata || {}
+    });
+
     const product: PrintfulProduct = {
       id: sync_product.id?.toString() || '',
       external_id: sync_product.external_id || '',
       name: sync_product.name || 'Unnamed Product',
       thumbnail_url: sync_product.thumbnail_url || '',
       is_ignored: sync_product.is_ignored ?? false,
+      category: productCategory,
+      tags: sync_product.tags || [],
+      metadata: sync_product.metadata || {},
       variants: sync_variants
         .filter((variant: any) => variant && variant.id) // Only include valid variants
         .map((variant: any) => ({

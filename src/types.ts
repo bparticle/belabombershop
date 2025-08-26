@@ -120,9 +120,33 @@ export interface PrintfulProduct {
   thumbnail_url: string;
   is_ignored: boolean;
   variants: PrintfulVariant[];
+  // Add category support
+  category?: string;
+  tags?: string[];
+  metadata?: Record<string, any>;
 }
 
 export type PrintfulShippingItem = {
   external_variant_id: string;
   quantity: number;
 };
+
+// Category system types
+export interface ProductCategory {
+  id: string;
+  name: string;
+  description?: string;
+  slug: string;
+  color?: string;
+  icon?: string;
+}
+
+export interface CategoryFilter {
+  category: string;
+  count: number;
+}
+
+export interface ProductFilters {
+  categories: CategoryFilter[];
+  selectedCategory?: string;
+}

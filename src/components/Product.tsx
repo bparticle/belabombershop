@@ -6,12 +6,13 @@ import useWishlistState from "../hooks/useWishlistState";
 
 import VariantPicker from "./VariantPicker";
 import SafeImage from "./SafeImage";
+import CategoryBadge from "./CategoryBadge";
 
 const Product = (product) => {
   const { addItem } = useWishlistDispatch();
   const { isSaved } = useWishlistState();
 
-  const { id, name, variants } = product;
+  const { id, name, variants, category } = product;
   
   const [firstVariant] = variants;
   const [activeVariantExternalId, setActiveVariantExternalId] = useState(
@@ -58,7 +59,8 @@ const Product = (product) => {
         )}
       </button>
       
-                           <Link href={`/product/${id}`} className="flex items-center justify-center flex-1 sm:flex-shrink-0 w-full p-6 cursor-pointer">
+                           <Link href={`/product/${id}`}>
+        <div className="flex items-center justify-center flex-1 sm:flex-shrink-0 w-full p-6 cursor-pointer">
           {activeVariantFile && activeVariantFile.preview_url ? (
             <div className="w-full h-64 flex items-center justify-center image-container-height-constrained">
               <SafeImage
@@ -74,11 +76,19 @@ const Product = (product) => {
               No image available
             </div>
           )}
-        </Link>
+        </div>
+      </Link>
       
-      <Link href={`/product/${id}`} className="flex-1 p-6 pt-0 cursor-pointer">
-        <div className="text-center">
-          <p className="mb-1 font-semibold text-gray-900 hover:text-blue-600 transition-colors group-hover:text-blue-600">{name}</p>
+      <Link href={`/product/${id}`}>
+        <div className="flex-1 p-6 pt-0 cursor-pointer">
+          <div className="text-center">
+            <p className="mb-1 font-semibold text-gray-900 hover:text-blue-600 transition-colors group-hover:text-blue-600">{name}</p>
+            {category && (
+              <div className="mt-2">
+                <CategoryBadge categoryId={category} size="sm" />
+              </div>
+            )}
+          </div>
         </div>
       </Link>
       <div className="p-6 pt-0 space-y-3">
