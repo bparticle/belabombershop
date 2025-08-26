@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 
 import { printful } from "../../lib/printful-client";
 import { formatVariantName } from "../../lib/format-variant-name";
-import { PrintfulProduct } from "../../types";
+import { PrintfulProduct, ProductImage } from "../../types";
 import { determineProductCategory } from "../../lib/category-config";
 import { enhanceProductData, getDefaultDescription } from "../../lib/product-enhancements";
 import VariantPicker from "../../components/VariantPicker";
@@ -15,8 +15,11 @@ import SafeImage from "../../components/SafeImage";
 import CategoryBadge from "../../components/CategoryBadge";
 import ProductEnhancements from "../../components/ProductEnhancements";
 import ImageGalleryModal from "../../components/ImageGalleryModal";
+import ProductImageGallery from "../../components/ProductImageGallery";
+import AdditionalViewsGallery from "../../components/AdditionalViewsGallery";
 import useWishlistDispatch from "../../hooks/useWishlistDispatch";
 import useWishlistState from "../../hooks/useWishlistState";
+import { useProductGallery } from "../../hooks/useProductGallery";
 
 type ProductDetailPageProps = {
   product: PrintfulProduct & { enhancement?: any };
@@ -27,10 +30,6 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
   const { addItem } = useWishlistDispatch();
   const { isSaved } = useWishlistState();
 
-  // Gallery state - moved to top to avoid hooks rules violations
-  const [galleryOpen, setGalleryOpen] = React.useState(false);
-  const [galleryStartIndex, setGalleryStartIndex] = React.useState(0);
-  
   // All hooks must be called before any conditional returns
   const [firstVariant] = product?.variants || [];
   const [activeVariantExternalId, setActiveVariantExternalId] = React.useState(
@@ -52,55 +51,38 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
     
     return product.variants
       .flatMap(variant => variant.files || [])
-      .filter(file => file && file.type && file.type === "preview") // Only show preview images (actual product photos)
-      .filter(file => file.preview_url && typeof file.preview_url === 'string' && file.preview_url.trim() !== '')
-      .filter(file => file.preview_url.startsWith('http')) // Only allow valid HTTP URLs
-      .map(file => ({
+      .filter((file: any) => file && file.type && file.type === "preview") // Only show preview images (actual product photos)
+      .filter((file: any) => file.preview_url && typeof file.preview_url === 'string' && file.preview_url.trim() !== '')
+      .filter((file: any) => file.preview_url.startsWith('http')) // Only allow valid HTTP URLs
+      .map((file: any) => ({
         url: file.preview_url,
         type: file.type,
         alt: `${product.name} - ${file.type} view`
       }))
-      .filter((image, index, self) => 
-        index === self.findIndex(img => img.url === image.url)
+      .filter((image: any, index: number, self: any[]) => 
+        index === self.findIndex((img: any) => img.url === image.url)
       );
   }, [product]);
 
-  // Combine Printful images with enhancement images for unified gallery
-  const allGalleryImages = React.useMemo(() => {
-    const printfulGalleryImages = printfulImages.map(image => ({
-      url: image.url,
-      alt: image.alt,
-      caption: image.type,
-      source: 'printful' as const
-    }));
+  // Get enhancement images
+  const enhancementImages = React.useMemo(() => {
+    return product?.enhancement?.additionalImages || [];
+  }, [product?.enhancement?.additionalImages]);
 
-    const enhancementImages = product?.enhancement?.additionalImages?.map(image => ({
-      url: image.url,
-      alt: image.alt,
-      caption: image.caption,
-      source: 'enhancement' as const
-    })) || [];
-
-    return [...printfulGalleryImages, ...enhancementImages];
-  }, [printfulImages, product]);
-
-  // Use printfulImages for the existing image gallery logic
-  const allImages = printfulImages;
-
-  const [selectedImage, setSelectedImage] = React.useState(() => {
-    // Validate activeVariantFile URL
-    const activeVariantUrl = activeVariantFile?.preview_url;
-    if (activeVariantUrl && typeof activeVariantUrl === 'string' && activeVariantUrl.trim() !== '' && activeVariantUrl.startsWith('http')) {
-      return activeVariantUrl;
-    }
-    
-    // Fallback to first valid image
-    const firstValidImage = allImages[0];
-    if (firstValidImage && firstValidImage.url && firstValidImage.url.startsWith('http')) {
-      return firstValidImage.url;
-    }
-    
-    return '';
+  // Use custom hook for gallery management
+  const {
+    selectedImage,
+    allGalleryImages,
+    setSelectedImage,
+    openGallery,
+    handleEnhancementImageClick,
+    galleryOpen,
+    galleryStartIndex,
+    setGalleryOpen
+  } = useProductGallery({
+    printfulImages,
+    enhancementImages,
+    initialSelectedImage: activeVariantFile?.preview_url
   });
 
   // Update selected image when variant changes
@@ -110,7 +92,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
       setSelectedImage(activeVariantUrl);
     } else {
       // Fallback to first valid image for this variant
-      const variantImages = activeVariant?.files?.filter(file => 
+      const variantImages = activeVariant?.files?.filter((file: any) => 
         file && file.type === "preview" && 
         file.preview_url && 
         typeof file.preview_url === 'string' && 
@@ -122,7 +104,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
         setSelectedImage(variantImages[0].preview_url);
       }
     }
-  }, [activeVariantFile, activeVariant]);
+  }, [activeVariantFile, activeVariant, setSelectedImage]);
 
   // Validate product data
   if (!product || !product.id || !product.name || !product.variants) {
@@ -151,22 +133,8 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
   const handleMainImageClick = () => {
     if (allGalleryImages.length > 0) {
       const currentImageIndex = allGalleryImages.findIndex(img => img.url === selectedImage);
-      setGalleryStartIndex(currentImageIndex >= 0 ? currentImageIndex : 0);
-      setGalleryOpen(true);
+      openGallery(currentImageIndex >= 0 ? currentImageIndex : 0);
     }
-  };
-
-  const handleGalleryImageClick = (index: number) => {
-    setGalleryStartIndex(index);
-    setGalleryOpen(true);
-  };
-
-  const handleEnhancementImageClick = (enhancementIndex: number) => {
-    // Find the index of this enhancement image in the unified gallery
-    const printfulImageCount = printfulImages.length;
-    const galleryIndex = printfulImageCount + enhancementIndex;
-    setGalleryStartIndex(galleryIndex);
-    setGalleryOpen(true);
   };
 
   // Get unique colors and sizes
@@ -174,7 +142,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
   const sizes = Array.from(new Set(variants.map(v => v.size).filter(Boolean)));
 
   // If no valid images found, show a placeholder
-  const hasValidImages = allImages.length > 0;
+  const hasValidImages = printfulImages.length > 0;
 
   if (router.isFallback) {
     return (
@@ -275,50 +243,21 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
               )}
             </div>
 
-                         {/* Image Gallery */}
-             {allImages.length > 1 && (
-               <div className="space-y-3">
-                 <h3 className="text-sm font-medium text-gray-900">Product Views</h3>
-                 <div className="grid grid-cols-4 gap-2">
-                   {allImages.map((image, index) => (
-                     <button
-                       key={index}
-                       onClick={() => {
-                         setSelectedImage(image.url);
-                         // Also open gallery with this image
-                         const galleryIndex = allGalleryImages.findIndex(img => img.url === image.url);
-                         if (galleryIndex >= 0) {
-                           setGalleryStartIndex(galleryIndex);
-                           setGalleryOpen(true);
-                         }
-                       }}
-                       className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-colors ${
-                         selectedImage === image.url 
-                           ? 'border-blue-500' 
-                           : 'border-gray-200 hover:border-gray-300'
-                       }`}
-                     >
-                       {image.url && (
-                         <SafeImage
-                           src={image.url}
-                           alt={image.alt}
-                           fill
-                           className="object-cover"
-                           sizes="(max-width: 768px) 25vw, 12.5vw"
-                           onError={(e) => {
-                             console.error('Gallery image failed to load:', image.url);
-                             e.currentTarget.style.display = 'none';
-                           }}
-                         />
-                       )}
-                       <div className="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs px-1 rounded">
-                         {image.type}
-                       </div>
-                     </button>
-                   ))}
-                 </div>
-               </div>
-             )}
+             {/* Product Image Gallery */}
+             <ProductImageGallery
+               images={printfulImages}
+               selectedImage={selectedImage}
+               onImageSelect={setSelectedImage}
+               onGalleryOpen={openGallery}
+               maxVisibleThumbnails={6}
+             />
+
+             {/* Additional Views Gallery */}
+             <AdditionalViewsGallery
+               images={enhancementImages}
+               onImageClick={handleEnhancementImageClick}
+               maxVisibleThumbnails={3}
+             />
 
 
           </div>

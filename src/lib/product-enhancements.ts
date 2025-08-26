@@ -67,9 +67,17 @@ export const PRODUCT_ENHANCEMENTS: Record<string, ProductEnhancement> = {
     },
     additionalImages: [
       {
-        url: '/images/products/example-product-2-back.jpg',
-        alt: 'Back view of hoodie',
-        caption: 'Back view showing full design'
+        url: '/images/products/youth-classic-tee-gold-front-68ab56d7bd2a7.png',
+        alt: 'Gold front view of the shirt',
+        caption: 'Gold front view of the shirt'
+      }, {
+        url: '/images/products/youth-classic-tee-azalea-front-68ab56d7bba36.png',
+        alt: 'Azalea front view of the shirt',
+        caption: 'Azalea front view of the shirt'
+      }, {
+        url: '/images/products/youth-classic-tee-black-front-68ab56d7b798a.png',
+        alt: 'Black lifestyle',
+        caption: 'Black lifestyle'
       }
     ],
     seo: {
