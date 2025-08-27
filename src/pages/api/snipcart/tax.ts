@@ -120,7 +120,7 @@ export default async function handler(
        // Add more countries as needed
      };
      
-     vatRate = vatRates[country] || 0;
+     vatRate = country ? (vatRates[country] || 0) : 0;
      
      console.log('🧮 VAT rate lookup:', {
        country: country,
