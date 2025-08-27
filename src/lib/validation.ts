@@ -71,7 +71,8 @@ export const ShippingRateRequestSchema = z.object({
     items: z.array(z.object({
       id: z.string(),
       quantity: z.number().positive(),
-    })).min(1, 'At least one item is required'),
+      price: z.number().positive().optional(),
+    }).passthrough()).min(1, 'At least one item is required'),
     shippingAddress1: z.string().optional(),
     shippingAddress2: z.string().optional(),
     shippingAddressCity: z.string().optional(),
