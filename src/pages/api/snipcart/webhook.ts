@@ -84,7 +84,16 @@ export default async function handler(
           shippingRateUserDefinedId: content.shippingRateUserDefinedId,
         };
         console.log('Extracted order data:', orderData);
-        await createOrder(orderData);
+        
+        try {
+          await createOrder(orderData);
+          console.log('Order created successfully');
+        } catch (orderError) {
+          console.error('createOrder error:', orderError);
+          console.error('createOrder error type:', typeof orderError);
+          console.error('createOrder error keys:', Object.keys(orderError || {}));
+          throw orderError;
+        }
         break;
       case "customauth:customer_updated":
         return res
@@ -97,6 +106,9 @@ export default async function handler(
     res.status(200).json({ message: "Done" });
   } catch (err) {
     console.error('Webhook handler error:', err);
+    console.error('Error type:', typeof err);
+    console.error('Error constructor:', err?.constructor?.name);
+    console.error('Error stringified:', JSON.stringify(err, null, 2));
     
     // Handle validation errors specifically
     if (err instanceof Error && err.message.includes('Validation failed')) {
@@ -107,13 +119,25 @@ export default async function handler(
     }
     
     // Return the actual error for debugging
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-    const errorStack = err instanceof Error ? err.stack : '';
+    let errorMessage = 'Unknown error';
+    let errorStack = '';
+    let errorDetails = {};
+    
+    if (err instanceof Error) {
+      errorMessage = err.message;
+      errorStack = err.stack || '';
+    } else if (typeof err === 'string') {
+      errorMessage = err;
+    } else if (err && typeof err === 'object') {
+      errorMessage = err.message || err.error || 'Object error';
+      errorDetails = err;
+    }
     
     res.status(500).json({ 
       message: "Something went wrong",
       error: errorMessage,
-      stack: errorStack
+      stack: errorStack,
+      details: errorDetails
     });
   }
 }
