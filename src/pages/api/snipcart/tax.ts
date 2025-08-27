@@ -93,8 +93,14 @@ export default async function handler(
       items,
     });
 
-    // Check if VAT is actually calculated
-    if (result.costs && result.costs.vat > 0) {
+         // Check if VAT is actually calculated
+     console.log('🧮 Checking VAT calculation:', {
+       hasCosts: !!result.costs,
+       vatAmount: result.costs?.vat,
+       vatGreaterThanZero: result.costs?.vat > 0
+     });
+     
+     if (result.costs && result.costs.vat > 0) {
       // Debug: Log what Printful is returning
       console.log('🧮 Printful costs data:', {
         vat: result.costs.vat,
@@ -103,9 +109,10 @@ export default async function handler(
         shipping: result.costs.shipping
       });
       
-      // Calculate the tax rate based on the VAT amount and subtotal
-      const subtotal = result.costs.subtotal || (result.costs.total - result.costs.vat);
-      const taxRate = subtotal > 0 ? (result.costs.vat / subtotal) * 100 : 0;
+             // Calculate the tax rate based on the VAT amount and subtotal
+       // Use the actual subtotal from Printful response
+       const subtotal = result.costs.subtotal;
+       const taxRate = subtotal > 0 ? (result.costs.vat / subtotal) * 100 : 0;
       
       console.log('🧮 Tax calculation:', {
         vat: result.costs.vat,
@@ -123,12 +130,13 @@ export default async function handler(
           },
         ],
       });
-    } else {
-      // No VAT applicable
-      res.status(200).json({
-        taxes: [],
-      });
-    }
+         } else {
+       // No VAT applicable
+       console.log('🧮 No VAT applicable - returning empty taxes array');
+       res.status(200).json({
+         taxes: [],
+       });
+     }
   } catch (err) {
     console.error('Tax API error:', err);
     
