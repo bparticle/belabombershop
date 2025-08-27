@@ -129,7 +129,8 @@ export default async function handler(
     } else if (typeof err === 'string') {
       errorMessage = err;
     } else if (err && typeof err === 'object') {
-      errorMessage = err.message || err.error || 'Object error';
+      const errorObj = err as any;
+      errorMessage = errorObj.message || errorObj.error || 'Object error';
       errorDetails = err;
     }
     
