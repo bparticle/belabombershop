@@ -62,6 +62,9 @@ export const SnipcartWebhookRequestSchema = z.object({
   mode: z.string(),
   createdOn: z.string(),
   content: SnipcartWebhookContentSchema,
+  // Add fields that are at the root level for order.completed events
+  invoiceNumber: z.string().optional(),
+  email: z.string().optional(),
 });
 
 // Shipping rate request validation
