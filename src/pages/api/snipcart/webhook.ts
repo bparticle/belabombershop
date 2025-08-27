@@ -45,32 +45,37 @@ export default async function handler(
   if (!allowedEvents.includes(eventName))
     return res.status(400).json({ message: "This event is not permitted" });
 
-  // Debug environment variables
-  console.log('Environment check:', {
-    hasSecretKey: !!process.env.SNIPCART_SECRET_KEY,
-    hasPrintfulKey: !!process.env.PRINTFUL_API_KEY,
-    secretKeyLength: process.env.SNIPCART_SECRET_KEY?.length || 0,
-    printfulKeyLength: process.env.PRINTFUL_API_KEY?.length || 0
-  });
-  
-  // Temporarily skip token verification for testing
-  console.log('Token verification skipped for testing');
-  
-  // if (!token) return res.status(401).json({ message: "Not Authorized" });
+  // Verify webhook token with detailed error handling
+  if (!token) {
+    console.error('Missing webhook token');
+    return res.status(401).json({ 
+      message: "Not Authorized - Missing webhook token",
+      error: "x-snipcart-requesttoken header is required"
+    });
+  }
 
-  // try {
-  //   const verifyToken = await fetch(
-  //     `https://app.snipcart.com/api/requestvalidation/${token}`
-  //   );
+  try {
+    console.log('Verifying webhook token...');
+    const verifyToken = await fetch(
+      `https://app.snipcart.com/api/requestvalidation/${token}`
+    );
 
-  //   if (!verifyToken.ok)
-  //     return res.status(401).json({ message: "Not Authorized" });
-  // } catch (err) {
-  //   console.error('Webhook verification error:', err);
-  //   return res
-  //     .status(500)
-  //     .json({ message: "Unable to verify Snipcart webhook token" });
-  // }
+    if (!verifyToken.ok) {
+      console.error('Token verification failed:', verifyToken.status, verifyToken.statusText);
+      return res.status(401).json({ 
+        message: "Not Authorized - Invalid webhook token",
+        error: `Token verification failed: ${verifyToken.status} ${verifyToken.statusText}`
+      });
+    }
+    
+    console.log('Webhook token verified successfully');
+  } catch (err) {
+    console.error('Webhook verification error:', err);
+    return res.status(500).json({ 
+      message: "Unable to verify Snipcart webhook token",
+      error: err instanceof Error ? err.message : 'Unknown verification error'
+    });
+  }
 
   try {
     switch (eventName) {
