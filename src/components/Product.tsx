@@ -104,22 +104,24 @@ const Product: React.FC<ProductProps> = ({ product }) => {
         />
         
         <div className="flex gap-2">
-                     <button
-             className="snipcart-add-item flex-1 transition flex-shrink-0 py-3 px-6 border border-gray-300 hover:border-transparent shadow-sm text-sm font-medium bg-white text-gray-900 focus:text-white hover:bg-blue-600 hover:text-white focus:bg-blue-600 focus:outline-none rounded disabled:opacity-50 disabled:cursor-not-allowed"
-             data-item-id={activeVariantExternalId}
-             data-item-price={activeVariant?.retail_price || 0}
-             data-item-url={`/api/products/${activeVariantExternalId}`}
-             data-item-description={`${name} - ${activeVariant?.color || ''} ${activeVariant?.size || ''}`}
-             data-item-image={activeVariantFile?.preview_url && activeVariantFile.preview_url.trim() !== '' && activeVariantFile.preview_url.startsWith('http') ? activeVariantFile.preview_url : ''}
-             data-item-name={`${name} (${activeVariant?.color || ''} ${activeVariant?.size || ''})`}
-             data-item-custom1-value={activeVariant?.color || ''}
-             data-item-custom1-name="Color"
-             data-item-custom2-value={activeVariant?.size || ''}
-             data-item-custom2-name="Size"
-             disabled={!activeVariant || !activeVariant.retail_price}
-           >
-             {activeVariant && activeVariant.retail_price ? 'Add to Cart' : 'Unavailable'}
-           </button>
+          {activeVariant && activeVariantExternalId && (
+            <button
+              className="snipcart-add-item flex-1 transition flex-shrink-0 py-3 px-6 border border-gray-300 hover:border-transparent shadow-sm text-sm font-medium bg-white text-gray-900 focus:text-white hover:bg-blue-600 hover:text-white focus:bg-blue-600 focus:outline-none rounded disabled:opacity-50 disabled:cursor-not-allowed"
+              data-item-id={activeVariantExternalId}
+              data-item-price={activeVariant?.retail_price ? parseFloat(activeVariant.retail_price) : 0}
+              data-item-url={`/product/${id}`}
+              data-item-description={`${name} - ${activeVariant?.color || ''} ${activeVariant?.size || ''}`}
+              data-item-image={activeVariantFile?.preview_url && activeVariantFile.preview_url.trim() !== '' ? activeVariantFile.preview_url : ''}
+              data-item-name={`${name} (${activeVariant?.color || ''} ${activeVariant?.size || ''})`}
+              data-item-custom1-value={activeVariant?.color || ''}
+              data-item-custom1-name="Color"
+              data-item-custom2-value={activeVariant?.size || ''}
+              data-item-custom2-name="Size"
+              disabled={!activeVariant.retail_price}
+            >
+              {activeVariant.retail_price ? 'Add to Cart' : 'Unavailable'}
+            </button>
+          )}
         </div>
       </div>
     </article>

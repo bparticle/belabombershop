@@ -326,22 +326,24 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
              </div>
 
                          {/* Add to Cart Button */}
-             <button
-               className="snipcart-add-item w-full transition flex-shrink-0 py-4 px-6 border border-transparent shadow-sm text-lg font-medium bg-blue-600 text-white hover:bg-blue-700 focus:bg-blue-700 focus:outline-none rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-               data-item-id={activeVariantExternalId}
-               data-item-price={activeVariant?.retail_price || 0}
-               data-item-url={`/api/products/${activeVariantExternalId}`}
-               data-item-description={`${name} - ${activeVariant?.color || ''} ${activeVariant?.size || ''}`}
-               data-item-image={activeVariantFile?.preview_url && activeVariantFile.preview_url.trim() !== '' && activeVariantFile.preview_url.startsWith('http') ? activeVariantFile.preview_url : ''}
-               data-item-name={`${name} (${activeVariant?.color || ''} ${activeVariant?.size || ''})`}
-               data-item-custom1-value={activeVariant?.color || ''}
-               data-item-custom1-name="Color"
-               data-item-custom2-value={activeVariant?.size || ''}
-               data-item-custom2-name="Size"
-               disabled={!activeVariant || !activeVariant.retail_price}
-             >
-               {activeVariant && activeVariant.retail_price ? `Add to Cart - €${activeVariant.retail_price}` : 'Unavailable'}
-             </button>
+             {activeVariant && activeVariantExternalId && (
+                               <button
+                  className="snipcart-add-item w-full transition flex-shrink-0 py-4 px-6 border border-transparent shadow-sm text-lg font-medium bg-blue-600 text-white hover:bg-blue-700 focus:bg-blue-700 focus:outline-none rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  data-item-id={activeVariantExternalId}
+                  data-item-price={activeVariant?.retail_price ? parseFloat(activeVariant.retail_price) : 0}
+                  data-item-url={`/product/${id}`}
+                  data-item-description={`${name} - ${activeVariant?.color || ''} ${activeVariant?.size || ''}`}
+                  data-item-image={activeVariantFile?.preview_url && activeVariantFile.preview_url.trim() !== '' ? activeVariantFile.preview_url : ''}
+                  data-item-name={`${name} (${activeVariant?.color || ''} ${activeVariant?.size || ''})`}
+                  data-item-custom1-value={activeVariant?.color || ''}
+                  data-item-custom1-name="Color"
+                  data-item-custom2-value={activeVariant?.size || ''}
+                  data-item-custom2-name="Size"
+                  disabled={!activeVariant.retail_price}
+                >
+                 {activeVariant.retail_price ? `Add to Cart - €${activeVariant.retail_price}` : 'Unavailable'}
+               </button>
+             )}
 
                          {/* Back to Products */}
              <div className="pt-4 border-t border-gray-200">
