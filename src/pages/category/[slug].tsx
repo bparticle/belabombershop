@@ -163,18 +163,27 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
       return { notFound: true };
     }
 
-    // Fetch all products
+    // Fetch all products (limited for build performance)
     const { result: productIds } = await printful.get("sync/products");
     
+    // Limit products to prevent build timeouts
+    const limitedProductIds = productIds.slice(0, 20);
+    
     const allProducts = await Promise.all(
-      productIds.map(async ({ id }: { id: string }) => {
-        const productData = await printful.get(`sync/products/${id}`);
-        return productData;
+      limitedProductIds.map(async ({ id }: { id: string }) => {
+        try {
+          const productData = await printful.get(`sync/products/${id}`);
+          return productData;
+        } catch (error) {
+          console.error(`Error fetching product ${id}:`, error);
+          return null;
+        }
       })
     );
 
     // Process products and filter by category
     const products: PrintfulProduct[] = allProducts
+      .filter(Boolean) // Remove null results
       .map(({ result: { sync_product, sync_variants } }) => {
         // Determine product category
         const productCategory = determineProductCategory({

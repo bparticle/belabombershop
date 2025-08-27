@@ -32,22 +32,28 @@ export const getStaticProps: GetStaticProps = async () => {
     
     console.log('Product IDs:', productIds);
 
+    // Limit the number of products to prevent build timeouts
+    const limitedProductIds = productIds.slice(0, 10); // Only fetch first 10 products for build
+
     const allProducts = await Promise.all(
-      productIds.map(async ({ id }: { id: string }) => {
-        const productData = await printful.get(`sync/products/${id}`);
-        console.log(`Product ${id} data:`, JSON.stringify(productData.result, null, 2));
-        return productData;
+      limitedProductIds.map(async ({ id }: { id: string }) => {
+        try {
+          const productData = await printful.get(`sync/products/${id}`);
+          console.log(`Product ${id} data fetched successfully`);
+          return productData;
+        } catch (error) {
+          console.error(`Error fetching product ${id}:`, error);
+          return null;
+        }
       })
     );
 
-    const products: PrintfulProduct[] = allProducts.map(
-      ({ result: { sync_product, sync_variants } }) => {
-        console.log(`Processing product ${sync_product.id}:`, {
-          product: sync_product,
-          variants: sync_variants
-        });
+    const products: PrintfulProduct[] = allProducts
+      .filter(Boolean) // Remove null results
+      .map(({ result: { sync_product, sync_variants } }) => {
+        console.log(`Processing product ${sync_product.id}`);
 
-                         // Determine product category based on metadata, tags, and name
+        // Determine product category based on metadata, tags, and name
         const productCategory = determineProductCategory({
           name: sync_product.name || '',
           tags: sync_product.tags || [],
@@ -83,15 +89,16 @@ export const getStaticProps: GetStaticProps = async () => {
 
         // Enhance product with local data
         return enhanceProductData(baseProduct);
-      }
-    );
+      });
 
-    console.log('Final processed products:', JSON.stringify(products, null, 2));
+    console.log(`Successfully processed ${products.length} products`);
 
     return {
       props: {
         products: shuffle(products),
       },
+      // Revalidate every 5 minutes to keep data fresh
+      revalidate: 300,
     };
   } catch (error: any) {
     console.error('Error in getStaticProps:', error);
@@ -100,6 +107,8 @@ export const getStaticProps: GetStaticProps = async () => {
         products: [],
         error: error?.message || 'An error occurred'
       },
+      // Revalidate after 1 minute on error
+      revalidate: 60,
     };
   }
 };

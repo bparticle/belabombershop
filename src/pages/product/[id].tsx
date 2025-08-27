@@ -466,7 +466,8 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
       props: {
         product,
       },
-      revalidate: 60, // Revalidate every minute
+      // Revalidate every 10 minutes to keep data fresh
+      revalidate: 600,
     };
   } catch (error) {
     console.error('Error in getStaticProps:', error);
