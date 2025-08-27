@@ -84,6 +84,9 @@ export interface SnipcartRequest extends NextApiRequest {
     mode: string;
     createdOn: string;
     content: SnipcartWebhookContent;
+    // Add fields that are at the root level for order.completed events
+    invoiceNumber?: string;
+    email?: string;
   };
 }
 

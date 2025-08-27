@@ -47,8 +47,8 @@ export default async function handler(
       case "order.completed":
         // Extract data from the correct locations in the Snipcart payload
         const orderData = {
-          invoiceNumber: req.body.invoiceNumber,
-          email: req.body.email,
+          invoiceNumber: req.body.invoiceNumber || '',
+          email: req.body.email || '',
           shippingAddress: content.shippingAddress,
           items: content.items,
           shippingRateUserDefinedId: content.shippingRateUserDefinedId,
