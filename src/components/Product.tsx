@@ -123,6 +123,31 @@ const Product: React.FC<ProductProps> = ({ product }) => {
             </button>
           )}
         </div>
+
+        {/* Hidden Snipcart elements for all variants - required for cart validation */}
+        <div style={{ display: 'none' }}>
+          {variants.map((variant) => {
+            const variantFile = variant.files?.find(
+              ({ type }) => type === "preview"
+            );
+            return (
+              <div
+                key={variant.external_id}
+                className="snipcart-add-item"
+                data-item-id={variant.external_id}
+                data-item-price={variant.retail_price ? parseFloat(variant.retail_price) : 0}
+                data-item-url={`/product/${id}`}
+                data-item-description={`${name} - ${variant.color || ''} ${variant.size || ''}`}
+                data-item-image={variantFile?.preview_url && variantFile.preview_url.trim() !== '' ? variantFile.preview_url : ''}
+                data-item-name={`${name} (${variant.color || ''} ${variant.size || ''})`}
+                data-item-custom1-value={variant.color || ''}
+                data-item-custom1-name="Color"
+                data-item-custom2-value={variant.size || ''}
+                data-item-custom2-name="Size"
+              />
+            );
+          })}
+        </div>
       </div>
     </article>
   );
