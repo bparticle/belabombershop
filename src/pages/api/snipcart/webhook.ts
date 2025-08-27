@@ -9,6 +9,14 @@ export default async function handler(
   req: SnipcartRequest,
   res: NextApiResponse
 ) {
+  console.log('Webhook received:', {
+    method: req.method,
+    eventName: req.body?.eventName,
+    hasContent: !!req.body?.content,
+    hasInvoiceNumber: !!req.body?.invoiceNumber,
+    hasEmail: !!req.body?.email
+  });
+
   const allowedEvents: SnipcartWebhookEvent[] = [
     "order.completed",
     "customauth:customer_updated",
@@ -16,8 +24,19 @@ export default async function handler(
 
   const token = req.headers["x-snipcart-requesttoken"];
 
-  // Validate request body
-  const validatedBody = validateData(SnipcartWebhookRequestSchema, req.body);
+  // Validate request body with error handling
+  let validatedBody;
+  try {
+    validatedBody = validateData(SnipcartWebhookRequestSchema, req.body);
+  } catch (err) {
+    console.error('Validation error:', err);
+    return res.status(400).json({ 
+      message: "Validation failed",
+      error: err instanceof Error ? err.message : 'Unknown validation error',
+      receivedData: req.body
+    });
+  }
+  
   const { eventName, content } = validatedBody;
 
   if (req.method !== "POST")

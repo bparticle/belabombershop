@@ -33,39 +33,22 @@ export const SnipcartWebhookEventSchema = z.enum([
 
 // Snipcart webhook content validation
 export const SnipcartWebhookContentSchema = z.object({
-  discounts: z.record(z.any()).optional(),
-  items: z.array(z.object({
-    id: z.string(),
-    quantity: z.number().positive(),
-    price: z.number().positive(),
-  }).passthrough()).optional(),
-  shippingAddress: z.object({
-    fullName: z.string(),
-    firstName: z.string().optional(),
-    name: z.string(),
-    company: z.string().optional(),
-    address1: z.string(),
-    address2: z.string().optional(),
-    fullAddress: z.string(),
-    city: z.string(),
-    country: z.string(),
-    postalCode: z.string(),
-    province: z.string(),
-    phone: z.string().optional(),
-  }).optional(),
+  discounts: z.any().optional(),
+  items: z.array(z.any()).optional(),
+  shippingAddress: z.any().optional(),
   shippingRateUserDefinedId: z.string().optional(),
 }).passthrough();
 
 // Snipcart webhook request validation
 export const SnipcartWebhookRequestSchema = z.object({
   eventName: SnipcartWebhookEventSchema,
-  mode: z.string(),
-  createdOn: z.string(),
-  content: SnipcartWebhookContentSchema,
+  mode: z.string().optional(),
+  createdOn: z.string().optional(),
+  content: SnipcartWebhookContentSchema.passthrough(),
   // Add fields that are at the root level for order.completed events
   invoiceNumber: z.string().optional(),
   email: z.string().optional(),
-});
+}).passthrough();
 
 // Shipping rate request validation
 export const ShippingRateRequestSchema = z.object({
