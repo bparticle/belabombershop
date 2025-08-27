@@ -67,6 +67,14 @@ export default async function handler(
       });
     }
     
-    res.status(500).json({ message: "Something went wrong" });
+    // Return the actual error for debugging
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    const errorStack = err instanceof Error ? err.stack : '';
+    
+    res.status(500).json({ 
+      message: "Something went wrong",
+      error: errorMessage,
+      stack: errorStack
+    });
   }
 }

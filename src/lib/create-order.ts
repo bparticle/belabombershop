@@ -9,6 +9,10 @@ const createOrder = async ({
   items,
   shippingRateUserDefinedId,
 }: SnipcartWebhookContent) => {
+  console.log('Creating order for:', invoiceNumber);
+  console.log('Email:', email);
+  console.log('Items:', items);
+  
   const recipient = {
     ...(shippingAddress?.name && { name: shippingAddress.name }),
     ...(shippingAddress?.address1 && { address1: shippingAddress.address1 }),
@@ -23,6 +27,8 @@ const createOrder = async ({
     email,
   };
 
+  console.log('Recipient:', recipient);
+
   const printfulItems: PrintfulShippingItem[] = (items || []).map(
     (item: any): PrintfulShippingItem => ({
       external_variant_id: item.id,
@@ -30,13 +36,20 @@ const createOrder = async ({
     })
   );
 
-  const { result } = await printful.post("orders", {
+  console.log('Printful items:', printfulItems);
+
+  const orderData = {
     external_id: invoiceNumber,
     recipient,
     items: printfulItems,
     shipping: shippingRateUserDefinedId,
-  });
+  };
 
+  console.log('Sending to Printful:', orderData);
+
+  const { result } = await printful.post("orders", orderData);
+
+  console.log('Printful response:', result);
   return result;
 };
 
