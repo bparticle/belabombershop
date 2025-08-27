@@ -85,6 +85,7 @@ export const TaxCalculationRequestSchema = z.object({
     items: z.array(z.object({
       id: z.string(),
       quantity: z.number().positive(),
+      price: z.number().positive(),
     })).min(1, 'At least one item is required'),
     shippingAddress: z.object({
       address1: z.string().optional(),
