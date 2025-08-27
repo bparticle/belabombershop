@@ -45,7 +45,7 @@ export default async function handler(
   if (!allowedEvents.includes(eventName))
     return res.status(400).json({ message: "This event is not permitted" });
 
-  // Verify webhook token with detailed error handling
+  // Verify webhook token using Snipcart's Basic Authentication
   if (!token) {
     console.error('Missing webhook token');
     return res.status(401).json({ 
@@ -54,11 +54,37 @@ export default async function handler(
     });
   }
 
+  const secretKey = process.env.SNIPCART_SECRET_KEY;
+  if (!secretKey) {
+    console.error('Missing SNIPCART_SECRET_KEY environment variable');
+    return res.status(500).json({ 
+      message: "Server configuration error",
+      error: "SNIPCART_SECRET_KEY not configured"
+    });
+  }
+
   try {
-    console.log('Verifying webhook token...');
+    console.log('Verifying webhook token with Basic Auth...');
+    
+    // Create Basic Auth header as per Snipcart documentation
+    const credentials = `${secretKey}:`;
+    const base64Credentials = Buffer.from(credentials).toString('base64');
+    
     const verifyToken = await fetch(
-      `https://app.snipcart.com/api/requestvalidation/${token}`
+      `https://app.snipcart.com/api/requestvalidation/${token}`,
+      {
+        headers: {
+          'Authorization': `Basic ${base64Credentials}`,
+          'Accept': 'application/json'
+        }
+      }
     );
+
+    console.log('Verification response:', {
+      status: verifyToken.status,
+      statusText: verifyToken.statusText,
+      ok: verifyToken.ok
+    });
 
     if (!verifyToken.ok) {
       console.error('Token verification failed:', verifyToken.status, verifyToken.statusText);
