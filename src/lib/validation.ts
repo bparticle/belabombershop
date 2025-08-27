@@ -34,7 +34,11 @@ export const SnipcartWebhookEventSchema = z.enum([
 // Snipcart webhook content validation
 export const SnipcartWebhookContentSchema = z.object({
   discounts: z.record(z.any()).optional(),
-  items: z.record(z.any()).optional(),
+  items: z.array(z.object({
+    id: z.string(),
+    quantity: z.number().positive(),
+    price: z.number().positive(),
+  }).passthrough()).optional(),
   shippingAddress: z.object({
     fullName: z.string(),
     firstName: z.string().optional(),
