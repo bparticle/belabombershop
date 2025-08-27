@@ -93,43 +93,67 @@ export default async function handler(
       items,
     });
 
-         // Check if VAT is actually calculated
-     console.log('🧮 Checking VAT calculation:', {
-       hasCosts: !!result.costs,
-       vatAmount: result.costs?.vat,
-       vatGreaterThanZero: result.costs?.vat > 0
+              // Calculate VAT based on retail prices, not Printful's wholesale costs
+     // Get the total retail value from cart items
+     const retailSubtotal = cartItems.reduce((total, item) => {
+       return total + (item.price * item.quantity);
+     }, 0);
+     
+     console.log('🧮 Retail calculation:', {
+       retailSubtotal: retailSubtotal,
+       cartItems: cartItems.map(item => ({ id: item.id, price: item.price, quantity: item.quantity }))
      });
      
-     if (result.costs && result.costs.vat > 0) {
-      // Debug: Log what Printful is returning
-      console.log('🧮 Printful costs data:', {
-        vat: result.costs.vat,
-        subtotal: result.costs.subtotal,
-        total: result.costs.total,
-        shipping: result.costs.shipping
-      });
-      
-             // Calculate the tax rate based on the VAT amount and subtotal
-       // Use the actual subtotal from Printful response
-       const subtotal = result.costs.subtotal;
-       const taxRate = subtotal > 0 ? (result.costs.vat / subtotal) * 100 : 0;
-      
-      console.log('🧮 Tax calculation:', {
-        vat: result.costs.vat,
-        subtotal: subtotal,
-        calculatedRate: taxRate,
-        roundedRate: Math.round(taxRate)
-      });
-      
-      res.status(200).json({
-        taxes: [
-          {
-            name: "VAT",
-            amount: result.costs.vat,
-            rate: Math.round(taxRate), // Round to whole number for percentage
-          },
-        ],
-      });
+     // Determine VAT rate based on country
+     let vatRate = 0;
+     const country = recipient.country_code;
+     
+     // Common EU VAT rates (you may need to adjust based on your business requirements)
+     const vatRates: { [key: string]: number } = {
+       'GB': 20, // UK VAT
+       'BE': 21, // Belgium VAT
+       'DE': 19, // Germany VAT
+       'FR': 20, // France VAT
+       'NL': 21, // Netherlands VAT
+       'IT': 22, // Italy VAT
+       'ES': 21, // Spain VAT
+       // Add more countries as needed
+     };
+     
+     vatRate = vatRates[country] || 0;
+     
+     console.log('🧮 VAT rate lookup:', {
+       country: country,
+       vatRate: vatRate,
+       availableRates: Object.keys(vatRates)
+     });
+     
+     if (vatRate > 0) {
+       // Calculate VAT amount based on retail price
+       const vatAmount = (retailSubtotal * vatRate) / 100;
+       
+       console.log('🧮 VAT calculation:', {
+         retailSubtotal: retailSubtotal,
+         vatRate: vatRate,
+         vatAmount: vatAmount
+       });
+       
+       res.status(200).json({
+         taxes: [
+           {
+             name: "VAT",
+             amount: Math.round(vatAmount * 100) / 100, // Round to 2 decimal places
+             rate: vatRate,
+           },
+         ],
+       });
+     } else {
+       // No VAT applicable for this country
+       console.log('🧮 No VAT applicable for country:', country);
+       res.status(200).json({
+         taxes: [],
+       });
+     }
          } else {
        // No VAT applicable
        console.log('🧮 No VAT applicable - returning empty taxes array');
