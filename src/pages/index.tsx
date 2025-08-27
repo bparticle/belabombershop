@@ -30,7 +30,7 @@ export const getStaticProps: GetStaticProps = async () => {
   try {
     const { result: productIds } = await printful.get("sync/products");
     
-    console.log('Product IDs:', productIds);
+    // Product IDs fetched successfully
 
     // Limit the number of products to prevent build timeouts
     const limitedProductIds = productIds.slice(0, 10); // Only fetch first 10 products for build
@@ -39,7 +39,7 @@ export const getStaticProps: GetStaticProps = async () => {
       limitedProductIds.map(async ({ id }: { id: string }) => {
         try {
           const productData = await printful.get(`sync/products/${id}`);
-          console.log(`Product ${id} data fetched successfully`);
+          // Product data fetched successfully
           return productData;
         } catch (error) {
           console.error(`Error fetching product ${id}:`, error);
@@ -51,7 +51,7 @@ export const getStaticProps: GetStaticProps = async () => {
     const products: PrintfulProduct[] = allProducts
       .filter(Boolean) // Remove null results
       .map(({ result: { sync_product, sync_variants } }) => {
-        console.log(`Processing product ${sync_product.id}`);
+        // Processing product
 
         // Determine product category based on metadata, tags, and name
         const productCategory = determineProductCategory({
@@ -91,7 +91,7 @@ export const getStaticProps: GetStaticProps = async () => {
         return enhanceProductData(baseProduct);
       });
 
-    console.log(`Successfully processed ${products.length} products`);
+    // Successfully processed products
 
     return {
       props: {

@@ -26,13 +26,7 @@ export default async function handler(
   req: SnipcartRequest,
   res: NextApiResponse<Data | Error>
 ) {
-  console.log('🧮 Tax API called:', {
-    method: req.method,
-    eventName: req.body?.eventName,
-    hasItems: req.body?.content?.items?.length > 0,
-    hasAddress: !!req.body?.content?.shippingAddress,
-    timestamp: new Date().toISOString()
-  });
+  // Tax API called
 
   // Validate request body
   const validatedBody = validateData(TaxCalculationRequestSchema, req.body);
@@ -99,10 +93,7 @@ export default async function handler(
        return total + (item.price * item.quantity);
      }, 0);
      
-     console.log('🧮 Retail calculation:', {
-       retailSubtotal: retailSubtotal,
-       cartItems: cartItems.map(item => ({ id: item.id, price: item.price, quantity: item.quantity }))
-     });
+     // Retail calculation completed
      
      // Determine VAT rate based on country
      let vatRate = 0;
@@ -122,21 +113,13 @@ export default async function handler(
      
      vatRate = country ? (vatRates[country] || 0) : 0;
      
-     console.log('🧮 VAT rate lookup:', {
-       country: country,
-       vatRate: vatRate,
-       availableRates: Object.keys(vatRates)
-     });
+     // VAT rate lookup completed
      
      if (vatRate > 0) {
        // Calculate VAT amount based on retail price
        const vatAmount = (retailSubtotal * vatRate) / 100;
        
-       console.log('🧮 VAT calculation:', {
-         retailSubtotal: retailSubtotal,
-         vatRate: vatRate,
-         vatAmount: vatAmount
-       });
+       // VAT calculation completed
        
        res.status(200).json({
          taxes: [
@@ -149,13 +132,12 @@ export default async function handler(
        });
            } else {
         // No VAT applicable for this country
-        console.log('🧮 No VAT applicable for country:', country);
         res.status(200).json({
           taxes: [],
         });
       }
   } catch (err) {
-    console.error('Tax API error:', err);
+    // Tax API error occurred
     
     // Handle validation errors specifically
     if (err instanceof Error && err.message.includes('Validation failed')) {

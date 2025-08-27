@@ -14,9 +14,7 @@ export default async function handler(
     "customauth:customer_updated",
   ];
 
-  console.log(req.headers);
   const token = req.headers["x-snipcart-requesttoken"];
-  console.log(token);
 
   // Validate request body
   const validatedBody = validateData(SnipcartWebhookRequestSchema, req.body);

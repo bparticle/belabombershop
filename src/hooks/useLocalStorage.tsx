@@ -24,7 +24,7 @@ export default function useLocalStorage(
 
       window.localStorage.setItem(key, valueToStore);
     } catch (error) {
-      console.log(error);
+      // Silently handle localStorage errors
     }
   };
 
