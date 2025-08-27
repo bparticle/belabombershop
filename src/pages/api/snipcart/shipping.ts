@@ -71,12 +71,28 @@ export default async function handler(
     });
 
     res.status(200).json({
-      rates: result.map((rate: any) => ({
-        cost: rate.rate,
-        description: rate.name,
-        userDefinedId: rate.id,
-        guaranteedDaysToDelivery: rate.maxDeliveryDays,
-      })),
+      rates: result.map((rate: any) => {
+        // Map Printful shipping methods to standard Snipcart shipping method IDs
+        let userDefinedId = 'STANDARD';
+        
+        // Map based on shipping method name or type
+        if (rate.name.toLowerCase().includes('express') || rate.name.toLowerCase().includes('priority')) {
+          userDefinedId = 'EXPRESS';
+        } else if (rate.name.toLowerCase().includes('overnight') || rate.name.toLowerCase().includes('next day')) {
+          userDefinedId = 'OVERNIGHT';
+        } else if (rate.name.toLowerCase().includes('economy') || rate.name.toLowerCase().includes('ground')) {
+          userDefinedId = 'ECONOMY';
+        } else if (rate.name.toLowerCase().includes('flat') || rate.name.toLowerCase().includes('standard')) {
+          userDefinedId = 'STANDARD';
+        }
+
+        return {
+          cost: rate.rate,
+          description: rate.name,
+          userDefinedId: userDefinedId,
+          guaranteedDaysToDelivery: rate.maxDeliveryDays,
+        };
+      }),
     });
   } catch (err) {
     console.error('Shipping API error:', err);
