@@ -8,7 +8,7 @@
 
 interface EnvironmentVariables {
   PRINTFUL_API_KEY: string;
-  SNIPCART_PUBLIC_KEY?: string;
+  NEXT_PUBLIC_SNIPCART_API_KEY?: string;
   SNIPCART_SECRET_KEY?: string;
   NODE_ENV: 'development' | 'production' | 'test';
 }
@@ -24,7 +24,7 @@ export function validateEnvironmentVariables(): EnvironmentVariables {
   };
 
   const optionalVars = {
-    SNIPCART_PUBLIC_KEY: process.env.SNIPCART_PUBLIC_KEY,
+    NEXT_PUBLIC_SNIPCART_API_KEY: process.env.NEXT_PUBLIC_SNIPCART_API_KEY,
     SNIPCART_SECRET_KEY: process.env.SNIPCART_SECRET_KEY,
   };
 

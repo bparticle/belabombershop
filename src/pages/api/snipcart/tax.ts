@@ -26,6 +26,14 @@ export default async function handler(
   req: SnipcartRequest,
   res: NextApiResponse<Data | Error>
 ) {
+  console.log('🧮 Tax API called:', {
+    method: req.method,
+    eventName: req.body?.eventName,
+    hasItems: req.body?.content?.items?.length > 0,
+    hasAddress: !!req.body?.content?.shippingAddress,
+    timestamp: new Date().toISOString()
+  });
+
   // Validate request body
   const validatedBody = validateData(TaxCalculationRequestSchema, req.body);
   const { eventName, content } = validatedBody;
@@ -85,15 +93,42 @@ export default async function handler(
       items,
     });
 
-    res.status(200).json({
-      taxes: [
-        {
-          name: "VAT",
-          amount: result.costs.vat,
-          rate: 0,
-        },
-      ],
-    });
+    // Check if VAT is actually calculated
+    if (result.costs && result.costs.vat > 0) {
+      // Debug: Log what Printful is returning
+      console.log('🧮 Printful costs data:', {
+        vat: result.costs.vat,
+        subtotal: result.costs.subtotal,
+        total: result.costs.total,
+        shipping: result.costs.shipping
+      });
+      
+      // Calculate the tax rate based on the VAT amount and subtotal
+      const subtotal = result.costs.subtotal || (result.costs.total - result.costs.vat);
+      const taxRate = subtotal > 0 ? (result.costs.vat / subtotal) * 100 : 0;
+      
+      console.log('🧮 Tax calculation:', {
+        vat: result.costs.vat,
+        subtotal: subtotal,
+        calculatedRate: taxRate,
+        roundedRate: Math.round(taxRate)
+      });
+      
+      res.status(200).json({
+        taxes: [
+          {
+            name: "VAT",
+            amount: result.costs.vat,
+            rate: Math.round(taxRate), // Round to whole number for percentage
+          },
+        ],
+      });
+    } else {
+      // No VAT applicable
+      res.status(200).json({
+        taxes: [],
+      });
+    }
   } catch (err) {
     console.error('Tax API error:', err);
     
