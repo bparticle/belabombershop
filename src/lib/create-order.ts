@@ -42,7 +42,8 @@ const createOrder = async ({
     external_id: invoiceNumber,
     recipient,
     items: printfulItems,
-    shipping: shippingRateUserDefinedId,
+    // Remove shipping method for now - let Printful use default
+    // shipping: shippingRateUserDefinedId,
   };
 
   console.log('Sending to Printful:', orderData);
