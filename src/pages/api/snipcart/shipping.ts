@@ -72,19 +72,9 @@ export default async function handler(
 
     res.status(200).json({
       rates: result.map((rate: any) => {
-        // Map Printful shipping methods to standard Snipcart shipping method IDs
-        let userDefinedId = 'STANDARD';
-        
-        // Map based on shipping method name or type
-        if (rate.name.toLowerCase().includes('express') || rate.name.toLowerCase().includes('priority')) {
-          userDefinedId = 'EXPRESS';
-        } else if (rate.name.toLowerCase().includes('overnight') || rate.name.toLowerCase().includes('next day')) {
-          userDefinedId = 'OVERNIGHT';
-        } else if (rate.name.toLowerCase().includes('economy') || rate.name.toLowerCase().includes('ground')) {
-          userDefinedId = 'ECONOMY';
-        } else if (rate.name.toLowerCase().includes('flat') || rate.name.toLowerCase().includes('standard')) {
-          userDefinedId = 'STANDARD';
-        }
+        // Use Printful's rate ID as the unique shipping method identifier
+        // This ensures each shipping method has a unique ID that Snipcart can validate
+        const userDefinedId = `RATE_${rate.id}`;
 
         return {
           cost: rate.rate,
