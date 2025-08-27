@@ -147,20 +147,13 @@ export default async function handler(
            },
          ],
        });
-     } else {
-       // No VAT applicable for this country
-       console.log('🧮 No VAT applicable for country:', country);
-       res.status(200).json({
-         taxes: [],
-       });
-     }
-         } else {
-       // No VAT applicable
-       console.log('🧮 No VAT applicable - returning empty taxes array');
-       res.status(200).json({
-         taxes: [],
-       });
-     }
+           } else {
+        // No VAT applicable for this country
+        console.log('🧮 No VAT applicable for country:', country);
+        res.status(200).json({
+          taxes: [],
+        });
+      }
   } catch (err) {
     console.error('Tax API error:', err);
     
