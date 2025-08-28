@@ -23,48 +23,56 @@ The Product Enhancements System is a hybrid solution that combines Printful's li
 
 ## Getting Started
 
-### 1. Find Your Product External IDs
+### Step 1: Get Your Product Data
 
-First, you need to get the `external_id` for each product from Printful:
+First, you need to get the external IDs for your products and variants:
 
-1. **Go to your Printful Dashboard**
-2. **Navigate to a product**
-3. **Look for the "External ID" field** (usually in the product details)
-4. **Copy this ID** - you'll need it for the enhancement system
+```bash
+npm run getVariants
+```
 
-### 2. Add Product Enhancements
+This script will:
+- Fetch all products from your Printful store
+- Display each product with all its variants
+- Show external IDs, colors, and sizes for each variant
+- Generate enhancement templates you can copy and customize
 
-Edit `src/lib/product-enhancements.ts` and add your product enhancements:
+### Step 2: Add Product Enhancements
 
+1. Copy the external ID for the product you want to enhance
+2. Open `src/lib/product-enhancements.ts`
+3. Add a new entry to the `PRODUCT_ENHANCEMENTS` object using the external ID as the key
+4. Fill in the enhancement data
+
+Example:
 ```typescript
-export const PRODUCT_ENHANCEMENTS: Record<string, ProductEnhancement> = {
-  'your-product-external-id': {
-    description: 'Your detailed product description here...',
-    shortDescription: 'Brief description for product cards',
-    features: [
-      'Feature 1',
-      'Feature 2',
-      'Feature 3'
-    ],
-    specifications: {
-      material: '100% Cotton',
-      weight: '180 GSM',
-      fit: 'Regular fit',
-      care: 'Machine wash cold'
-    },
-    additionalImages: [
-      {
-        url: '/images/products/your-product-detail.jpg',
-        alt: 'Product detail view',
-        caption: 'Close-up of the design'
-      }
-    ],
-    seo: {
-      keywords: ['keyword1', 'keyword2', 'keyword3'],
-      metaDescription: 'SEO-optimized description'
+'68ac95d1455845': {
+  description: 'Your custom product description here...',
+  shortDescription: 'Short description for product cards',
+  defaultVariant: '68ac95d1455b15', // Set your preferred default variant
+  features: [
+    'Premium cotton fabric',
+    'Durable print quality',
+    'Comfortable fit'
+  ],
+  specifications: {
+    material: '100% Cotton',
+    weight: '180 GSM',
+    fit: 'Regular fit',
+    printMethod: 'Direct to Garment (DTG)'
+  },
+  additionalImages: [
+    {
+      url: '/images/products/your-image.jpg',
+      alt: 'Product detail view',
+      caption: 'Close-up of the design'
     }
+  ],
+  seo: {
+    keywords: ['your', 'keywords', 'here'],
+    metaDescription: 'SEO-optimized product description'
   }
-};
+}
 ```
 
 ## Enhancement Structure

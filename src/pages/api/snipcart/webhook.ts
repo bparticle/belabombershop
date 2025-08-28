@@ -9,14 +9,6 @@ export default async function handler(
   req: SnipcartRequest,
   res: NextApiResponse
 ) {
-  console.log('Webhook received:', {
-    method: req.method,
-    eventName: req.body?.eventName,
-    hasContent: !!req.body?.content,
-    hasInvoiceNumber: !!req.body?.invoiceNumber,
-    hasEmail: !!req.body?.email
-  });
-
   const allowedEvents: SnipcartWebhookEvent[] = [
     "order.completed",
     "customauth:customer_updated",
@@ -29,11 +21,9 @@ export default async function handler(
   try {
     validatedBody = validateData(SnipcartWebhookRequestSchema, req.body);
   } catch (err) {
-    console.error('Validation error:', err);
     return res.status(400).json({ 
       message: "Validation failed",
-      error: err instanceof Error ? err.message : 'Unknown validation error',
-      receivedData: req.body
+      error: err instanceof Error ? err.message : 'Unknown validation error'
     });
   }
   
@@ -47,25 +37,19 @@ export default async function handler(
 
   // Verify webhook token using Snipcart's Basic Authentication
   if (!token) {
-    console.error('Missing webhook token');
     return res.status(401).json({ 
-      message: "Not Authorized - Missing webhook token",
-      error: "x-snipcart-requesttoken header is required"
+      message: "Not Authorized - Missing webhook token"
     });
   }
 
   const secretKey = process.env.SNIPCART_SECRET_KEY;
   if (!secretKey) {
-    console.error('Missing SNIPCART_SECRET_KEY environment variable');
     return res.status(500).json({ 
-      message: "Server configuration error",
-      error: "SNIPCART_SECRET_KEY not configured"
+      message: "Server configuration error"
     });
   }
 
   try {
-    console.log('Verifying webhook token with Basic Auth...');
-    
     // Create Basic Auth header as per Snipcart documentation
     const credentials = `${secretKey}:`;
     const base64Credentials = Buffer.from(credentials).toString('base64');
@@ -80,26 +64,14 @@ export default async function handler(
       }
     );
 
-    console.log('Verification response:', {
-      status: verifyToken.status,
-      statusText: verifyToken.statusText,
-      ok: verifyToken.ok
-    });
-
     if (!verifyToken.ok) {
-      console.error('Token verification failed:', verifyToken.status, verifyToken.statusText);
       return res.status(401).json({ 
-        message: "Not Authorized - Invalid webhook token",
-        error: `Token verification failed: ${verifyToken.status} ${verifyToken.statusText}`
+        message: "Not Authorized - Invalid webhook token"
       });
     }
-    
-    console.log('Webhook token verified successfully');
   } catch (err) {
-    console.error('Webhook verification error:', err);
     return res.status(500).json({ 
-      message: "Unable to verify Snipcart webhook token",
-      error: err instanceof Error ? err.message : 'Unknown verification error'
+      message: "Unable to verify Snipcart webhook token"
     });
   }
 
@@ -111,18 +83,13 @@ export default async function handler(
           invoiceNumber: req.body.invoiceNumber || '',
           email: req.body.email || '',
           shippingAddress: content.shippingAddress,
-          items: content.items,
-          shippingRateUserDefinedId: content.shippingRateUserDefinedId,
+          items: content.items || [],
+          shippingRateUserDefinedId: content.shippingRateUserDefinedId || 'standard',
         };
-        console.log('Extracted order data:', orderData);
         
         try {
           await createOrder(orderData);
-          console.log('Order created successfully');
         } catch (orderError) {
-          console.error('createOrder error:', orderError);
-          console.error('createOrder error type:', typeof orderError);
-          console.error('createOrder error keys:', Object.keys(orderError || {}));
           throw orderError;
         }
         break;
@@ -136,11 +103,6 @@ export default async function handler(
 
     res.status(200).json({ message: "Done" });
   } catch (err) {
-    console.error('Webhook handler error:', err);
-    console.error('Error type:', typeof err);
-    console.error('Error constructor:', err?.constructor?.name);
-    console.error('Error stringified:', JSON.stringify(err, null, 2));
-    
     // Handle validation errors specifically
     if (err instanceof Error && err.message.includes('Validation failed')) {
       return res.status(400).json({ 
@@ -149,27 +111,9 @@ export default async function handler(
       });
     }
     
-    // Return the actual error for debugging
-    let errorMessage = 'Unknown error';
-    let errorStack = '';
-    let errorDetails = {};
-    
-    if (err instanceof Error) {
-      errorMessage = err.message;
-      errorStack = err.stack || '';
-    } else if (typeof err === 'string') {
-      errorMessage = err;
-    } else if (err && typeof err === 'object') {
-      const errorObj = err as any;
-      errorMessage = errorObj.message || errorObj.error || 'Object error';
-      errorDetails = err;
-    }
-    
+    // Return generic error for security
     res.status(500).json({ 
-      message: "Something went wrong",
-      error: errorMessage,
-      stack: errorStack,
-      details: errorDetails
+      message: "Something went wrong"
     });
   }
 }

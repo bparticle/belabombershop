@@ -4,5 +4,6 @@ node_modules
 .env
 !.env.local.example
 
-# Test files
-tests/
+# Build outputs
+dist/
+build/

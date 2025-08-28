@@ -51,6 +51,11 @@ export function validateEnvironmentVariables(): EnvironmentVariables {
     throw new Error('PRINTFUL_API_KEY must be a non-empty string');
   }
 
+  // Require SNIPCART_SECRET_KEY in production
+  if (requiredVars.NODE_ENV === 'production' && !optionalVars.SNIPCART_SECRET_KEY) {
+    throw new Error('SNIPCART_SECRET_KEY is required in production for webhook security');
+  }
+
   return {
     ...requiredVars,
     ...optionalVars,

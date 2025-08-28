@@ -232,34 +232,6 @@ export function enhanceProductData(printfulProduct: any): any {
 }
 
 /**
- * Debug utility: Log all variants for a product to help set default variants
- * @param product - The product data
- */
-export function debugProductVariants(product: any): void {
-  console.log(`Product: ${product.name} (${product.external_id})`);
-  console.log('Available variants:');
-  product.variants.forEach((variant: any, index: number) => {
-    console.log(`  ${index + 1}. ${variant.name} - Color: ${variant.color} - Size: ${variant.size} - External ID: ${variant.external_id}`);
-  });
-  console.log('---');
-}
-
-/**
- * Debug utility: Log default variant selection process
- * Set this to true to enable detailed debugging of default variant selection
- */
-const DEBUG_DEFAULT_VARIANTS = false;
-
-/**
- * Debug helper: Log default variant selection (only when DEBUG_DEFAULT_VARIANTS is true)
- */
-function debugDefaultVariant(message: string, data?: any): void {
-  if (DEBUG_DEFAULT_VARIANTS) {
-    console.log(`🔍 ${message}`, data || '');
-  }
-}
-
-/**
  * Get default variant for a product
  * @param product - The product data
  * @returns The default variant or the first available variant
@@ -267,21 +239,13 @@ function debugDefaultVariant(message: string, data?: any): void {
 export function getDefaultVariant(product: any): any {
   const enhancement = getProductEnhancement(product.external_id);
   
-  debugDefaultVariant(`Getting default variant for product: ${product.name} (${product.external_id})`);
-  debugDefaultVariant(`Enhancement found:`, enhancement ? 'Yes' : 'No');
-  
   // If we have a specific default variant in enhancements, use it
   if (enhancement?.defaultVariant) {
-    debugDefaultVariant(`Looking for default variant: ${enhancement.defaultVariant}`);
     const defaultVariant = product.variants.find(
       (v: any) => v.external_id === enhancement.defaultVariant
     );
     if (defaultVariant) {
-      debugDefaultVariant(`Found default variant: ${defaultVariant.name} (${defaultVariant.external_id})`);
       return defaultVariant;
-    } else {
-      debugDefaultVariant(`Default variant ${enhancement.defaultVariant} not found in product variants`);
-      debugDefaultVariant(`Available variant external IDs:`, product.variants.map((v: any) => v.external_id));
     }
   }
   
@@ -290,12 +254,10 @@ export function getDefaultVariant(product: any): any {
     (v: any) => v.color?.toLowerCase().includes('black')
   );
   if (blackVariant) {
-    debugDefaultVariant(`Using black variant as fallback: ${blackVariant.name} (${blackVariant.external_id})`);
     return blackVariant;
   }
   
   // If no black variant, return the first available variant
-  debugDefaultVariant(`Using first available variant: ${product.variants[0]?.name} (${product.variants[0]?.external_id})`);
   return product.variants[0];
 }
 
