@@ -13,12 +13,14 @@ interface VariantPickerProps {
   variants: Variant[];
   onVariantChange: (externalId: string) => void;
   className?: string;
+  defaultVariant?: Variant; // Add default variant prop
 }
 
 const VariantPicker: React.FC<VariantPickerProps> = ({ 
   variants, 
   onVariantChange, 
-  className = "" 
+  className = "", 
+  defaultVariant 
 }) => {
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
@@ -71,18 +73,28 @@ const VariantPicker: React.FC<VariantPickerProps> = ({
     );
   }, [variants, selectedColor, selectedSize]);
 
-  // Auto-select first color and size when component mounts or variants change
+  // Auto-select default variant or first color and size when component mounts or variants change
   useEffect(() => {
     if (availableColors.length > 0 && !selectedColor) {
-      setSelectedColor(availableColors[0]);
+      // Use default variant color if available, otherwise use first color
+      const initialColor = defaultVariant?.color && availableColors.includes(defaultVariant.color) 
+        ? defaultVariant.color 
+        : availableColors[0];
+      setSelectedColor(initialColor);
     }
-  }, [availableColors, selectedColor]);
+  }, [availableColors, selectedColor, defaultVariant]);
 
   useEffect(() => {
     if (availableSizes.length > 0 && !selectedSize) {
-      setSelectedSize(availableSizes[0]);
+      // Use default variant size if available and color matches, otherwise use first size
+      const initialSize = (defaultVariant?.size && 
+                          defaultVariant?.color === selectedColor && 
+                          availableSizes.includes(defaultVariant.size))
+        ? defaultVariant.size 
+        : availableSizes[0];
+      setSelectedSize(initialSize);
     }
-  }, [availableSizes, selectedSize]);
+  }, [availableSizes, selectedSize, defaultVariant, selectedColor]);
 
   // Handle color change
   const handleColorChange = (color: string) => {

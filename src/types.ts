@@ -189,6 +189,7 @@ export interface ProductEnhancement {
   specifications?: ProductSpecifications;
   additionalImages?: ProductImage[];
   seo?: ProductSEO;
+  defaultVariant?: string; // External ID of the default variant to show on home page
 }
 
 // Enhanced product interface

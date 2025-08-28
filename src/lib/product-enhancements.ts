@@ -19,8 +19,9 @@ export const PRODUCT_ENHANCEMENTS: Record<string, ProductEnhancement> = {
   // Example enhancements - replace with your actual product data
   // You can get the external_id from your Printful dashboard or API
   '68ad4d026311b3': {
-    description: 'Premium cotton t-shirt with classic Bela Bomberman design. The Bomberman Youth Long Sleeve Tee is a wardrobe staple that’ll go great with casual, sporty, or loungewear looks. The shirt is made of airlume combed and ring-spun cotton and will feel soft and comfy.',
+    description: 'Premium cotton t-shirt with classic Bela Bomberman design. The Bomberman Youth Long Sleeve Tee is a wardrobe staple that\'ll go great with casual, sporty, or loungewear looks. The shirt is made of airlume combed and ring-spun cotton and will feel soft and comfy.',
     shortDescription: 'Premium cotton t-shirt with classic Bela Bomberman design. Comfortable fit with durable print.',
+    defaultVariant: '68ad4d02631253', // Black S variant (updated to valid ID)
     features: [
       'Comfortable, breathable fabric',
       'Vibrant, durable print'
@@ -45,13 +46,14 @@ export const PRODUCT_ENHANCEMENTS: Record<string, ProductEnhancement> = {
     ],
     seo: {
       keywords: ['bela bomberman', 'cotton t-shirt', 'gaming apparel'],
-      metaDescription: 'Premium Bela Bomberman t-shirt made from organic cotton. Perfect for gaming enthusiasts and retro gaming fans.'
+      metaDescription: 'Premium Bela Bomberman t-shirt made from 100% cotton. Perfect for gaming enthusiasts and retro gaming fans.'
     }
   },
 
   '68ac95d1455845': {
     description: 'Premium cotton t-shirt with original Bela Bomberman pufferfish design. What sets the Youth Classic Tee apart is its thick and durable fabric. Engineered to withstand the boundless energy of kids, the shirt promises longevity and resilience.',
     shortDescription: 'Premium cotton t-shirt with original Bela Bomberman pufferfish design.',
+    defaultVariant: '68ac95d1455b15',
     features: [
       'Pre-shrunk fabric',
       'Classic fit',
@@ -82,7 +84,76 @@ export const PRODUCT_ENHANCEMENTS: Record<string, ProductEnhancement> = {
     ],
     seo: {
       keywords: ['bela bomberman', 'cotton t-shirt', 'gaming apparel'],
-      metaDescription: 'Premium Bela Bomberman t-shirt made from organic cotton. Perfect for gaming enthusiasts and retro gaming fans.'
+      metaDescription: 'Premium Bela Bomberman t-shirt made from 100% cotton. Perfect for gaming enthusiasts and retro gaming fans.'
+    }
+  },
+
+
+  '68b008db7aed87': {
+    description: 'Premium cotton t-shirt with original Bela Bomberman explosion design. What sets the Youth Classic Tee apart is its thick and durable fabric. Engineered to withstand the boundless energy of kids, the shirt promises longevity and resilience.',
+    shortDescription: 'Premium cotton t-shirt with original Bela Bomberman explosion design.',
+    defaultVariant: '68b008db7af1c5',
+    features: [
+      'Pre-shrunk fabric',
+      'Classic fit',
+      'Taped neck and shoulders',
+      'Tear-away tag',
+      'Made with OEKO-TEX certified low-impact dyes'
+    ],
+    specifications: {
+      material: '100% Cotton',
+      weight: '180 GSM',
+      fit: 'Regular fit',
+      printMethod: 'Direct to Garment (DTG)'
+    },
+    additionalImages: [
+      {
+        url: '/images/products/youth-classic-tee-black-front-68b00f4e89286.jpg',
+        alt: 'Black front view of the shirt',
+        caption: 'Black front view of the shirt'
+      }, {
+        url: '/images/products/youth-classic-tee-black-product-details-68b00f4e88cc6.jpg',
+        alt: 'Black front view of the shirt',
+        caption: 'Black front view of the shirt'
+      }, {
+        url: '/images/products/youth-classic-tee-sport-grey-front-68b00f4e98912.jpg',
+        alt: 'Sport grey',
+        caption: 'Sport grey'
+      }, {
+        url: '/images/products/youth-classic-tee-charcoal-back-68b00f4e91e74.jpg',
+        alt: 'Grey backside',
+        caption: 'Grey backside'
+      }
+    ],
+    seo: {
+      keywords: ['bela bomberman', 'cotton t-shirt', 'gaming apparel'],
+      metaDescription: 'Premium Bela Bomberman t-shirt made from 100% cotton. Perfect for gaming enthusiasts and retro gaming fans.'
+    }
+  },
+
+
+  '68aff9a217a5f9': {
+    description: 'A great bomberman hat!',
+    shortDescription: 'A great bomberman hat!',
+    defaultVariant: '68aff9a217a691',
+    features: [
+      'Classic brim with decorative stitching',
+      'One size fits most',
+    ],
+    specifications: {
+      material: '100% terry cotton',
+      printMethod: 'Flat Embroidery'
+    },
+    additionalImages: [
+      {
+        url: '/images/products/unstructured-terry-cloth-bucket-hat-black-front-68b00e3304435.jpg',
+        alt: 'Bucket hat with embroidery front',
+        caption: 'Bucket hat with embroidery front'
+      },
+    ],
+    seo: {
+      keywords: ['bela bomberman', 'cotton bucket hat'],
+      metaDescription: 'Premium Bela Bomberman bucket hat made from 100% terry cotton.'
     }
   }
 };
@@ -140,9 +211,13 @@ export function getProductEnhancementKeys(): string[] {
  */
 export function enhanceProductData(printfulProduct: any): any {
   const enhancement = getProductEnhancement(printfulProduct.external_id);
+  const defaultVariant = getDefaultVariant(printfulProduct);
 
   if (!enhancement) {
-    return printfulProduct;
+    return {
+      ...printfulProduct,
+      defaultVariant
+    };
   }
 
   return {
@@ -150,8 +225,78 @@ export function enhanceProductData(printfulProduct: any): any {
     // Override description if enhancement exists
     description: enhancement.description || printfulProduct.description,
     // Add enhancement data
-    enhancement
+    enhancement,
+    // Add default variant information
+    defaultVariant
   };
+}
+
+/**
+ * Debug utility: Log all variants for a product to help set default variants
+ * @param product - The product data
+ */
+export function debugProductVariants(product: any): void {
+  console.log(`Product: ${product.name} (${product.external_id})`);
+  console.log('Available variants:');
+  product.variants.forEach((variant: any, index: number) => {
+    console.log(`  ${index + 1}. ${variant.name} - Color: ${variant.color} - Size: ${variant.size} - External ID: ${variant.external_id}`);
+  });
+  console.log('---');
+}
+
+/**
+ * Debug utility: Log default variant selection process
+ * Set this to true to enable detailed debugging of default variant selection
+ */
+const DEBUG_DEFAULT_VARIANTS = false;
+
+/**
+ * Debug helper: Log default variant selection (only when DEBUG_DEFAULT_VARIANTS is true)
+ */
+function debugDefaultVariant(message: string, data?: any): void {
+  if (DEBUG_DEFAULT_VARIANTS) {
+    console.log(`🔍 ${message}`, data || '');
+  }
+}
+
+/**
+ * Get default variant for a product
+ * @param product - The product data
+ * @returns The default variant or the first available variant
+ */
+export function getDefaultVariant(product: any): any {
+  const enhancement = getProductEnhancement(product.external_id);
+  
+  debugDefaultVariant(`Getting default variant for product: ${product.name} (${product.external_id})`);
+  debugDefaultVariant(`Enhancement found:`, enhancement ? 'Yes' : 'No');
+  
+  // If we have a specific default variant in enhancements, use it
+  if (enhancement?.defaultVariant) {
+    debugDefaultVariant(`Looking for default variant: ${enhancement.defaultVariant}`);
+    const defaultVariant = product.variants.find(
+      (v: any) => v.external_id === enhancement.defaultVariant
+    );
+    if (defaultVariant) {
+      debugDefaultVariant(`Found default variant: ${defaultVariant.name} (${defaultVariant.external_id})`);
+      return defaultVariant;
+    } else {
+      debugDefaultVariant(`Default variant ${enhancement.defaultVariant} not found in product variants`);
+      debugDefaultVariant(`Available variant external IDs:`, product.variants.map((v: any) => v.external_id));
+    }
+  }
+  
+  // Fallback logic: prefer black variants, then first available
+  const blackVariant = product.variants.find(
+    (v: any) => v.color?.toLowerCase().includes('black')
+  );
+  if (blackVariant) {
+    debugDefaultVariant(`Using black variant as fallback: ${blackVariant.name} (${blackVariant.external_id})`);
+    return blackVariant;
+  }
+  
+  // If no black variant, return the first available variant
+  debugDefaultVariant(`Using first available variant: ${product.variants[0]?.name} (${product.variants[0]?.external_id})`);
+  return product.variants[0];
 }
 
 /**

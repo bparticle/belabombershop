@@ -4,6 +4,7 @@ import Link from "next/link";
 import useWishlistDispatch from "../hooks/useWishlistDispatch";
 import useWishlistState from "../hooks/useWishlistState";
 import { PrintfulProduct } from "../types";
+import { getDefaultVariant } from "../lib/product-enhancements";
 
 import VariantPicker from "./VariantPicker";
 import SafeImage from "./SafeImage";
@@ -19,9 +20,10 @@ const Product: React.FC<ProductProps> = ({ product }) => {
 
   const { id, name, variants, category } = product;
   
-  const [firstVariant] = variants;
+  // Use defaultVariant from enhanced product data if available, otherwise calculate it
+  const defaultVariant = (product as any).defaultVariant || getDefaultVariant(product);
   const [activeVariantExternalId, setActiveVariantExternalId] = useState(
-    firstVariant?.external_id || ''
+    defaultVariant?.external_id || ''
   );
 
   const activeVariant = variants.find(
@@ -101,6 +103,7 @@ const Product: React.FC<ProductProps> = ({ product }) => {
           variants={variants}
           onVariantChange={setActiveVariantExternalId}
           className="mb-4"
+          defaultVariant={defaultVariant}
         />
         
         <div className="flex gap-2">
