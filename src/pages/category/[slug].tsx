@@ -31,7 +31,7 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ category, products }) => {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Loading...</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Loading...</h1>
         </div>
       </div>
     );
@@ -41,8 +41,8 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ category, products }) => {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Category Not Found</h1>
-          <p className="text-gray-600 mb-6">The requested category could not be found.</p>
+                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Category Not Found</h1>
+        <p className="text-gray-600 dark:text-gray-400 mb-6">The requested category could not be found.</p>
           <button
             onClick={() => router.push('/')}
             className="text-blue-600 hover:text-blue-800 transition-colors"
@@ -69,7 +69,7 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ category, products }) => {
       <div className="container mx-auto px-4 py-8">
         {/* Breadcrumb */}
         <nav className="mb-8">
-          <ol className="flex items-center space-x-2 text-sm text-gray-500">
+                      <ol className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
             <li>
               <button
                 onClick={() => router.push('/')}
@@ -92,7 +92,7 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ category, products }) => {
             <li>
               <span className="mx-2">/</span>
             </li>
-            <li className="text-gray-900 font-medium">{category.name}</li>
+                          <li className="text-gray-900 dark:text-white font-medium">{category.name}</li>
           </ol>
         </nav>
 
@@ -102,12 +102,12 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ category, products }) => {
             <span className="text-4xl mr-3" aria-hidden="true">
               {category.icon}
             </span>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white">
               {category.name}
             </h1>
           </div>
           {category.description && (
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
               {category.description}
             </p>
           )}

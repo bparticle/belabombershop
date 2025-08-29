@@ -40,7 +40,7 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
   return (
     <div className={`space-y-4 ${className}`}>
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
           Filter by Category
         </h3>
         {selectedCategory && (
@@ -101,7 +101,7 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
       </div>
       
       {filters.length === 0 && (
-        <p className="text-gray-500 text-sm">
+        <p className="text-gray-500 dark:text-gray-400 text-sm">
           No categories available
         </p>
       )}

@@ -69,7 +69,7 @@ const ColorSizeSelector: React.FC<ColorSizeSelectorProps> = ({
 
       {/* Size Selection */}
       <div className="space-y-3">
-        <h3 className="text-sm font-medium text-gray-900">Select Size</h3>
+        <h3 className="text-sm font-medium text-gray-900 dark:text-white">Select Size</h3>
         <div className="flex flex-wrap gap-2">
           {sizes.map((size) => {
             const isAvailable = getAvailableVariants(selectedColor, size).length > 0;
@@ -80,10 +80,10 @@ const ColorSizeSelector: React.FC<ColorSizeSelectorProps> = ({
                 disabled={!isAvailable}
                 className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
                   selectedSize === size
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
                     : isAvailable
-                    ? 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                    : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+                    ? 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100'
+                    : 'border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
                 }`}
               >
                 {size}
@@ -93,17 +93,17 @@ const ColorSizeSelector: React.FC<ColorSizeSelectorProps> = ({
         </div>
       </div>
 
-      {/* Current Selection Display */}
-      <div className="pt-4 border-t border-gray-200">
-        <div className="flex justify-between items-center">
-          <div className="text-sm text-gray-600">
-            <span className="font-medium">Selected:</span> {selectedColor} - {selectedSize}
-          </div>
-          <div className="text-lg font-semibold text-blue-600">
-            €{getCurrentPrice()}
-          </div>
-        </div>
-      </div>
+             {/* Current Selection Display */}
+       <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+         <div className="flex justify-between items-center">
+           <div className="text-sm text-gray-600 dark:text-gray-400">
+             <span className="font-medium">Selected:</span> {selectedColor} - {selectedSize}
+           </div>
+           <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+             €{getCurrentPrice()}
+           </div>
+         </div>
+       </div>
     </div>
   );
 };

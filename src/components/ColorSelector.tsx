@@ -28,7 +28,7 @@ const ColorSelector: React.FC<ColorSelectorProps> = ({
 
   return (
     <div className={`space-y-3 ${className}`}>
-      <h3 className="text-sm font-medium text-gray-900">Select Color</h3>
+              <h3 className="text-sm font-medium text-gray-900 dark:text-white">Select Color</h3>
       <div className="flex flex-wrap gap-3">
         {colors.map((color) => {
           const isAvailable = availableColors.includes(color);
@@ -50,7 +50,7 @@ const ColorSelector: React.FC<ColorSelectorProps> = ({
       
       {/* Selected color display */}
       {selectedColor && (
-        <div className="pt-2 text-sm text-gray-600">
+        <div className="pt-2 text-sm text-gray-600 dark:text-gray-400">
           <span className="font-medium">Selected:</span> {selectedColor}
         </div>
       )}

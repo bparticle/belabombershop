@@ -2,22 +2,25 @@ import Link from "next/link";
 
 import useWishlistState from "../hooks/useWishlistState";
 import useSnipcartCount from "../hooks/useSnipcartCount";
+import { useTheme } from "../context/theme";
+import ThemeToggle from "./ThemeToggle";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const { hasItems } = useWishlistState();
   const { cart } = useSnipcartCount();
+  const { isDark } = useTheme();
   const cartHasItems = cart?.items?.count !== 0;
 
   return (
     <>
-      <header className="py-6 md:py-12">
+      <header className="py-6 md:py-12 bg-white dark:bg-gray-900 transition-colors duration-200">
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex items-center justify-between">
             <div className="md:w-1/3">
-              <Link href="/" className="flex items-center text-gray-900 hover:opacity-80 transition-opacity duration-200">
+              <Link href="/" className="flex items-center text-gray-900 dark:text-white hover:opacity-80 transition-opacity duration-200">
                 <div className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 flex items-center justify-center">
                   <img
-                    src="/bomberlogo_black.svg"
+                    src={isDark ? "/bomberlogo_white.svg" : "/bomberlogo_black.svg"}
                     alt="Bomber Logo"
                     className="w-full h-full object-contain"
                   />
@@ -25,9 +28,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               </Link>
             </div>
             <div className="flex-1 flex items-center justify-center">
-              <Link href="/" className="flex items-center text-gray-900 hover:opacity-80 transition-opacity duration-200">
+              <Link href="/" className="flex items-center text-gray-900 dark:text-white hover:opacity-80 transition-opacity duration-200">
                 <img
-                  src="/belabomberman_typeface.svg"
+                  src={isDark ? "/belabomberman_typeface_white.svg" : "/belabomberman_typeface.svg"}
                   alt="Bela Bomberman"
                   className="h-10 md:h-14 lg:h-16 xl:h-18 object-contain"
                   style={{ maxWidth: '300px' }}
@@ -35,8 +38,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               </Link>
             </div>
             <div className="md:w-1/3 flex items-center justify-end space-x-3 -mr-2.5">
+              <ThemeToggle />
               <button
-                className="snipcart-customer-signin appearance-none px-2 text-gray-800 hover:text-blue-600 rounded-md cursor-pointer focus:outline-none focus:text-blue-600 transition relative"
+                className="snipcart-customer-signin appearance-none px-2 text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 rounded-md cursor-pointer focus:outline-none focus:text-blue-600 dark:focus:text-blue-400 transition relative"
                 aria-label="User login"
               >
                 <svg
@@ -50,7 +54,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               </button>
               <Link 
                 href="/wishlist"
-                className="px-2 text-gray-800 hover:text-blue-600 rounded-md cursor-pointer focus:outline-none focus:text-blue-600 relative transition"
+                className="px-2 text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 rounded-md cursor-pointer focus:outline-none focus:text-blue-600 dark:focus:text-blue-400 relative transition"
                 aria-label="Wishlist"
               >
                 {hasItems && (
@@ -66,7 +70,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 </svg>
               </Link>
               <button
-                className="snipcart-checkout appearance-none px-2 text-gray-800 hover:text-blue-600 rounded-md cursor-pointer focus:outline-none focus:text-blue-600 transition relative"
+                className="snipcart-checkout appearance-none px-2 text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 rounded-md cursor-pointer focus:outline-none focus:text-blue-600 dark:focus:text-blue-400 transition relative"
                 aria-label="Cart"
               >
                 {cartHasItems && (
@@ -85,38 +89,40 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           </div>
         </div>
       </header>
-      <main className="py-6 md:py-12">
+      <main className="py-6 md:py-12 bg-white dark:bg-gray-900 transition-colors duration-200">
         <div className="max-w-6xl mx-auto px-6">{children}</div>
       </main>
-      <footer className="max-w-6xl mx-auto px-6">
-        <div className="py-6 border-t border-gray-100 text-center flex flex-col md:flex-row items-center justify-between">
-          <p className="text-gray-600 text-sm md:text-base">
-            Copyright 2025 {" "}
-            <img
-              src="/belabomberman_typeface.svg"
-              alt="Bela Bomberman"
-              className="inline h-5 md:h-6 lg:h-7 object-contain"
-              style={{ maxWidth: '150px' }}
-            />
-             {" "}based on{" "}
-            <a
-              href="https://twitter.com/notrab"
-              title="Follow the creator on Twitter"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="ml-0.5 text-gray-800 hover:text-blue-600 transition-colors duration-200"
-            >
-              @notrab
-            </a>
-          </p>
-          <nav className="flex items-center justify-end space-x-3 md:space-x-6">
-            <Link href="/about" className="text-gray-800 hover:text-blue-600 p-1 transition text-sm">
-              About
-            </Link>
-            <Link href="/terms-of-sale" className="text-gray-800 hover:text-blue-600 p-1 transition text-sm">
-              Terms of Sale
-            </Link>
-          </nav>
+      <footer className="bg-white dark:bg-gray-900 transition-colors duration-200">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="py-6 border-t border-gray-100 dark:border-gray-800 text-center flex flex-col md:flex-row items-center justify-between">
+                         <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base">
+               Copyright 2025 {" "}
+               <img
+                 src={isDark ? "/belabomberman_typeface_white.svg" : "/belabomberman_typeface.svg"}
+                 alt="Bela Bomberman"
+                 className="inline h-5 md:h-6 lg:h-7 object-contain"
+                 style={{ maxWidth: '150px' }}
+               />
+                {" "}based on{" "}
+              <a
+                href="https://twitter.com/notrab"
+                title="Follow the creator on Twitter"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-0.5 text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
+              >
+                @notrab
+              </a>
+            </p>
+            <nav className="flex items-center justify-end space-x-3 md:space-x-6">
+              <Link href="/about" className="text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 p-1 transition text-sm">
+                About
+              </Link>
+              <Link href="/terms-of-sale" className="text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 p-1 transition text-sm">
+                Terms of Sale
+              </Link>
+            </nav>
+          </div>
         </div>
       </footer>
     </>

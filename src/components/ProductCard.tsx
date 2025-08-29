@@ -70,7 +70,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       onClick={handleCardClick}
     >
       <Link href={`/product/${id}`} className="block">
-                <div className="aspect-square bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 relative">
+                <div className="aspect-square bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 relative">
           {thumbnail_url ? (
             <div className="w-full h-full relative">
               <SafeImage
@@ -105,7 +105,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                      );
                    })}
                    {uniqueColors.length > 4 && (
-                     <div className="w-8 h-8 bg-gray-100 border-2 border-gray-300 rounded-full flex items-center justify-center text-xs text-gray-600 font-medium shadow-lg">
+                     <div className="w-8 h-8 bg-gray-100 dark:bg-gray-600 border-2 border-gray-300 dark:border-gray-500 rounded-full flex items-center justify-center text-xs text-gray-600 dark:text-gray-300 font-medium shadow-lg">
                        +{uniqueColors.length - 4}
                      </div>
                    )}
@@ -120,7 +120,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                )}
             </div>
           ) : (
-            <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">
+            <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400">
               No image available
             </div>
           )}
@@ -130,7 +130,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       {/* Product info */}
       <div className="mt-3 space-y-1">
         <Link href={`/product/${id}`} className="block">
-          <h3 className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors overflow-hidden text-ellipsis whitespace-nowrap">
+          <h3 className="font-medium text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors overflow-hidden text-ellipsis whitespace-nowrap">
             {name}
           </h3>
         </Link>
@@ -138,7 +138,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         {category && (
           <div className="flex items-center justify-between">
             <CategoryBadge categoryId={category} size="sm" />
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-gray-500 dark:text-gray-400">
               {uniqueColors.length} color{uniqueColors.length !== 1 ? 's' : ''}
             </span>
           </div>

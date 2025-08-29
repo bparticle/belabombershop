@@ -59,10 +59,10 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                 Something went wrong
               </h3>
-              <p className="text-sm text-gray-500 mb-4">
+                              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                 We encountered an error while loading this page.
               </p>
               <button

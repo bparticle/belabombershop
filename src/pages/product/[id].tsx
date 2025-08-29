@@ -185,45 +185,45 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
 
   return (
     <ErrorBoundary>
-      <div className="container mx-auto px-4 py-8">
-        {/* Breadcrumb */}
-        <nav className="mb-8">
-          <ol className="flex items-center space-x-2 text-sm text-gray-500">
-            <li>
-              <button
-                onClick={() => router.push('/')}
-                className="hover:text-blue-600 transition-colors"
-              >
-                Home
-              </button>
-            </li>
-            <li>
-              <span className="mx-2">/</span>
-            </li>
-            <li>
-              <button
-                onClick={() => router.push('/')}
-                className="hover:text-blue-600 transition-colors"
-              >
-                Products
-              </button>
-            </li>
-            <li>
-              <span className="mx-2">/</span>
-            </li>
-            <li className="text-gray-900 font-medium">{name}</li>
-          </ol>
-        </nav>
+              <div className="container mx-auto px-4 py-8">
+          {/* Breadcrumb */}
+          <nav className="mb-8">
+            <ol className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+              <li>
+                <button
+                  onClick={() => router.push('/')}
+                  className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                >
+                  Home
+                </button>
+              </li>
+              <li>
+                <span className="mx-2">/</span>
+              </li>
+              <li>
+                <button
+                  onClick={() => router.push('/')}
+                  className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                >
+                  Products
+                </button>
+              </li>
+              <li>
+                <span className="mx-2">/</span>
+              </li>
+              <li className="text-gray-900 dark:text-gray-100 font-medium">{name}</li>
+            </ol>
+          </nav>
 
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
           {/* Product Images */}
           <div className="space-y-4">
                                      {/* Main Image */}
-            <div className="relative aspect-square bg-white rounded-lg overflow-hidden border border-gray-200">
+            <div className="relative aspect-square bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 product-image-container">
               {hasValidImages && selectedImage ? (
                 <button
                   onClick={handleMainImageClick}
-                  className="w-full h-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  className="w-full h-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
                   aria-label="View larger image"
                 >
                   <SafeImage
@@ -256,7 +256,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
                   </div>
                 </button>
               ) : (
-                <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">
+                <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400">
                   No image available
                 </div>
               )}
@@ -286,7 +286,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
                          {/* Header */}
              <div className="flex items-start justify-between">
                <div>
-                 <h1 className="text-3xl font-bold text-gray-900 mb-2">{name}</h1>
+                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{name}</h1>
                  {category && (
                    <div className="mt-2">
                      <CategoryBadge categoryId={category} size="md" />
@@ -321,7 +321,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
             </div>
 
             {/* Product Description */}
-            <div className="prose prose-sm text-gray-600">
+            <div className="prose prose-sm text-gray-600 dark:text-gray-300 dark:prose-invert">
               <p>{description}</p>
             </div>
 
@@ -365,10 +365,10 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
              )}
 
                          {/* Back to Products */}
-             <div className="pt-4 border-t border-gray-200">
+             <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
                <button
                  onClick={() => router.back()}
-                 className="text-blue-600 hover:text-blue-800 transition-colors"
+                 className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
                >
                  ← Back to Products
                </button>
