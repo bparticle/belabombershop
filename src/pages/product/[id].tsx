@@ -32,9 +32,20 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
 
   // All hooks must be called before any conditional returns
   const [firstVariant] = product?.variants || [];
+  
   const [activeVariantExternalId, setActiveVariantExternalId] = React.useState(
     firstVariant?.external_id || ''
   );
+
+  // Update variant when URL parameter changes
+  React.useEffect(() => {
+    if (router.isReady && router.query.variant && product?.variants) {
+      const variantFromUrl = product.variants.find(v => v.external_id === router.query.variant);
+      if (variantFromUrl) {
+        setActiveVariantExternalId(variantFromUrl.external_id);
+      }
+    }
+  }, [router.isReady, router.query.variant, product?.variants]);
 
   const activeVariant = product?.variants?.find(
     (v) => v.external_id === activeVariantExternalId

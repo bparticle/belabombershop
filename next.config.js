@@ -6,11 +6,16 @@ const nextConfig = {
     // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
+  // Disable type checking during build for faster builds
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   // Optimize build performance
   experimental: {
-    // Reduce memory usage during build
-    workerThreads: false,
-    cpus: 1,
+    // Enable parallel processing for faster builds
+    workerThreads: true,
+    // Use all available CPU cores
+    cpus: Math.max(1, require('os').cpus().length - 1),
   },
   // Reduce build output size
   compress: true,

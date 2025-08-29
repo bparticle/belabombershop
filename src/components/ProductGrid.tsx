@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { PrintfulProduct, CategoryFilter as CategoryFilterType } from "../types";
 import { generateCategoryFilters } from "../lib/category-config";
-import Product from "./Product";
+import ProductCard from "./ProductCard";
 import CategoryFilter from "./CategoryFilter";
 
 interface ProductGridProps {
@@ -69,9 +69,9 @@ const ProductGrid: React.FC<ProductGridProps> = ({
           </button>
         </div>
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredProducts.map((product) => (
-            <Product key={product.id} product={product} />
+            <ProductCard key={product.id} product={product} />
           ))}
         </div>
       )}

@@ -11,6 +11,32 @@ export const COLOR_MAPPING: Record<string, string> = {
   'Sport Grey': '#9CA3AF',
   'Natural': '#F5F5DC',
   
+  // New colors from the latest product
+  'Heather Midnight Navy': '#1B365D', // Dark navy with heather effect
+  'Heather Deep Teal': '#0F766E', // Deep teal color
+  'Aqua': '#00FFFF', // Bright aqua
+  'Heather Mauve': '#E0B0FF', // Light purple/mauve
+  'Steel Blue': '#4682B4', // Steel blue
+  'Tan': '#D2B48C', // Tan/beige
+  'Heather Yellow Gold': '#F59E0B', // Gold with heather effect
+  'Heather Dust': '#A8A8A8', // Dusty gray
+  'Ash': '#8B8B8B', // Ash gray
+  'Vintage White': '#F5F5DC', // Off-white with vintage tint
+  'Solid White Blend': '#FFFFFF', // Pure white
+  
+  // Additional heather variations that might be used
+  'Heather Charcoal': '#374151',
+  'Heather Slate': '#64748B',
+  'Heather Stone': '#78716C',
+  'Heather Sand': '#D6D3D1',
+  'Heather Cream': '#FEF3C7',
+  'Heather Ivory': '#FFFFF0',
+  'Heather Pearl': '#F3F4F6',
+  'Heather Silver': '#9CA3AF',
+  'Heather Bronze': '#CD7F32',
+  'Heather Copper': '#B87333',
+  'Heather Gunmetal': '#374151',
+  
   // Pastel colors
   'Light Blue': '#93C5FD',
   'Light Pink': '#FBCFE8',
@@ -34,7 +60,6 @@ export const COLOR_MAPPING: Record<string, string> = {
   'Heather Forest': '#166534',
   'Heather Olive': '#3F6212',
   'Heather Tan': '#A16207',
-  'Heather Cream': '#FEF3C7',
   'Heather Mint': '#10B981',
   'Heather Lavender': '#A855F7',
   'Heather Coral': '#F97316',
@@ -49,17 +74,9 @@ export const COLOR_MAPPING: Record<string, string> = {
   'Heather Sapphire': '#3B82F6',
   'Heather Amethyst': '#8B5CF6',
   'Heather Topaz': '#F59E0B',
-  'Heather Pearl': '#F3F4F6',
-  'Heather Silver': '#9CA3AF',
-  'Heather Bronze': '#CD7F32',
-  'Heather Copper': '#B87333',
   'Heather Steel': '#6B7280',
-  'Heather Gunmetal': '#374151',
   'Heather Ash': '#9CA3AF',
-  'Heather Stone': '#D1D5DB',
-  'Heather Sand': '#F9FAFB',
   'Heather Beige': '#F5F5DC',
-  'Heather Ivory': '#FFFFF0',
   'Heather Off-White': '#FAFAFA',
   'Heather Warm White': '#FEFEFE',
   'Heather Cool White': '#F8FAFC',
@@ -69,7 +86,6 @@ export const COLOR_MAPPING: Record<string, string> = {
   'Heather Bone': '#F9F6EE',
   'Heather Vanilla': '#F3E5AB',
   'Heather Blush': '#FFB6C1',
-  'Heather Mauve': '#E0B0FF',
   'Heather Lilac': '#C8A2C8',
   'Heather Periwinkle': '#CCCCFF',
   'Heather Turquoise': '#40E0D0',

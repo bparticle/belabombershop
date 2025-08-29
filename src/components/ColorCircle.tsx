@@ -5,7 +5,7 @@ interface ColorCircleProps {
   colorName: string;
   isSelected: boolean;
   isAvailable?: boolean;
-  onClick: () => void;
+  onClick: (e?: React.MouseEvent) => void;
   size?: 'sm' | 'md' | 'lg';
   showLabel?: boolean;
   className?: string;
