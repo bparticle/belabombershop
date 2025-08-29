@@ -5,6 +5,7 @@ interface ProductImage {
   url: string;
   alt: string;
   type: string;
+  color?: string;
 }
 
 interface ProductImageGalleryProps {
@@ -72,7 +73,7 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
               />
             )}
             <div className="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs px-1 rounded">
-              {image.type}
+              {image.color || image.type}
             </div>
           </button>
         ))}

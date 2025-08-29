@@ -60,19 +60,27 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
   const printfulImages = React.useMemo(() => {
     if (!product || !product.variants) return [];
     
-    return product.variants
-      .flatMap(variant => variant.files || [])
-      .filter((file: any) => file && file.type && file.type === "preview") // Only show preview images (actual product photos)
-      .filter((file: any) => file.preview_url && typeof file.preview_url === 'string' && file.preview_url.trim() !== '')
-      .filter((file: any) => file.preview_url.startsWith('http')) // Only allow valid HTTP URLs
-      .map((file: any) => ({
-        url: file.preview_url,
-        type: file.type,
-        alt: `${product.name} - ${file.type} view`
-      }))
-      .filter((image: any, index: number, self: any[]) => 
-        index === self.findIndex((img: any) => img.url === image.url)
-      );
+    const imageMap = new Map();
+    
+    product.variants.forEach(variant => {
+      const previewFile = variant.files?.find((file: any) => file && file.type && file.type === "preview");
+      if (previewFile?.preview_url && typeof previewFile.preview_url === 'string' && 
+          previewFile.preview_url.trim() !== '' && previewFile.preview_url.startsWith('http')) {
+        
+        // Create a unique key for each color to avoid duplicates
+        const key = variant.color || 'default';
+        if (!imageMap.has(key)) {
+          imageMap.set(key, {
+            url: previewFile.preview_url,
+            type: variant.color || 'Color',
+            alt: `${product.name} - ${variant.color || 'default'} view`,
+            color: variant.color
+          });
+        }
+      }
+    });
+    
+    return Array.from(imageMap.values());
   }, [product]);
 
   // Get enhancement images
