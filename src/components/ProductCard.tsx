@@ -21,8 +21,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         colors.add(variant.color);
       }
     });
-    const colorArray = Array.from(colors);
-    return colorArray;
+    return Array.from(colors);
   })();
 
   // Get current color

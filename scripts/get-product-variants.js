@@ -43,7 +43,22 @@ async function getProductDetails(productId) {
       variants: sync_variants
     };
   } catch (error) {
-    console.error(`❌ Error fetching product ${productId}:`, error.message);
+    console.error(`❌ Error fetching product ${productId}:`, error);
+    
+    // Handle Printful API errors specifically
+    if (error.result && error.error) {
+      console.error(`❌ Printful API Error: ${error.result}`);
+      console.error(`❌ Error Code: ${error.code}, Reason: ${error.error.reason}`);
+    } else {
+      console.error(`❌ Error details:`, {
+        message: error.message,
+        status: error.status,
+        statusText: error.statusText,
+        response: error.response?.data
+      });
+    }
+    
+    console.error(`💡 Suggestion: Check this product in your Printful dashboard or try again later.`);
     return null;
   }
 }

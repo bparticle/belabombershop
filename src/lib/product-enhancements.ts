@@ -131,6 +131,31 @@ export const PRODUCT_ENHANCEMENTS: Record<string, ProductEnhancement> = {
     }
   },
 
+  '68b15542875c91': {
+    description: "Premium cotton t-shirt with original Bela Bomberman explosion design. The Unisex Staple T-Shirt feels soft and light with just the right amount of stretch. It's comfortable and flattering for all.",
+    shortDescription: 'Premium cotton t-shirt with original Bela Bomberman explosion design.',
+    defaultVariant: '68b008db7af1c5',
+    features: [
+      'Pre-shrunk fabric',
+      'Side-seamed',
+    ],
+    specifications: {
+      fit: 'Regular fit',
+      printMethod: 'Direct to Garment (DTG)'
+    },
+    additionalImages: [
+      {
+        url: '/images/products/youth-classic-tee-black-front-68b00f4e89286.jpg',
+        alt: 'Black front view of the shirt',
+        caption: 'Black front view of the shirt'
+      },
+    ],
+    seo: {
+      keywords: ['bela bomberman', 'cotton t-shirt', 'gaming apparel'],
+      metaDescription: 'Premium Bela Bomberman t-shirt made from 100% cotton.'
+    }
+  },
+
 
   '68aff9a217a5f9': {
     description: 'A great bomberman hat!',
@@ -238,7 +263,7 @@ export function enhanceProductData(printfulProduct: any): any {
  */
 export function getDefaultVariant(product: any): any {
   const enhancement = getProductEnhancement(product.external_id);
-  
+
   // If we have a specific default variant in enhancements, use it
   if (enhancement?.defaultVariant) {
     const defaultVariant = product.variants.find(
@@ -248,7 +273,7 @@ export function getDefaultVariant(product: any): any {
       return defaultVariant;
     }
   }
-  
+
   // Fallback logic: prefer black variants, then first available
   const blackVariant = product.variants.find(
     (v: any) => v.color?.toLowerCase().includes('black')
@@ -256,7 +281,7 @@ export function getDefaultVariant(product: any): any {
   if (blackVariant) {
     return blackVariant;
   }
-  
+
   // If no black variant, return the first available variant
   return product.variants[0];
 }
