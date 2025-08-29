@@ -5,58 +5,49 @@ import SafeImage from "./SafeImage";
 import CategoryBadge from "./CategoryBadge";
 import ColorCircle from "./ColorCircle";
 import { useResponsiveInteraction } from "../hooks/useResponsiveInteraction";
-import { extractVariantThumbnails, VariantThumbnail } from "../lib/variant-utils";
-
 interface ProductCardProps {
   product: PrintfulProduct;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const { id, name, variants, category } = product;
-  const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
-
-  // Get unique variant thumbnails
-  const thumbnailsData = extractVariantThumbnails(variants);
-  const currentVariant = thumbnailsData[selectedVariantIndex];
-  const hasMultipleVariants = thumbnailsData.length > 1;
+  const { id, name, variants, category, thumbnail_url } = product;
+  const [selectedColorIndex, setSelectedColorIndex] = useState(0);
 
   // Extract unique colors from variants
-  const uniqueColors = useCallback(() => {
+  const uniqueColors = (() => {
     const colors = new Set<string>();
-    variants.forEach(variant => {
+    variants.forEach((variant: any) => {
       if (variant.color) {
         colors.add(variant.color);
       }
     });
-    return Array.from(colors);
-  }, [variants])();
+    const colorArray = Array.from(colors);
+    return colorArray;
+  })();
 
-  // Handle variant selection
-  const handleVariantSelect = useCallback((index: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setSelectedVariantIndex(index);
-  }, []);
+  // Get current color
+  const currentColor = uniqueColors[selectedColorIndex] || uniqueColors[0];
+  const hasMultipleColors = uniqueColors.length > 1;
 
-  // Handle color hover (preview variant)
+  // Handle color hover (preview color)
   const handleColorHover = useCallback((colorName: string) => {
-    // Find the first variant with this color
-    const colorIndex = thumbnailsData.findIndex(variant => variant.color === colorName);
+    // Find the color index
+    const colorIndex = uniqueColors.findIndex(color => color === colorName);
     if (colorIndex !== -1) {
-      setSelectedVariantIndex(colorIndex);
+      setSelectedColorIndex(colorIndex);
     }
-  }, [thumbnailsData]);
+  }, [uniqueColors]);
 
   // Handle color click (navigate to detail page with selected variant)
   const handleColorClick = useCallback((colorName: string, e: React.MouseEvent) => {
     e.stopPropagation();
     // Find the variant with this color to pass to detail page
-    const colorIndex = thumbnailsData.findIndex(variant => variant.color === colorName);
-    if (colorIndex !== -1) {
-      const variant = thumbnailsData[colorIndex];
+    const variantWithColor = variants.find((variant: any) => variant.color === colorName);
+    if (variantWithColor) {
       // Navigate to detail page with variant external_id
-      window.location.href = `/product/${id}?variant=${variant.external_id}`;
+      window.location.href = `/product/${id}?variant=${variantWithColor.external_id}`;
     }
-  }, [thumbnailsData, id]);
+  }, [variants, id]);
 
   // Use custom hook for responsive interaction
   const {
@@ -66,7 +57,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     handleMouseLeave,
     handleCardClick,
   } = useResponsiveInteraction({
-    onDesktopLeave: () => setSelectedVariantIndex(0),
+    onDesktopLeave: () => setSelectedColorIndex(0),
   });
 
   // Determine if we should show color circles
@@ -80,27 +71,27 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       onClick={handleCardClick}
     >
       <Link href={`/product/${id}`} className="block">
-        <div className="aspect-square bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 relative">
-          {currentVariant?.imageUrl ? (
+                <div className="aspect-square bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 relative">
+          {thumbnail_url ? (
             <div className="w-full h-full relative">
               <SafeImage
-                src={currentVariant.imageUrl}
-                alt={`${name} - ${currentVariant.color || ''} ${currentVariant.size || ''}`}
+                src={thumbnail_url}
+                alt={`${name} - ${currentColor || ''}`}
                 width={400}
                 height={400}
                 className="w-full h-full object-cover transition-opacity duration-300"
               />
               
-                             {/* Color circles overlay */}
-               {shouldShowColors && (
-                 <div className="absolute bottom-3 left-3 flex gap-1">
-                   {uniqueColors.slice(0, 4).map((colorName) => {
-                     const isSelected = currentVariant?.color === colorName;
+              {/* Color circles overlay */}
+              {shouldShowColors && (
+                <div className="absolute bottom-3 left-3 flex gap-1">
+                  {uniqueColors.slice(0, 4).map((colorName: string) => {
+                    const isSelected = currentColor === colorName;
                      return (
                        <div
                          key={colorName}
                          onMouseEnter={() => handleColorHover(colorName)}
-                         onMouseLeave={() => handleColorHover(currentVariant?.color || uniqueColors[0])}
+                         onMouseLeave={() => handleColorHover(currentColor || uniqueColors[0])}
                        >
                                                    <ColorCircle
                             colorName={colorName}
@@ -122,12 +113,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                  </div>
                )}
               
-              {/* Variant indicator */}
-              {hasMultipleVariants && !shouldShowColors && (
-                <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                  {selectedVariantIndex + 1}/{thumbnailsData.length}
-                </div>
-              )}
+                             {/* Color indicator */}
+               {hasMultipleColors && !shouldShowColors && (
+                 <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                   {uniqueColors.length} colors
+                 </div>
+               )}
             </div>
           ) : (
             <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">

@@ -196,3 +196,30 @@ export interface ProductEnhancement {
 export interface EnhancedPrintfulProduct extends PrintfulProduct {
   enhancement?: ProductEnhancement;
 }
+
+// Lightweight product type for homepage (reduces payload size)
+export interface LightweightProduct {
+  id: string;
+  external_id: string;
+  name: string;
+  thumbnail_url: string;
+  category: string;
+  tags: string[];
+  description: string;
+  variants: Array<{
+    id: number;
+    external_id: string;
+    name: string;
+    retail_price: string;
+    currency: string;
+    files: Array<{
+      type: string;
+      preview_url: string;
+    }>;
+    size: string | null;
+    color: string | null;
+    is_enabled: boolean;
+    in_stock: boolean;
+  }>;
+  enhancement?: any;
+}

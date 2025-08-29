@@ -4,7 +4,7 @@ import shuffle from "lodash.shuffle";
 
 import { printful } from "../lib/printful-client";
 import { formatVariantName } from "../lib/format-variant-name";
-import { PrintfulProduct } from "../types";
+import { PrintfulProduct, LightweightProduct } from "../types";
 import { determineProductCategory } from "../lib/category-config";
 import { enhanceProductData, getDefaultDescription } from "../lib/product-enhancements";
 
@@ -60,7 +60,7 @@ export const getStaticProps: GetStaticProps = async () => {
           metadata: sync_product.metadata || {}
         });
 
-        // Create base product object
+        // Create base product object with minimal data for homepage
         const baseProduct = {
           id: sync_product.id || '',
           external_id: sync_product.external_id || '',
@@ -71,21 +71,27 @@ export const getStaticProps: GetStaticProps = async () => {
           tags: sync_product.tags || [],
           metadata: sync_product.metadata || {},
           description: getDefaultDescription(sync_product.name || 'Product', productCategory),
-          variants: sync_variants.map((variant: any) => ({
-            id: variant.id || 0,
-            external_id: variant.external_id || '',
-            name: formatVariantName(variant.name, variant.options, variant.size, variant.color),
-            retail_price: variant.retail_price || '0',
-            currency: variant.currency || 'USD',
-            files: variant.files || [],
-            options: variant.options || [],
-            size: variant.size || null,
-            color: variant.color || null,
-            is_enabled: variant.is_enabled ?? true,
-            in_stock: variant.in_stock ?? true,
-            is_ignored: variant.is_ignored ?? false,
-          })),
+          // Only include essential variant data for homepage - lightweight version
+          variants: sync_variants
+            .filter((variant: any) => variant.is_enabled !== false) // Only enabled variants
+            .map((variant: any) => ({
+              id: variant.id || 0,
+              external_id: variant.external_id || '',
+              name: formatVariantName(variant.name, variant.options, variant.size, variant.color),
+              retail_price: variant.retail_price || '0',
+              currency: variant.currency || 'USD',
+              // Only include color information for homepage - no images
+              color: variant.color || null,
+              size: variant.size || null,
+              is_enabled: variant.is_enabled ?? true,
+              in_stock: variant.in_stock ?? true,
+              is_ignored: variant.is_ignored ?? false,
+            }))
+            // Don't limit variants - we want all colors!
+            // .slice(0, 10), // Allow more variants since we're not loading images
         };
+
+
 
         // Enhance product with local data
         return enhanceProductData(baseProduct);
@@ -97,8 +103,8 @@ export const getStaticProps: GetStaticProps = async () => {
       props: {
         products: shuffle(products),
       },
-      // Revalidate every 5 minutes to keep data fresh
-      revalidate: 300,
+      // Revalidate every 2 minutes to keep data fresh but reduce build time
+      revalidate: 120,
     };
   } catch (error: any) {
     console.error('Error in getStaticProps:', error);
