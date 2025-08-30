@@ -12,6 +12,9 @@
     "type-check": "tsc --noEmit",
     "validate": "npm run lint && npm run format:check && npm run type-check",
     "getVariants": "node scripts/dev/get-product-variants.js",
+    "debugVariants": "node scripts/dev/debug-variant-mapping.js",
+    "testVariantMapping": "node scripts/dev/test-variant-mapping.js",
+    "testWebhookOrder": "node scripts/dev/test-webhook-order.js",
     "test:webhook": "node scripts/dev/test-webhook-v2.js",
     "analyze": "ANALYZE=true npm run build"
   },
