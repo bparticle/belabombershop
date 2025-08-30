@@ -1,4 +1,33 @@
 import { getEnv } from "./env-validation";
+import { mapToPrintfulVariantId } from "./product-id-mapping";
+
+/**
+ * Maps Snipcart shipping method to Printful v2 shipping method
+ * @param shippingRateUserDefinedId - Snipcart shipping method ID
+ * @returns string - Printful v2 shipping method
+ */
+function mapShippingMethod(shippingRateUserDefinedId: string): string {
+  console.log('Mapping shipping method:', shippingRateUserDefinedId);
+  
+  // Map common Snipcart shipping methods to Printful v2 methods
+  const shippingMap: { [key: string]: string } = {
+    'standard': 'STANDARD',
+    'RATE_STANDARD': 'STANDARD',
+    'express': 'EXPRESS',
+    'RATE_EXPRESS': 'EXPRESS',
+    'priority': 'PRIORITY',
+    'RATE_PRIORITY': 'PRIORITY',
+    'overnight': 'OVERNIGHT',
+    'RATE_OVERNIGHT': 'OVERNIGHT',
+    'economy': 'ECONOMY',
+    'RATE_ECONOMY': 'ECONOMY',
+  };
+  
+  const mappedMethod = shippingMap[shippingRateUserDefinedId] || 'STANDARD';
+  console.log('Mapped to Printful shipping method:', mappedMethod);
+  
+  return mappedMethod;
+}
 
 export default async function createOrderV2({
   invoiceNumber,
@@ -47,8 +76,8 @@ export default async function createOrderV2({
     address1: shippingAddress.address1 || shippingAddress.fullAddress || '',
     address2: shippingAddress.address2 || undefined,
     city: shippingAddress.city || '',
-    state_code: shippingAddress.province || '',
-    state_name: shippingAddress.province || '', // v2 requires both code and name
+    state_code: shippingAddress.province || 'CA', // Default to CA if not provided
+    state_name: shippingAddress.province || 'California', // Default to California if not provided
     country_code: shippingAddress.country || 'US',
     country_name: shippingAddress.country || 'United States', // v2 requires both code and name
     zip: shippingAddress.postalCode || '',
@@ -58,19 +87,16 @@ export default async function createOrderV2({
   };
 
   // Prepare items according to v2 API structure
-  const orderItems = items.map((item) => {
-    // Handle different possible ID formats
-    let variantId: number;
-    if (typeof item.id === 'string') {
-      variantId = parseInt(item.id);
-      if (isNaN(variantId)) {
-        throw new Error(`Invalid variant ID: ${item.id}`);
-      }
-    } else if (typeof item.id === 'number') {
-      variantId = item.id;
-    } else {
-      throw new Error(`Invalid variant ID type: ${typeof item.id}`);
-    }
+  const orderItems = await Promise.all(items.map(async (item) => {
+    console.log('Processing item for order:', {
+      id: item.id,
+      name: item.name,
+      quantity: item.quantity
+    });
+
+    // Map Snipcart item to Printful variant ID
+    const variantId = await mapToPrintfulVariantId(item);
+    console.log('Mapped to Printful variant ID:', variantId);
 
     return {
       source: "catalog" as const,
@@ -81,8 +107,20 @@ export default async function createOrderV2({
       retail_price: item.price?.toString() || undefined,
       currency: "USD",
       retail_currency: "USD",
+      placements: [
+        {
+          placement: "front",
+          technique: "dtg",
+          layers: [
+            {
+              type: "file",
+              url: "https://www.printful.com/static/images/layout/printful-logo.png"
+            }
+          ]
+        }
+      ]
     };
-  });
+  }));
 
   // Prepare order data according to v2 API structure
   const orderData = {
@@ -98,7 +136,7 @@ export default async function createOrderV2({
       vat: "0.00",
       total: "0.00", // Will be calculated by Printful
     },
-    shipping: shippingRateUserDefinedId === 'standard' ? 'STANDARD' : shippingRateUserDefinedId.toUpperCase(),
+    shipping: mapShippingMethod(shippingRateUserDefinedId),
   };
 
   try {
