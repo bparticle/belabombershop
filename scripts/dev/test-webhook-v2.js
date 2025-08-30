@@ -6,37 +6,43 @@ process.env.PRINTFUL_API_KEY = 'test-key';
 // Test data that mimics what Snipcart would send
 const testWebhookData = {
   eventName: 'order.completed',
-  mode: 'Live',
-  createdOn: '2024-01-01T00:00:00.000Z',
+  mode: 'Test',
+  createdOn: '2025-08-30T21:03:27.2345862Z',
   content: {
     items: [
       {
-        id: '4012', // Example Printful variant ID
+        id: '68b2fd4bbab7b4', // Example sync variant external ID
         quantity: 1,
-        price: 25.99,
-        name: 'Test Product - Small'
+        price: 20.00,
+        name: 'Fireskull Youth classic tee (Gold L)',
+        customFields: [
+          { name: 'Color', value: 'Gold' },
+          { name: 'Size', value: 'L' }
+        ]
       }
     ],
     shippingAddress: {
-      name: 'John Doe',
-      company: 'Test Company',
-      address1: '123 Test Street',
-      address2: 'Apt 4B',
-      city: 'Test City',
-      province: 'CA',
-      country: 'US',
-      postalCode: '90210',
-      phone: '+1234567890'
+      name: 'Bruno Patyn',
+      company: '',
+      address1: 'Gaston Lejeunestraat 14',
+      address2: '',
+      city: 'Koksijde',
+      province: 'BE',
+      country: 'BE',
+      postalCode: '8670',
+      phone: '0484973368'
     },
-    shippingRateUserDefinedId: 'standard'
+    shippingRateUserDefinedId: 'RATE_STANDARD',
+    invoiceNumber: 'SNIP-1043',
+    email: 'bparticle@protonmail.com'
   },
-  invoiceNumber: 'TEST-ORDER-123',
-  email: 'test@example.com'
+  invoiceNumber: 'SNIP-1043',
+  email: 'bparticle@protonmail.com'
 };
 
 async function testWebhook() {
   try {
-    console.log('Testing webhook endpoint with v2 implementation...');
+    console.log('Testing webhook endpoint with v1 implementation...');
     
     const response = await fetch('http://localhost:3000/api/snipcart/webhook', {
       method: 'POST',

@@ -1,6 +1,6 @@
 import type { NextApiResponse } from "next";
 
-import createOrderV2 from "../../../lib/create-order-v2";
+import createOrderV1 from "../../../lib/create-order-v1";
 import { validateData, SnipcartWebhookRequestSchema } from "../../../lib/validation";
 
 import type { SnipcartRequest, SnipcartWebhookEvent } from "../../../types";
@@ -101,7 +101,7 @@ export default async function handler(
   try {
     switch (eventName) {
       case "order.completed":
-        console.log('Processing order.completed event...');
+        console.log('Processing order.completed event with v1 API...');
         
         // Extract data from the correct locations in the Snipcart payload
         const orderData = {
@@ -130,11 +130,11 @@ export default async function handler(
         }
         
         try {
-          console.log('Calling createOrderV2...');
-          await createOrderV2(orderData);
-          console.log('createOrderV2 completed successfully');
+          console.log('Calling createOrderV1...');
+          await createOrderV1(orderData);
+          console.log('createOrderV1 completed successfully');
         } catch (orderError) {
-          console.error('createOrderV2 failed:', orderError);
+          console.error('createOrderV1 failed:', orderError);
           throw orderError;
         }
         break;
