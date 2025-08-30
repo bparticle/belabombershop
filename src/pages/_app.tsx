@@ -10,12 +10,12 @@ import { ThemeProvider } from "../context/theme";
 import Layout from "../components/Layout";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { useSnipcartTheme } from "../hooks/useSnipcartTheme";
-import { validateEnvironmentVariables } from "../lib/env-validation";
+import { validateClientEnvironmentVariables } from "../lib/env-validation";
 
 function MyApp({ Component, pageProps }: AppProps) {
-  // Validate environment variables on app startup
+  // Validate client-side environment variables on app startup
   try {
-    validateEnvironmentVariables();
+    validateClientEnvironmentVariables();
   } catch (error) {
     // In production, this should cause the app to fail fast
     if (process.env.NODE_ENV === 'production') {

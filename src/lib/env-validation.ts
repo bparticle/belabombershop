@@ -13,6 +13,11 @@ interface EnvironmentVariables {
   NODE_ENV: 'development' | 'production' | 'test';
 }
 
+interface ClientEnvironmentVariables {
+  NEXT_PUBLIC_SNIPCART_API_KEY?: string;
+  NODE_ENV: 'development' | 'production' | 'test';
+}
+
 /**
  * Validates that all required environment variables are present
  * @throws Error if any required environment variables are missing
@@ -63,11 +68,40 @@ export function validateEnvironmentVariables(): EnvironmentVariables {
 }
 
 /**
+ * Validates client-side environment variables only
+ * This function is safe to call on the client side
+ * @throws Error if any required client-side environment variables are missing
+ */
+export function validateClientEnvironmentVariables(): ClientEnvironmentVariables {
+  const clientVars = {
+    NEXT_PUBLIC_SNIPCART_API_KEY: process.env.NEXT_PUBLIC_SNIPCART_API_KEY,
+    NODE_ENV: process.env.NODE_ENV as ClientEnvironmentVariables['NODE_ENV'],
+  };
+
+  // Validate NODE_ENV
+  if (!['development', 'production', 'test'].includes(clientVars.NODE_ENV)) {
+    throw new Error(
+      `Invalid NODE_ENV: ${clientVars.NODE_ENV}. Must be one of: development, production, test`
+    );
+  }
+
+  return clientVars as ClientEnvironmentVariables;
+}
+
+/**
  * Get validated environment variables
  * @returns Validated environment variables object
  */
 export function getEnv(): EnvironmentVariables {
   return validateEnvironmentVariables();
+}
+
+/**
+ * Get validated client-side environment variables
+ * @returns Validated client-side environment variables object
+ */
+export function getClientEnv(): ClientEnvironmentVariables {
+  return validateClientEnvironmentVariables();
 }
 
 /**
