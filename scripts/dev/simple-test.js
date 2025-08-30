@@ -26,7 +26,7 @@ const testData = {
     },
     "shippingRateUserDefinedId": "RATE_STANDARD"
   },
-  "invoiceNumber": "TEST-123",
+  "invoiceNumber": "TEST-" + Date.now(),
   "email": "test@example.com"
 };
 
