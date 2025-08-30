@@ -2,12 +2,12 @@
 
 ## Issue Summary
 
-The webhook was failing with the error:
-```
-"Item 0: This item is discontinued."
-```
+The webhook was failing with two issues:
 
-This was happening because the webhook was using the wrong variant ID when creating orders with Printful's v2 API.
+1. **"Item 0: This item is discontinued."** - Wrong variant ID mapping
+2. **Missing design files** - Orders were created with generic placeholder images instead of the actual designs
+
+These issues were happening because the webhook was using the wrong variant ID and not including the design files when creating orders with Printful's v2 API.
 
 ## Root Cause
 
@@ -25,6 +25,7 @@ The issue was in the variant ID mapping between Snipcart and Printful:
 
 ## Solution
 
+### Issue 1: Variant ID Mapping
 Updated the `mapToPrintfulVariantId` function in `src/lib/product-id-mapping.ts` to:
 
 1. **Take the sync variant external ID** from Snipcart
@@ -32,8 +33,17 @@ Updated the `mapToPrintfulVariantId` function in `src/lib/product-id-mapping.ts`
 3. **Extract the catalog variant ID** from the sync variant response
 4. **Use the catalog variant ID** in the v2 API call
 
+### Issue 2: Design Files
+Updated the `createOrderV2` function in `src/lib/create-order-v2.ts` to:
+
+1. **Get sync variant details** to access design files
+2. **Extract design files** from the sync variant response
+3. **Create placements** based on file types (front, back, etc.)
+4. **Use actual file URLs** instead of placeholder images
+
 ### Code Changes
 
+#### Variant ID Mapping
 ```typescript
 // Before: Trying to use sync variant ID directly
 const parsedId = parseInt(item.id);
@@ -43,6 +53,38 @@ return parsedId; // This was wrong!
 const syncVariantResponse = await printful.get(`store/variants/@${item.id}`);
 const syncVariant = syncVariantResponse.result;
 return syncVariant.variant_id; // This is the correct catalog variant ID
+```
+
+#### Design Files
+```typescript
+// Before: Using hardcoded placeholder image
+placements: [
+  {
+    placement: "front",
+    technique: "dtg",
+    layers: [
+      {
+        type: "file",
+        url: "https://www.printful.com/static/images/layout/printful-logo.png"
+      }
+    ]
+  }
+]
+
+// After: Using actual design files from sync variant
+const syncVariantResponse = await printful.get(`store/variants/@${item.id}`);
+const syncVariant = syncVariantResponse.result;
+
+// Create placements based on design files
+syncVariant.files.forEach(file => {
+  if (file.type === 'default' || file.type === 'front') {
+    // Add to front placement
+    placementMap.get('front').layers.push({
+      type: "file",
+      url: `https://api.printful.com/files/${file.id}`
+    });
+  }
+});
 ```
 
 ## Testing
@@ -56,10 +98,11 @@ Created several test scripts to verify the fix:
 ### Test Results
 
 ```
-✅ Sync variant external ID (from Snipcart): 68b307c1899057
-✅ Mapped to catalog variant ID: 18715
+✅ Sync variant external ID (from Snipcart): 68b2fd4bbab7b4
+✅ Mapped to catalog variant ID: 18698
 ✅ Order data structure is correct for v2 API
-✅ This should resolve the "item is discontinued" error
+✅ Design files included: 2 placements (front + back)
+✅ This should resolve both the "item is discontinued" error and missing design issue
 ```
 
 ## Performance Optimization
@@ -90,7 +133,9 @@ The fix ensures that:
 
 - ✅ Snipcart orders are correctly mapped to Printful catalog variants
 - ✅ The v2 API receives the correct `catalog_variant_id`
+- ✅ Design files are included in the order placements
 - ✅ No more "item is discontinued" errors
+- ✅ No more missing design issues
 - ✅ Dynamic, data-driven approach maintained (no hardcoding)
 - ✅ Hybrid v1/v2 API approach preserved
 

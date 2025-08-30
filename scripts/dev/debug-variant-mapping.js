@@ -26,7 +26,7 @@ async function debugVariantMapping() {
   console.log('=====================================\n');
   
   // The problematic variant ID from the error
-  const problematicVariantId = '68b307c1899057';
+  const problematicVariantId = '68b2fd4bbab7b4'; // Fireskull Gold L variant
   
   console.log(`🔍 Analyzing problematic variant ID: ${problematicVariantId}\n`);
   
@@ -49,6 +49,22 @@ async function debugVariantMapping() {
     console.log('  In Stock:', syncVariant.in_stock);
     console.log('  Is Ignored:', syncVariant.is_ignored);
     console.log('');
+    
+    // Check if there are files/designs
+    if (syncVariant.files && syncVariant.files.length > 0) {
+      console.log('📁 Design Files:');
+      syncVariant.files.forEach((file, index) => {
+        console.log(`  File ${index + 1}:`);
+        console.log('    ID:', file.id);
+        console.log('    Type:', file.type);
+        console.log('    URL:', file.url);
+        console.log('    Preview URL:', file.preview_url);
+        console.log('');
+      });
+    } else {
+      console.log('❌ No design files found in sync variant');
+      console.log('');
+    }
     
     // Now get the product details to see all variants
     console.log('2️⃣ Getting product details...');
@@ -76,6 +92,16 @@ async function debugVariantMapping() {
         console.log('    Is Enabled:', variant.is_enabled);
         console.log('    In Stock:', variant.in_stock);
         console.log('    Is Ignored:', variant.is_ignored);
+        
+        // Check files for this variant
+        if (variant.files && variant.files.length > 0) {
+          console.log('    Files:', variant.files.length);
+          variant.files.forEach((file, fileIndex) => {
+            console.log(`      File ${fileIndex + 1}: ${file.type} - ${file.url}`);
+          });
+        } else {
+          console.log('    Files: None');
+        }
         console.log('');
       });
     }
