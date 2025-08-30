@@ -85,8 +85,6 @@ export default async function handler(
       }),
     });
   } catch (err) {
-    console.error('Shipping API error:', err);
-    
     // Handle validation errors specifically
     if (err instanceof Error && err.message.includes('Validation failed')) {
       return res.status(400).json({

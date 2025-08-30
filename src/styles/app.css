@@ -1,3 +1,280 @@
+/* ========================================
+   SITE THEME COLOR VARIABLES
+   ======================================== */
+:root {
+  /* Light theme colors */
+  --site-bg-primary: hsl(0, 0%, 100%);
+  --site-bg-secondary: hsl(0, 0%, 98%);
+  --site-bg-tertiary: hsl(0, 0%, 96%);
+  --site-text-primary: hsl(0, 0%, 20%);
+  --site-text-secondary: hsl(0, 0%, 45%);
+  --site-text-muted: hsl(0, 0%, 60%);
+  --site-border-primary: hsl(0, 0%, 85%);
+  --site-border-secondary: hsl(0, 0%, 90%);
+  --site-accent-primary: hsl(220, 70%, 50%);
+  --site-accent-hover: hsl(220, 70%, 40%);
+  --site-success: hsl(144, 50%, 45%);
+  --site-error: hsl(6, 55%, 50%);
+  --site-warning: hsl(38, 92%, 50%);
+}
+
+.dark {
+  /* Dark theme colors - matching the site's gray-900 theme */
+  --site-bg-primary: hsl(220, 26%, 14%); /* gray-900 equivalent */
+  --site-bg-secondary: hsl(220, 26%, 11%); /* slightly darker */
+  --site-bg-tertiary: hsl(220, 26%, 9%); /* even darker for cards */
+  --site-bg-elevated: hsl(220, 26%, 7%); /* darkest for modals */
+  --site-text-primary: hsl(0, 0%, 90%);
+  --site-text-secondary: hsl(0, 0%, 70%);
+  --site-text-muted: hsl(0, 0%, 50%);
+  --site-border-primary: hsla(0, 0%, 100%, 10%);
+  --site-border-secondary: hsla(0, 0%, 100%, 5%);
+  --site-accent-primary: hsl(220, 70%, 55%);
+  --site-accent-hover: hsl(220, 70%, 65%);
+  --site-success: hsl(144, 50%, 55%);
+  --site-error: hsl(6, 55%, 60%);
+  --site-warning: hsl(38, 92%, 60%);
+}
+
+/* ========================================
+   LAYOUT BACKGROUND CONSISTENCY
+   ======================================== */
+/* Ensure all layout elements use the same background color */
+header,
+main,
+footer {
+  background-color: var(--site-bg-primary) !important;
+}
+
+/* Override Tailwind classes to use our CSS variables */
+.bg-white.dark\:bg-gray-900 {
+  background-color: var(--site-bg-primary) !important;
+}
+
+/* ========================================
+   SNIPCART THEME INTEGRATION
+   ======================================== */
+/* Snipcart CSS Custom Properties for Theme Integration */
+/* Using higher specificity to override Snipcart's built-in dark mode variables */
+
+/* Light theme (default) - CSS custom properties will inherit from document root */
+#snipcart,
+.snipcart-layout,
+.snipcart-modal,
+[id^="snipcart"] {
+  /* These ensure consistent light theme appearance */
+  --color-default: var(--site-text-primary);
+  --color-alt: var(--site-text-secondary);
+  --color-icon: var(--site-accent-primary);
+  --color-success: var(--site-success);
+  --color-error: var(--site-error);
+  
+  --color-link: var(--site-accent-primary);
+  --color-link-hover: var(--site-accent-hover);
+  --color-link-active: var(--color-link);
+  --color-link-focus: var(--color-link);
+  
+  --bgColor-default: var(--site-bg-primary);
+  --bgColor-alt: var(--site-bg-secondary);
+  --bgColor-success: hsl(144, 70%, 95%);
+  --bgColor-error: hsl(6, 50%, 95%);
+  --bgColor-info: hsl(210, 55%, 95%);
+  
+  --bgColor-modal: var(--site-bg-primary);
+  --bgColor-modalVeil: hsla(0, 0%, 0%, 0.5);
+  
+  --borderColor-default: var(--site-border-primary);
+  --borderColor-error: hsl(6, 55%, 70%);
+}
+
+/* Dark theme CSS custom properties - using higher specificity to override Snipcart defaults */
+html.dark #snipcart,
+html.dark .snipcart-layout,
+html.dark .snipcart-modal,
+html.dark [id^="snipcart"],
+.dark #snipcart,
+.dark .snipcart-layout,
+.dark .snipcart-modal,
+.dark [id^="snipcart"],
+/* Additional specificity to ensure our variables override Snipcart's built-in dark mode */
+html.dark #snipcart *,
+html.dark .snipcart-layout *,
+html.dark .snipcart-modal *,
+.dark #snipcart *,
+.dark .snipcart-layout *,
+.dark .snipcart-modal * {
+  /* ----------------- 
+      Colors - Override Snipcart's built-in dark mode variables
+  ----------------- */
+  --color-default: var(--site-text-primary) !important;
+  --color-alt: var(--site-text-secondary) !important;
+  --color-icon: var(--site-accent-primary) !important;
+  --color-success: var(--site-success) !important;
+  --color-error: var(--site-error) !important;
+
+  --color-link: var(--site-accent-primary) !important;
+  --color-link-hover: var(--site-accent-hover) !important;
+  --color-link-active: var(--color-link) !important;
+  --color-link-focus: var(--color-link) !important;
+
+  --color-input: var(--color-default) !important;
+  --color-input-hover: var(--color-input) !important;
+  --color-input-focus: var(--color-input) !important;
+  --color-input-checked: var(--color-input) !important;
+  --color-input-disabled: var(--color-alt) !important;
+  --color-input-error: var(--color-error) !important;
+  --color-inputLabel: var(--color-default) !important;
+  --color-inputLabel-hover: var(--color-inputLabel) !important;
+  --color-inputLabel-focus: var(--color-inputLabel) !important;
+  --color-inputIcon: var(--color-alt) !important;
+  --color-inputIcon-hover: var(--color-default) !important;
+  --color-inputIcon-focus: var(--color-inputIcon) !important;
+  --color-inputIcon-checked: var(--color-default) !important;
+  --color-inputIcon-error: var(--color-error) !important;
+  --color-inputPlaceholder: var(--color-alt) !important;
+
+  --color-buttonPrimary: var(--color-default) !important;
+  --color-buttonPrimary-hover: hsl(0, 0%, 100%) !important;
+  --color-buttonPrimary-active: var(--color-buttonPrimary) !important;
+  --color-buttonPrimary-focus: var(--color-buttonPrimary) !important;
+  --color-buttonPrimary-disabled: var(--color-alt) !important;
+  --color-buttonPrimary-success: var(--color-buttonPrimary) !important;
+  --color-buttonPrimary-error: var(--color-buttonPrimary) !important;
+
+  --color-buttonSecondary: var(--color-icon) !important;
+  --color-buttonSecondary-hover: hsl(200, 90%, 50%) !important;
+  --color-buttonSecondary-active: var(--color-buttonSecondary) !important;
+  --color-buttonSecondary-focus: var(--color-buttonSecondary) !important;
+  --color-buttonSecondary-disabled: hsl(210, 10%, 25%) !important;
+  --color-buttonSecondary-success: var(--color-success) !important;
+  --color-buttonSecondary-error: var(--color-error) !important;
+
+  --color-buttonDanger: var(--color-error) !important;
+  --color-buttonDanger-hover: hsl(6, 55%, 70%) !important;
+  --color-buttonDanger-active: var(--color-buttonDanger) !important;
+  --color-buttonDanger-focus: var(--color-buttonDanger) !important;
+  --color-buttonDanger-disabled: hsl(210, 10%, 25%) !important;
+  --color-buttonDanger-success: var(--color-default) !important;
+  --color-buttonDanger-error: var(--color-default) !important;
+
+  --color-badge: var(--color-link) !important;
+  --color-badge-active: var(--color-link) !important;
+  --color-badge-disabled: var(--color-alt) !important;
+
+  /* ----------------- 
+      Border colors
+  ----------------- */
+  --borderColor-default: var(--site-border-primary) !important;
+  --borderColor-error: hsl(6, 55%, 30%) !important;
+
+  --borderColor-link: currentColor !important;
+  --borderColor-link-hover: currentColor !important;
+  --borderColor-link-active: currentColor !important;
+  --borderColor-link-focus: currentColor !important;
+
+  --borderColor-input: var(--site-border-primary) !important;
+  --borderColor-input-hover: var(--site-accent-primary) !important;
+  --borderColor-input-focus: var(--borderColor-input-hover) !important;
+  --borderColor-input-checked: var(--borderColor-input-hover) !important;
+  --borderColor-input-disabled: hsl(210, 10%, 20%) !important;
+  --borderColor-input-error: var(--borderColor-error) !important;
+
+  --borderColor-buttonPrimary: transparent !important;
+  --borderColor-buttonPrimary-hover: transparent !important;
+  --borderColor-buttonPrimary-focus: transparent !important;
+  --borderColor-buttonPrimary-disabled: transparent !important;
+  --borderColor-buttonPrimary-success: transparent !important;
+  --borderColor-buttonPrimary-error: transparent !important;
+
+  --borderColor-buttonSecondary: transparent !important;
+  --borderColor-buttonSecondary-hover: transparent !important;
+  --borderColor-buttonSecondary-focus: transparent !important;
+  --borderColor-buttonSecondary-disabled: transparent !important;
+  --borderColor-buttonSecondary-success: transparent !important;
+  --borderColor-buttonSecondary-error: transparent !important;
+
+  --borderColor-badge: transparent !important;
+  --borderColor-badge-active: transparent !important;
+  --borderColor-badge-disabled: transparent !important;
+
+  /* ----------------- 
+      Background colors
+  ----------------- */
+  --bgColor-default: var(--site-bg-primary) !important;
+  --bgColor-alt: var(--site-bg-secondary) !important;
+  --bgColor-success: hsl(144, 70%, 15%) !important;
+  --bgColor-error: hsl(6, 50%, 15%) !important;
+  --bgColor-info: hsl(210, 55%, 15%) !important;
+
+  --bgColor-modal: var(--site-bg-elevated) !important;
+  --bgColor-modalVeil: hsla(220, 26%, 14%, .75) !important;
+
+  --bgColor-link: none !important;
+  --bgColor-link-hover: none !important;
+  --bgColor-link-active: none !important;
+  --bgColor-link-focus: hsl(210, 55%, 10%) !important;
+
+  --bgColor-input: var(--site-bg-tertiary) !important;
+  --bgColor-input-hover: var(--bgColor-input) !important;
+  --bgColor-input-focus: var(--bgColor-input) !important;
+  --bgColor-input-checked: var(--borderColor-input-hover) !important;
+  --bgColor-input-disabled: hsl(210, 10%, 14%) !important;
+  --bgColor-input-error: var(--bgColor-input) !important;
+  --bgColor-input-autofill: hsl(210, 60%, 15%) !important;
+
+  --bgColor-buttonPrimary: var(--site-accent-primary) !important;
+  --bgColor-buttonPrimary-hover: var(--site-accent-hover) !important;
+  --bgColor-buttonPrimary-active: var(--bgColor-buttonPrimary) !important;
+  --bgColor-buttonPrimary-focus: var(--bgColor-buttonPrimary) !important;
+  --bgColor-buttonPrimary-disabled: hsl(210, 10%, 25%) !important;
+  --bgColor-buttonPrimary-success: hsl(144, 66%, 30%) !important;
+  --bgColor-buttonPrimary-error: hsl(6, 60%, 35%) !important;
+
+  --bgColor-buttonSecondary: var(--bgColor-info) !important;
+  --bgColor-buttonSecondary-hover: hsl(210, 60%, 18%) !important;
+  --bgColor-buttonSecondary-active: var(--bgColor-buttonSecondary) !important;
+  --bgColor-buttonSecondary-focus: var(--bgColor-buttonSecondary) !important;
+  --bgColor-buttonSecondary-disabled: hsl(210, 10%, 9%) !important;
+  --bgColor-buttonSecondary-success: var(--bgColor-success) !important;
+  --bgColor-buttonSecondary-error: var(--bgColor-error) !important;
+
+  --bgColor-buttonDanger: var(--bgColor-error) !important;
+  --bgColor-buttonDanger-hover: hsl(6, 50%, 18%) !important;
+  --bgColor-buttonDanger-active: var(--bgColor-buttonDanger) !important;
+  --bgColor-buttonDanger-focus: var(--bgColor-buttonDanger) !important;
+  --bgColor-buttonDanger-disabled: hsl(210, 10%, 9%) !important;
+  --bgColor-buttonDanger-success: hsl(144, 66%, 30%) !important;
+  --bgColor-buttonDanger-error: hsl(6, 60%, 35%) !important;
+
+  --bgColor-badge: hsl(210, 55%, 10%) !important;
+  --bgColor-badge-active: hsl(210, 60%, 15%) !important;
+  --bgColor-badge-disabled: hsl(210, 10%, 11%) !important;
+
+  /* ----------------- 
+      Shadows - Replace white shadows with dark mode appropriate ones
+  ----------------- */
+  --shadow-default: 0px 20px 24px -20px hsla(0, 0%, 0%, .5) !important;
+  --shadow-tooltip: 0px 8px 16px hsla(220, 70%, 22%, .5) !important;
+
+  --shadow-link-focus: 0px 6px 4px -3px hsla(200, 90%, 40%, .5) !important;
+
+  --shadow-input-hover: none !important;
+  --shadow-input-focus: 0px 5px 10px -3px hsla(200, 90%, 40%, .3) !important;
+  --shadow-input-checked: none !important;
+
+  --shadow-buttonPrimary-hover: 0px 10px 4px -8px hsla(0, 0%, 0%, .5) !important;
+  --shadow-buttonPrimary-active: none !important;
+  --shadow-buttonPrimary-focus: 0px 0px 6px 2px hsl(200, 90%, 40%) !important;
+
+  --shadow-buttonSecondary-hover: 0px 10px 4px -8px hsla(0, 0%, 0%, .2) !important;
+  --shadow-buttonSecondary-active: none !important;
+  --shadow-buttonSecondary-focus: 0px 0px 6px 2px hsla(200, 90%, 40%, .8) !important;
+
+  --shadow-buttonDanger-hover: 0px 10px 4px -8px hsla(0, 0%, 0%, .25) !important;
+  --shadow-buttonDanger-active: none !important;
+  --shadow-buttonDanger-focus: 0px 0px 6px 2px hsla(6, 55%, 60%) !important;
+}
+
 .snipcart {
   @apply font-sans text-base text-gray-800 dark:text-gray-200 font-normal;
 }
@@ -69,34 +346,630 @@
   @apply text-gray-900 dark:text-gray-100 text-sm leading-5;
 }
 
-/* Dark mode overrides for Snipcart */
+/* Legacy CSS overrides - keeping minimal essential overrides */
 .dark .snipcart-modal,
 .dark .snipcart-modal__container,
 .dark .snipcart-cart__content,
 .dark .snipcart-cart-header {
-  @apply bg-gray-800 text-gray-200;
+  /* These are now handled by CSS custom properties */
 }
 
-.dark .snipcart-input,
-.dark .snipcart-form__select {
-  @apply bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400;
+/* ========================================
+   SNIPCART ELEMENT-SPECIFIC OVERRIDES
+   ======================================== */
+/* Additional specific overrides to ensure proper dark mode appearance */
+.dark .snipcart-modal__container {
+  background-color: var(--site-bg-elevated) !important;
 }
 
-.dark .snipcart-form__field {
-  @apply text-gray-200;
+.dark .snipcart-cart__content {
+  background-color: var(--site-bg-primary) !important;
 }
 
-.dark .snipcart-cart-button--highlight {
-  @apply bg-blue-600 hover:bg-blue-700;
+.dark .snipcart-cart__secondary-header {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.dark .snipcart-cart__footer {
+  background-color: var(--site-bg-primary) !important;
+}
+
+/* Checkout page specific overrides */
+.dark .snipcart-checkout__content {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.dark .snipcart-checkout-step {
+  background-color: var(--site-bg-primary) !important;
 }
 
 .dark .snipcart__box {
-  @apply bg-gray-700 border-gray-600;
+  background-color: var(--site-bg-primary) !important;
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart__box--header {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.dark .snipcart__box--title {
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart__box--title h1 {
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-cart-summary {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.dark .snipcart-cart-summary__content {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.dark .snipcart-cart-summary__title {
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-cart-summary-item {
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-cart-summary-item__name {
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-cart-summary-item__quantity {
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-cart-summary-item__price {
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-cart-summary-fees__title {
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-cart-summary-fees__amount {
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-cart-summary-fees__notice {
+  color: var(--site-text-muted) !important;
+}
+
+.dark .snipcart-form__label {
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-input__input {
+  background-color: var(--site-bg-tertiary) !important;
+  color: var(--site-text-primary) !important;
+  border-color: var(--site-border-primary) !important;
+}
+
+/* Fix for .snipcart-input elements - darker border for better contrast */
+.dark .snipcart-input {
+  border-color: var(--site-border-primary) !important;
+  background-color: var(--site-bg-tertiary) !important;
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-input__input::placeholder {
+  color: var(--site-text-muted) !important;
+}
+
+.dark .snipcart-textbox {
+  background-color: var(--site-bg-tertiary) !important;
+  color: var(--site-text-primary) !important;
+  border-color: var(--site-border-primary) !important;
+}
+
+.dark .snipcart-checkbox {
+  background-color: var(--site-bg-tertiary) !important;
+  border-color: var(--site-border-primary) !important;
+}
+
+.dark .snipcart-checkbox:checked {
+  background-color: var(--site-accent-primary) !important;
+}
+
+.dark .snipcart-cart-button {
+  background-color: var(--site-accent-primary) !important;
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-cart-button:hover {
+  background-color: var(--site-accent-hover) !important;
+}
+
+.dark .snipcart-cart-button--highlight {
+  background-color: var(--site-accent-primary) !important;
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-cart-button--highlight:hover {
+  background-color: var(--site-accent-hover) !important;
+}
+
+.dark .snipcart__actions--link {
+  color: var(--site-accent-primary) !important;
+}
+
+.dark .snipcart__actions--link:hover {
+  color: var(--site-accent-hover) !important;
 }
 
 .dark .snipcart__box--badge {
-  @apply bg-gray-600 text-blue-400;
+  background-color: var(--site-accent-primary) !important;
+  color: var(--site-text-primary) !important;
 }
+
+.dark .snipcart__box--badge-highlight {
+  background-color: var(--site-accent-primary) !important;
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-featured-payment-methods__title {
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-featured-payment-methods__title a {
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-featured-payment-methods__title svg {
+  fill: var(--site-text-primary) !important;
+}
+
+.dark .snipcart__icon {
+  fill: var(--site-text-primary) !important;
+  stroke: var(--site-text-secondary) !important;
+  stroke-width: 0.5 !important;
+}
+
+.dark .snipcart__icon--blue-light {
+  fill: var(--site-accent-primary) !important;
+}
+
+.dark .snipcart__icon--brand {
+  fill: currentColor !important;
+}
+
+.dark .snipcart-modal__close-title {
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-modal__close-icon {
+  fill: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-form__separator {
+  border-color: var(--site-border-primary) !important;
+}
+
+.dark .snipcart-cart-summary__separator {
+  border-color: var(--site-border-primary) !important;
+}
+
+.dark .snipcart-form__field-checkbox label {
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-form__label--checkbox {
+  color: var(--site-text-primary) !important;
+}
+
+/* Additional overrides for inactive checkout steps and other elements */
+.dark .snipcart__box--gray {
+  background-color: var(--site-bg-secondary) !important;
+  color: var(--site-text-muted) !important;
+}
+
+.dark .snipcart__box--gray .snipcart__box--title {
+  color: var(--site-text-muted) !important;
+}
+
+.dark .snipcart__box--gray .snipcart__box--title h1 {
+  color: var(--site-text-muted) !important;
+}
+
+.dark .snipcart__box--gray .snipcart__box--badge {
+  background-color: var(--site-bg-tertiary) !important;
+  color: var(--site-text-muted) !important;
+}
+
+.dark .snipcart-layout__col {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.dark .snipcart-layout__content {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.dark .snipcart-cart-header {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.dark .snipcart-cart-header__close-button {
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-cart-header__close-button:hover {
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-typeahead__input {
+  background-color: var(--site-bg-tertiary) !important;
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-typeahead__dropdown {
+  background-color: var(--site-bg-tertiary) !important;
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-textbox--hidden {
+  background-color: var(--site-bg-tertiary) !important;
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-form__set {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.dark .snipcart-form__field {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.dark .snipcart-form__row {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.dark .snipcart-form__cell--large {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.dark .snipcart-form__cell--tidy {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.dark .snipcart-form__cell--input-aligned {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.dark .snipcart-form__footer {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.dark .snipcart-form__address-autocomplete {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.dark .snipcart-form__select {
+  background-color: var(--site-bg-tertiary) !important;
+  color: var(--site-text-primary) !important;
+  border-color: var(--site-border-primary) !important;
+}
+
+.dark .snipcart-form__set--different-shipping {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.dark .snipcart-form__field-checkbox {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.dark .snipcart-cart-summary__footer {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.dark .snipcart-featured-payment-methods {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.dark .snipcart-featured-payment-methods--no-background {
+  background-color: transparent !important;
+}
+
+.dark .snipcart-featured-payment-methods__list {
+  background-color: transparent !important;
+}
+
+.dark .snipcart-featured-payment-methods__list-item {
+  background-color: transparent !important;
+}
+
+.dark .snipcart-loading-overlay {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.dark .snipcart-loading-overlay__content {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.dark .snipcart-cart-summary__totals {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.dark .snipcart-cart-summary-fees {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.dark .snipcart-cart-summary-fees__item {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.dark .snipcart-cart-summary-fees__total {
+  background-color: var(--site-bg-primary) !important;
+}
+
+/* ========================================
+   ADDITIONAL DARK MODE FIXES
+   ======================================== */
+/* Shipping rates list item dark mode styling */
+.dark .snipcart-shipping-rates-list-item {
+  background-color: var(--site-bg-primary) !important;
+  color: var(--site-text-primary) !important;
+  border-color: var(--site-border-primary) !important;
+}
+
+.dark .snipcart-shipping-rates-list-item__title {
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-shipping-rates-list-item__description {
+  color: var(--site-text-secondary) !important;
+}
+
+.dark .snipcart-shipping-rates-list-item__price {
+  color: var(--site-text-primary) !important;
+}
+
+/* Legend dark mode styling */
+.dark legend {
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-form__legend {
+  color: var(--site-text-primary) !important;
+}
+
+/* Payment form input dark mode styling */
+.dark .snipcart-payment-form__input {
+  background-color: var(--site-bg-tertiary) !important;
+  color: var(--site-text-primary) !important;
+  border-color: var(--site-border-primary) !important;
+}
+
+.dark .snipcart-payment-form__input::placeholder {
+  color: var(--site-text-muted) !important;
+}
+
+/* Regular paragraph dark mode styling */
+.dark p {
+  color: var(--site-text-primary) !important;
+}
+
+/* Override inline styles for dark mode */
+.dark legend,
+.dark label,
+.dark p {
+  color: var(--site-text-primary) !important;
+}
+
+/* Specific override for test card hint */
+.dark .test-card-hint {
+  color: var(--site-text-secondary) !important;
+}
+
+/* ========================================
+   SNIPCART CSS RESET OVERRIDE
+   ======================================== */
+/* Override Snipcart's broad CSS reset for dark mode */
+.dark .snipcart * {
+  color: var(--site-text-primary) !important;
+}
+
+/* Ensure specific text elements have proper dark mode colors */
+.dark .snipcart span,
+.dark .snipcart div,
+.dark .snipcart p,
+.dark .snipcart label,
+.dark .snipcart legend,
+.dark .snipcart h1,
+.dark .snipcart h2,
+.dark .snipcart h3,
+.dark .snipcart h4,
+.dark .snipcart h5,
+.dark .snipcart h6 {
+  color: var(--site-text-primary) !important;
+}
+
+/* Secondary text elements */
+.dark .snipcart small,
+.dark .snipcart .snipcart__font--tiny,
+.dark .snipcart .snipcart__font--secondary {
+  color: var(--site-text-secondary) !important;
+}
+
+/* Muted text elements */
+.dark .snipcart .snipcart-cart-summary-fees__notice,
+.dark .snipcart .snipcart__font--muted {
+  color: var(--site-text-muted) !important;
+}
+
+/* ========================================
+   CRITICAL FIX: Product items with light backgrounds
+   ======================================== */
+/* Fix for Snipcart product items that have light backgrounds but dark text */
+.dark .snipcart-item-line {
+  background-color: var(--site-bg-primary) !important;
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-item-line__container {
+  background-color: var(--site-bg-primary) !important;
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-item-line__product {
+  background-color: var(--site-bg-primary) !important;
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-item-line__header {
+  background-color: var(--site-bg-primary) !important;
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-item-line__content {
+  background-color: var(--site-bg-primary) !important;
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-item-line__body {
+  background-color: var(--site-bg-primary) !important;
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-item-line__info {
+  background-color: var(--site-bg-primary) !important;
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-item-line__variants {
+  background-color: var(--site-bg-primary) !important;
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-item-line__quantity {
+  background-color: var(--site-bg-primary) !important;
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-item-line__title {
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-item-line__media {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.dark .snipcart-item-line__image {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.dark .snipcart-item-line__actions {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.dark .snipcart-item-custom-fields {
+  background-color: var(--site-bg-primary) !important;
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-item-custom-fields__field {
+  background-color: var(--site-bg-primary) !important;
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-item-custom-fields--textbox {
+  background-color: var(--site-bg-primary) !important;
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-custom-field-wrapper__label {
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-custom-field-wrapper__input {
+  background-color: var(--site-bg-tertiary) !important;
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-item-quantity {
+  background-color: var(--site-bg-primary) !important;
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-item-quantity__label {
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-item-quantity__quantity-price-container {
+  background-color: var(--site-bg-primary) !important;
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-item-quantity__quantity {
+  background-color: var(--site-bg-primary) !important;
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-item-quantity__total-price {
+  color: var(--site-text-primary) !important;
+}
+
+.dark .snipcart-item-quantity__button {
+  background-color: var(--site-bg-tertiary) !important;
+  color: var(--site-text-primary) !important;
+}
+
+/* ========================================
+   BOX SHADOW FIXES
+   ======================================== */
+/* Remove or replace white box shadows with dark mode appropriate ones */
+.dark .snipcart-modal {
+  box-shadow: 0px 20px 24px -20px hsla(0, 0%, 0%, .5) !important;
+}
+
+.dark .snipcart-modal__container {
+  box-shadow: 0px 20px 24px -20px hsla(0, 0%, 0%, .5) !important;
+}
+
+.dark .snipcart-cart-summary {
+  box-shadow: 0px 20px 24px -20px hsla(0, 0%, 0%, .5) !important;
+}
+
+.dark .snipcart__box {
+  box-shadow: 0px 10px 15px -3px hsla(0, 0%, 0%, .3) !important;
+}
+
+.dark .snipcart-form {
+  box-shadow: 0px 10px 15px -3px hsla(0, 0%, 0%, .3) !important;
+}
+
+.dark .snipcart-input {
+  box-shadow: none !important;
+}
+
+.dark .snipcart-textbox {
+  box-shadow: none !important;
+}
+
+.dark .snipcart-checkbox {
+  box-shadow: none !important;
+}
+
+.dark .snipcart-cart-button {
+  box-shadow: 0px 4px 6px -1px hsla(0, 0%, 0%, .3) !important;
+}
+
+.dark .snipcart-cart-button:hover {
+  box-shadow: 0px 10px 15px -3px hsla(0, 0%, 0%, .4) !important;
+}
+
+/* All Snipcart theming is now handled by CSS custom properties above */
+/* 
+  Theme Integration Approach:
+  1. Light theme: CSS custom properties are set on all Snipcart elements
+  2. Dark theme: CSS custom properties are overridden when .dark class is present
+  3. JavaScript hook: Only handles dynamic element detection and reflow triggering
+  4. This approach ensures consistent theming without conflicts between CSS and JS
+*/
 
 /* Ensure full page dark mode coverage */
 html {

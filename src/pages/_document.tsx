@@ -31,6 +31,11 @@ class MyDocument extends Document {
             id="snipcart"
             data-config-modal-style="side"
             data-api-key={process.env.NEXT_PUBLIC_SNIPCART_API_KEY}
+            data-config-success-url="/success"
+            data-config-cart-url="/"
+            data-config-theme="dark"
+            data-config-dark-mode="true"
+
             hidden
           >
             <address-fields section="top">
