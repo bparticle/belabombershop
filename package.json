@@ -16,7 +16,9 @@
     "testVariantMapping": "node scripts/dev/test-variant-mapping.js",
     "testFileStructure": "node scripts/dev/test-file-structure.js",
     "testWebhookOrder": "node scripts/dev/test-webhook-order.js",
+    "testWebhookOrderV1": "node scripts/dev/test-webhook-order-v1.js",
     "test:webhook": "node scripts/dev/test-webhook-v2.js",
+    "test:webhook-v1": "node scripts/dev/test-webhook-v1.js",
     "analyze": "ANALYZE=true npm run build"
   },
   "author": "Jamie Barton <jamie@notrab.dev> (https://notrab.dev)",
