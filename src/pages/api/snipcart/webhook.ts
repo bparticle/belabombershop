@@ -1,6 +1,6 @@
 import type { NextApiResponse } from "next";
 
-import createOrder from "../../../lib/create-order";
+import createOrderV2 from "../../../lib/create-order-v2";
 import { validateData, SnipcartWebhookRequestSchema } from "../../../lib/validation";
 
 import type { SnipcartRequest, SnipcartWebhookEvent } from "../../../types";
@@ -88,7 +88,7 @@ export default async function handler(
         };
         
         try {
-          await createOrder(orderData);
+          await createOrderV2(orderData);
         } catch (orderError) {
           throw orderError;
         }

@@ -12,6 +12,7 @@
     "type-check": "tsc --noEmit",
     "validate": "npm run lint && npm run format:check && npm run type-check",
     "getVariants": "node scripts/dev/get-product-variants.js",
+    "test:webhook": "node scripts/dev/test-webhook-v2.js",
     "analyze": "ANALYZE=true npm run build"
   },
   "author": "Jamie Barton <jamie@notrab.dev> (https://notrab.dev)",
