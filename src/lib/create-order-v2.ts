@@ -1,6 +1,5 @@
 import { getEnv } from "./env-validation";
 import { mapToPrintfulVariantId } from "./product-id-mapping";
-import { printful } from "./printful-client";
 
 /**
  * Maps Snipcart shipping method to Printful v2 shipping method
@@ -99,71 +98,6 @@ export default async function createOrderV2({
     const variantId = await mapToPrintfulVariantId(item);
     console.log('Mapped to Printful variant ID:', variantId);
 
-    // Get sync variant details to extract design files
-    let placements = [
-      {
-        placement: "front",
-        technique: "dtg",
-        layers: [
-          {
-            type: "file",
-            url: "https://www.printful.com/static/images/layout/printful-logo.png"
-          }
-        ]
-      }
-    ];
-
-    try {
-      console.log('Getting sync variant details for design files...');
-      const syncVariantResponse = await printful.get(`store/variants/@${item.id}`);
-      const syncVariant = syncVariantResponse.result;
-      
-      if (syncVariant.files && syncVariant.files.length > 0) {
-        console.log('Found design files:', syncVariant.files.length);
-        
-        // Create placements based on the design files
-        const placementMap = new Map();
-        
-        syncVariant.files.forEach(file => {
-          if (file.type === 'default' || file.type === 'front') {
-            // Front placement
-            if (!placementMap.has('front')) {
-              placementMap.set('front', {
-                placement: "front",
-                technique: "dtg",
-                layers: []
-              });
-            }
-            placementMap.get('front').layers.push({
-              type: "file",
-              url: `https://api.printful.com/files/${file.id}`
-            });
-          } else if (file.type === 'back') {
-            // Back placement
-            if (!placementMap.has('back')) {
-              placementMap.set('back', {
-                placement: "back",
-                technique: "dtg",
-                layers: []
-              });
-            }
-            placementMap.get('back').layers.push({
-              type: "file",
-              url: `https://api.printful.com/files/${file.id}`
-            });
-          }
-        });
-        
-        if (placementMap.size > 0) {
-          placements = Array.from(placementMap.values());
-          console.log('Created placements:', placements.length);
-        }
-      }
-    } catch (error) {
-      console.error('Error getting sync variant design files:', error);
-      // Keep default placement if there's an error
-    }
-
     return {
       source: "catalog" as const,
       catalog_variant_id: variantId,
@@ -172,8 +106,7 @@ export default async function createOrderV2({
       price: item.price?.toString() || undefined,
       retail_price: item.price?.toString() || undefined,
       currency: "USD",
-      retail_currency: "USD",
-      placements
+      retail_currency: "USD"
     };
   }));
 
