@@ -997,11 +997,6 @@ body {
   @apply bg-gray-800;
 }
 
-/* Ensure images are visible in dark mode */
-.dark img {
-  filter: brightness(1.1) contrast(1.1);
-}
-
 /* Product images specific dark mode handling */
 .dark .product-image-container {
   @apply bg-gray-800;
