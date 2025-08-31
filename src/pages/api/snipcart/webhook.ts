@@ -59,11 +59,7 @@ export default async function handler(
     });
   }
 
-  // TEMPORARY: Skip token verification for testing
-  console.log('Skipping token verification for testing...');
-  
-  // Uncomment the following block to re-enable token verification
-  /*
+  // Enable token verification for production
   try {
     console.log('Verifying Snipcart webhook token...');
     // Create Basic Auth header as per Snipcart documentation
@@ -96,7 +92,6 @@ export default async function handler(
       message: "Unable to verify Snipcart webhook token"
     });
   }
-  */
 
   try {
     switch (eventName) {

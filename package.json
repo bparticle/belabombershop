@@ -19,6 +19,8 @@
     "testWebhookOrderV1": "node scripts/dev/test-webhook-order-v1.js",
     "test:webhook": "node scripts/dev/test-webhook-v2.js",
     "test:webhook-v1": "node scripts/dev/test-webhook-v1.js",
+    "test:webhook-auth": "node scripts/dev/test-webhook-auth.js",
+    "testOrderCreation": "node scripts/dev/test-order-creation.js",
     "analyze": "ANALYZE=true npm run build"
   },
   "author": "Jamie Barton <jamie@notrab.dev> (https://notrab.dev)",
