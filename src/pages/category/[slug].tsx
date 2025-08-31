@@ -10,8 +10,14 @@ import type { Category } from "../../lib/database/schema";
 import { categoryService } from "../../lib/database/services/category-service";
 import ProductGrid from "../../components/ProductGrid";
 
+// Serialized Category type for getStaticProps
+type SerializedCategory = Omit<Category, 'createdAt' | 'updatedAt'> & {
+  createdAt: string | null;
+  updatedAt: string | null;
+};
+
 interface CategoryPageProps {
-  category: Category;
+  category: SerializedCategory;
   products: PrintfulProduct[];
 }
 
@@ -165,6 +171,13 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
       return { notFound: true };
     }
 
+    // Serialize category data
+    const serializedCategory: SerializedCategory = {
+      ...category,
+      createdAt: category.createdAt ? category.createdAt.toISOString() : null,
+      updatedAt: category.updatedAt ? category.updatedAt.toISOString() : null,
+    };
+
     // Get products for this category from database
     const { productService } = await import("../../lib/database/services/product-service");
     const dbProducts = await productService.getProductsByCategory(slug);
@@ -202,7 +215,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
 
     return {
       props: {
-        category,
+        category: serializedCategory,
         products,
       },
       revalidate: 300, // Revalidate every 5 minutes

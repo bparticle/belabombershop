@@ -6,6 +6,7 @@ import type { SyncLog } from '../../lib/database/schema';
 import { getAdminToken, removeAdminToken } from '../../lib/auth';
 import { useTheme } from '../../context/theme';
 import ThemeToggle from '../../components/ThemeToggle';
+import ProductEnhancementModal from '../../components/ProductEnhancementModal';
 import { formatDate } from '../../lib/date-utils';
 
 // Types for serialized data from getServerSideProps
@@ -41,6 +42,8 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
   const [syncLogs, setSyncLogs] = useState(initialSyncLogs);
   const [isSyncing, setIsSyncing] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
+  const [modalProduct, setModalProduct] = useState<ProductWithVariants | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Check authentication on component mount
   useEffect(() => {
@@ -164,6 +167,34 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
     router.push('/admin/login');
   };
 
+  const openProductModal = (product: SerializedProductWithVariants) => {
+    // Convert serialized product back to ProductWithVariants
+    const deserializedProduct: ProductWithVariants = {
+      ...product,
+      syncedAt: product.syncedAt ? new Date(product.syncedAt) : null,
+      createdAt: product.createdAt ? new Date(product.createdAt) : null,
+      updatedAt: product.updatedAt ? new Date(product.updatedAt) : null,
+      variants: product.variants.map(variant => ({
+        ...variant,
+        syncedAt: variant.syncedAt ? new Date(variant.syncedAt) : null,
+        createdAt: variant.createdAt ? new Date(variant.createdAt) : null,
+        updatedAt: variant.updatedAt ? new Date(variant.updatedAt) : null,
+      })),
+      enhancement: product.enhancement ? {
+        ...product.enhancement,
+        createdAt: product.enhancement.createdAt ? new Date(product.enhancement.createdAt) : null,
+        updatedAt: product.enhancement.updatedAt ? new Date(product.enhancement.updatedAt) : null,
+      } : undefined,
+    };
+    setModalProduct(deserializedProduct);
+    setIsModalOpen(true);
+  };
+
+  const handleProductUpdate = (updatedProduct: ProductWithVariants) => {
+    // Refresh the data to get the latest state
+    refreshData();
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
@@ -273,7 +304,7 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  window.open(`/admin/product/${product.id}`, '_blank');
+                                  openProductModal(product);
                                 }}
                                 className="text-sm text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300"
                               >
@@ -413,7 +444,18 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
           </div>
         </div>
 
-
+        {/* Product Enhancement Modal */}
+        {modalProduct && (
+          <ProductEnhancementModal
+            product={modalProduct}
+            isOpen={isModalOpen}
+            onClose={() => {
+              setIsModalOpen(false);
+              setModalProduct(null);
+            }}
+            onProductUpdate={handleProductUpdate}
+          />
+        )}
       </div>
     </div>
   );
