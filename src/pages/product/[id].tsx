@@ -474,6 +474,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
       description: dbProduct.enhancement?.description || 
                   dbProduct.description || 
                   getDefaultDescription(dbProduct.name || 'Product', productCategory),
+      enhancement: dbProduct.enhancement, // Pass the enhancement data from database
       variants: dbProduct.variants
         .filter(variant => variant.isEnabled) // Only include enabled variants
         .map(variant => ({

@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { GetServerSideProps } from 'next';
+import { useRouter } from 'next/router';
 import { productService } from '../../lib/database/services/product-service';
 import type { ProductWithVariants, SyncLog } from '../../lib/database/services/product-service';
+import { getAdminToken, removeAdminToken } from '../../lib/auth';
 
 // Types for serialized data from getServerSideProps
 type SerializedProductWithVariants = Omit<ProductWithVariants, 'syncedAt' | 'createdAt' | 'updatedAt'> & {
@@ -30,18 +32,35 @@ interface AdminDashboardProps {
 }
 
 export default function AdminDashboard({ products: initialProducts, syncLogs: initialSyncLogs }: AdminDashboardProps) {
+  const router = useRouter();
   const [products, setProducts] = useState(initialProducts);
   const [syncLogs, setSyncLogs] = useState(initialSyncLogs);
   const [isSyncing, setIsSyncing] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
+  const [isMigrating, setIsMigrating] = useState(false);
+  const [migrationResults, setMigrationResults] = useState<any>(null);
+
+  // Check authentication on component mount
+  useEffect(() => {
+    const token = getAdminToken();
+    if (!token) {
+      router.push('/admin/login');
+    }
+  }, [router]);
 
   const triggerSync = async () => {
+    const token = getAdminToken();
+    if (!token) {
+      router.push('/admin/login');
+      return;
+    }
+
     setIsSyncing(true);
     try {
       const response = await fetch('/api/admin/sync', {
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer your-admin-token', // Replace with proper auth
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -61,17 +80,23 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
     }
   };
 
-  const refreshData = async () => {
+    const refreshData = async () => {
+    const token = getAdminToken();
+    if (!token) {
+      router.push('/admin/login');
+      return;
+    }
+
     try {
       const [productsResponse, syncLogsResponse] = await Promise.all([
         fetch('/api/admin/products?includeInactive=true', {
           headers: {
-            'Authorization': 'Bearer your-admin-token', // Replace with proper auth
+            'Authorization': `Bearer ${token}`,
           },
         }),
         fetch('/api/admin/sync?limit=5', {
           headers: {
-            'Authorization': 'Bearer your-admin-token', // Replace with proper auth
+            'Authorization': `Bearer ${token}`,
           },
         }),
       ]);
@@ -91,11 +116,17 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
   };
 
   const toggleProductVisibility = async (productId: string) => {
+    const token = getAdminToken();
+    if (!token) {
+      router.push('/admin/login');
+      return;
+    }
+
     try {
       const response = await fetch(`/api/admin/products?id=${productId}`, {
         method: 'PUT',
         headers: {
-          'Authorization': 'Bearer your-admin-token', // Replace with proper auth
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ isActive: true }), // This will toggle the current state
@@ -106,6 +137,36 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
       }
     } catch (error) {
       console.error('Error toggling product visibility:', error);
+    }
+  };
+
+  const triggerMigration = async () => {
+    const token = getAdminToken();
+    if (!token) {
+      router.push('/admin/login');
+      return;
+    }
+
+    setIsMigrating(true);
+    try {
+      const response = await fetch('/api/admin/enhancements?action=migrate', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const results = await response.json();
+        setMigrationResults(results);
+        refreshData(); // Refresh to show new enhancements
+      } else {
+        console.error('Failed to trigger migration');
+      }
+    } catch (error) {
+      console.error('Error triggering migration:', error);
+    } finally {
+      setIsMigrating(false);
     }
   };
 
@@ -127,21 +188,47 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
     }
   };
 
+  const handleLogout = () => {
+    removeAdminToken();
+    router.push('/admin/login');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="px-4 py-6 sm:px-0">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-            <button
-              onClick={triggerSync}
-              disabled={isSyncing}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md"
-            >
-              {isSyncing ? 'Syncing...' : 'Sync Products'}
-            </button>
-          </div>
+                     <div className="flex justify-between items-center">
+             <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+             <div className="flex space-x-4">
+               <a
+                 href="/admin/enhancements"
+                 className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md"
+               >
+                 Manage Enhancements
+               </a>
+               <button
+                 onClick={triggerMigration}
+                 disabled={isMigrating}
+                 className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md"
+               >
+                 {isMigrating ? 'Migrating...' : 'Migrate Enhancements'}
+               </button>
+               <button
+                 onClick={triggerSync}
+                 disabled={isSyncing}
+                 className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md"
+               >
+                 {isSyncing ? 'Syncing...' : 'Sync Products'}
+               </button>
+               <button
+                 onClick={handleLogout}
+                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
+               >
+                 Logout
+               </button>
+             </div>
+           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -206,10 +293,61 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
                           {product.enhancement && (
                             <div className="mt-4">
                               <h4 className="font-medium text-gray-900 mb-2">Enhancement</h4>
-                              <div className="bg-gray-50 p-3 rounded">
-                                <p className="text-sm text-gray-700">
-                                  {product.enhancement.shortDescription || product.enhancement.description}
-                                </p>
+                              <div className="bg-gray-50 p-3 rounded space-y-3">
+                                {product.enhancement.shortDescription && (
+                                  <div>
+                                    <strong className="text-sm text-gray-700">Short Description:</strong>
+                                    <p className="text-sm text-gray-600 mt-1">{product.enhancement.shortDescription}</p>
+                                  </div>
+                                )}
+                                {product.enhancement.description && (
+                                  <div>
+                                    <strong className="text-sm text-gray-700">Description:</strong>
+                                    <p className="text-sm text-gray-600 mt-1">{product.enhancement.description}</p>
+                                  </div>
+                                )}
+                                {product.enhancement.features && product.enhancement.features.length > 0 && (
+                                  <div>
+                                    <strong className="text-sm text-gray-700">Features:</strong>
+                                    <ul className="text-sm text-gray-600 mt-1 list-disc list-inside">
+                                      {product.enhancement.features.map((feature, index) => (
+                                        <li key={index}>{feature}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                                                                 {product.enhancement.defaultVariantId && (
+                                   <div>
+                                     <strong className="text-sm text-gray-700">Default Variant ID:</strong>
+                                     <p className="text-sm text-gray-600 mt-1">{product.enhancement.defaultVariantId}</p>
+                                   </div>
+                                 )}
+                                 {product.enhancement.specifications && Object.keys(product.enhancement.specifications).length > 0 && (
+                                   <div>
+                                     <strong className="text-sm text-gray-700">Specifications:</strong>
+                                     <div className="text-sm text-gray-600 mt-1">
+                                       {Object.entries(product.enhancement.specifications).map(([key, value]) => (
+                                         <div key={key} className="flex justify-between">
+                                           <span className="font-medium">{key}:</span>
+                                           <span>{value as string}</span>
+                                         </div>
+                                       ))}
+                                     </div>
+                                   </div>
+                                 )}
+                                 {product.enhancement.additionalImages && product.enhancement.additionalImages.length > 0 && (
+                                   <div>
+                                     <strong className="text-sm text-gray-700">Additional Images:</strong>
+                                     <div className="text-sm text-gray-600 mt-1 space-y-1">
+                                       {product.enhancement.additionalImages.map((image: any, index: number) => (
+                                         <div key={index} className="flex items-center space-x-2">
+                                           <span className="text-xs bg-gray-100 px-2 py-1 rounded">Image {index + 1}</span>
+                                           <span className="truncate">{image.url}</span>
+                                         </div>
+                                       ))}
+                                     </div>
+                                   </div>
+                                 )}
                               </div>
                             </div>
                           )}
@@ -258,6 +396,58 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
             </div>
           </div>
         </div>
+
+        {/* Migration Results */}
+        {migrationResults && (
+          <div className="mt-6 px-4 py-6 sm:px-0">
+            <div className="bg-white shadow rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                <h2 className="text-lg font-medium text-gray-900 mb-4">Migration Results</h2>
+                
+                <div className="mb-4">
+                  <div className="grid grid-cols-4 gap-4 text-sm">
+                    <div className="bg-green-50 p-3 rounded">
+                      <div className="text-green-800 font-medium">Total</div>
+                      <div className="text-green-600">{migrationResults.summary.total}</div>
+                    </div>
+                    <div className="bg-blue-50 p-3 rounded">
+                      <div className="text-blue-800 font-medium">Migrated</div>
+                      <div className="text-blue-600">{migrationResults.summary.migrated}</div>
+                    </div>
+                    <div className="bg-yellow-50 p-3 rounded">
+                      <div className="text-yellow-800 font-medium">Skipped</div>
+                      <div className="text-yellow-600">{migrationResults.summary.skipped}</div>
+                    </div>
+                    <div className="bg-red-50 p-3 rounded">
+                      <div className="text-red-800 font-medium">Errors</div>
+                      <div className="text-red-600">{migrationResults.summary.errors}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="max-h-64 overflow-y-auto">
+                  <div className="space-y-2">
+                    {migrationResults.results.map((result: any, index: number) => (
+                      <div
+                        key={index}
+                        className={`p-3 rounded text-sm ${
+                          result.status === 'migrated'
+                            ? 'bg-green-50 text-green-800'
+                            : result.status === 'skipped'
+                            ? 'bg-yellow-50 text-yellow-800'
+                            : 'bg-red-50 text-red-800'
+                        }`}
+                      >
+                        <div className="font-medium">{result.externalId}</div>
+                        <div>{result.message}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

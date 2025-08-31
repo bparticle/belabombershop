@@ -231,12 +231,30 @@ export function getProductEnhancementKeys(): string[] {
 
 /**
  * Merge Printful product data with local enhancements
- * @param printfulProduct - The product data from Printful
+ * @param printfulProduct - The product data from Printful (may include database enhancement)
  * @returns Enhanced product data
  */
 export function enhanceProductData(printfulProduct: any): any {
-  const enhancement = getProductEnhancement(printfulProduct.external_id);
+  // Check if the product already has a database enhancement
+  const dbEnhancement = printfulProduct.enhancement;
+  const hardcodedEnhancement = getProductEnhancement(printfulProduct.external_id);
   const defaultVariant = getDefaultVariant(printfulProduct);
+
+  // Transform database enhancement to match frontend type expectations
+  let enhancement = null;
+  if (dbEnhancement) {
+    enhancement = {
+      description: dbEnhancement.description || '',
+      shortDescription: dbEnhancement.shortDescription || '',
+      features: dbEnhancement.features || [],
+      specifications: dbEnhancement.specifications || {},
+      additionalImages: dbEnhancement.additionalImages || [],
+      seo: dbEnhancement.seo || { keywords: [], metaDescription: '' },
+      defaultVariant: dbEnhancement.defaultVariantId || '', // Transform defaultVariantId to defaultVariant
+    };
+  } else if (hardcodedEnhancement) {
+    enhancement = hardcodedEnhancement;
+  }
 
   if (!enhancement) {
     return {
@@ -267,7 +285,8 @@ export function getDefaultVariant(product: any): any {
     return null;
   }
 
-  const enhancement = getProductEnhancement(product.external_id);
+  // Check for database enhancement first, then fallback to hardcoded
+  const enhancement = product.enhancement || getProductEnhancement(product.external_id);
 
   // If we have a specific default variant in enhancements, use it
   if (enhancement?.defaultVariant) {

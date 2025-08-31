@@ -3,6 +3,7 @@ import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
 import { productService } from '../../../lib/database/services/product-service';
 import type { ProductWithEnhancement } from '../../../lib/database/services/product-service';
+import { getAdminToken } from '../../../lib/auth';
 
 interface ProductEnhancementEditorProps {
   product: ProductWithEnhancement;
@@ -31,7 +32,7 @@ export default function ProductEnhancementEditor({ product: initialProduct }: Pr
       const response = await fetch(`/api/admin/products?id=${product.id}`, {
         method: 'PUT',
         headers: {
-          'Authorization': 'Bearer your-admin-token', // Replace with proper auth
+          'Authorization': `Bearer ${getAdminToken()}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ enhancement }),

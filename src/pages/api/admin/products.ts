@@ -1,16 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { productService } from '../../../lib/database/services/product-service';
+import { withAdminAuth } from '../../../lib/auth';
 
-export default async function handler(
+export default withAdminAuth(async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  // Basic admin authentication (you should implement proper auth)
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
   try {
     switch (req.method) {
       case 'GET':
@@ -31,7 +26,7 @@ export default async function handler(
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }
-}
+});
 
 async function handleGetProducts(req: NextApiRequest, res: NextApiResponse) {
   const { category, limit, offset, includeInactive } = req.query;

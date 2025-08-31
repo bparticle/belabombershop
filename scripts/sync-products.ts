@@ -48,7 +48,7 @@ class ProductSync {
    * Main sync function
    */
   async syncProducts(): Promise<void> {
-    console.log('🚀 Starting product sync...');
+    console.log('Starting product sync...');
     const startTime = Date.now();
 
     // Create sync log entry
@@ -67,9 +67,9 @@ class ProductSync {
 
     try {
       // Fetch all products from Printful
-      console.log('📡 Fetching products from Printful...');
+      console.log('Fetching products from Printful...');
       const printfulProducts = await this.fetchAllProducts();
-      console.log(`📦 Found ${printfulProducts.length} products in Printful`);
+      console.log(`Found ${printfulProducts.length} products in Printful`);
 
       // Get existing products from database
       const existingProducts = await productService.getAllProducts();
@@ -84,7 +84,7 @@ class ProductSync {
         try {
           await productService.deleteProduct(product.id);
           this.stats.productsDeleted++;
-          console.log(`🗑️  Deleted product: ${product.name} (${product.printfulId})`);
+          console.log(`Deleted product: ${product.name} (${product.printfulId})`);
         } catch (error) {
           const errorMsg = `Failed to delete product ${product.name}: ${error}`;
           this.stats.errors.push(errorMsg);
@@ -142,10 +142,10 @@ class ProductSync {
    */
   private async fetchAllProducts(): Promise<PrintfulProduct[]> {
     try {
-      console.log('📡 Fetching products from Printful store...');
+      console.log('Fetching products from Printful store...');
       const response = await printful.get('store/products');
       const products = response.result as PrintfulProduct[];
-      console.log(`📦 Found ${products.length} products in store`);
+      console.log(`Found ${products.length} products in store`);
       return products;
     } catch (error) {
       console.error(`❌ Failed to fetch products:`, error);
@@ -157,7 +157,7 @@ class ProductSync {
    * Process a single product
    */
   private async processProduct(printfulProduct: PrintfulProduct): Promise<void> {
-    console.log(`🔄 Processing: ${printfulProduct.name} (${printfulProduct.id})`);
+            console.log(`Processing: ${printfulProduct.name} (${printfulProduct.id})`);
 
     // Check if product exists in database
     const existingProduct = await productService.getProductByPrintfulId(printfulProduct.id);
@@ -168,10 +168,10 @@ class ProductSync {
     
     if (isNewProduct) {
       this.stats.productsCreated++;
-      console.log(`✅ Created product: ${product.name}`);
+                console.log(`Created product: ${product.name}`);
     } else {
       this.stats.productsUpdated++;
-      console.log(`🔄 Updated product: ${product.name}`);
+              console.log(`Updated product: ${product.name}`);
     }
 
     // Fetch product details from Printful to get variants
@@ -196,7 +196,7 @@ class ProductSync {
             seo: existingEnhancement.seo,
             defaultVariant: existingEnhancement.defaultVariant,
           });
-          console.log(`📝 Preserved enhancement for: ${product.name}`);
+          console.log(`Preserved enhancement for: ${product.name}`);
         }
       }
 
@@ -211,11 +211,11 @@ class ProductSync {
    */
   private async processVariants(productId: string, printfulVariants: PrintfulVariant[] | undefined): Promise<void> {
     if (!printfulVariants || !Array.isArray(printfulVariants)) {
-      console.log(`  ⚠️  No variants found for product ${productId}`);
+              console.log(`  No variants found for product ${productId}`);
       return;
     }
 
-    console.log(`  📦 Processing ${printfulVariants.length} variants...`);
+          console.log(`  Processing ${printfulVariants.length} variants...`);
 
     // Get existing variants to track changes
     const existingVariants = await productService.getProductById(productId);
@@ -235,30 +235,30 @@ class ProductSync {
       this.stats.variantsUpdated += upsertedVariants.length;
     }
 
-    console.log(`  ✅ Processed ${upsertedVariants.length} variants`);
+          console.log(`  Processed ${upsertedVariants.length} variants`);
   }
 
   /**
    * Print sync summary
    */
   private printSummary(duration: number): void {
-    console.log('\n📊 Sync Summary:');
+    console.log('\nSync Summary:');
     console.log('================');
-    console.log(`⏱️  Duration: ${duration}ms`);
-    console.log(`📦 Products processed: ${this.stats.productsProcessed}`);
-    console.log(`✅ Products created: ${this.stats.productsCreated}`);
-    console.log(`🔄 Products updated: ${this.stats.productsUpdated}`);
-    console.log(`🗑️  Products deleted: ${this.stats.productsDeleted}`);
-    console.log(`📦 Variants processed: ${this.stats.variantsProcessed}`);
-    console.log(`✅ Variants created: ${this.stats.variantsCreated}`);
-    console.log(`🔄 Variants updated: ${this.stats.variantsUpdated}`);
-    console.log(`🗑️  Variants deleted: ${this.stats.variantsDeleted}`);
+    console.log(`Duration: ${duration}ms`);
+    console.log(`Products processed: ${this.stats.productsProcessed}`);
+    console.log(`Products created: ${this.stats.productsCreated}`);
+    console.log(`Products updated: ${this.stats.productsUpdated}`);
+    console.log(`Products deleted: ${this.stats.productsDeleted}`);
+    console.log(`Variants processed: ${this.stats.variantsProcessed}`);
+    console.log(`Variants created: ${this.stats.variantsCreated}`);
+    console.log(`Variants updated: ${this.stats.variantsUpdated}`);
+    console.log(`Variants deleted: ${this.stats.variantsDeleted}`);
 
     if (this.stats.errors.length > 0) {
-      console.log(`❌ Errors: ${this.stats.errors.length}`);
+      console.log(`Errors: ${this.stats.errors.length}`);
       this.stats.errors.forEach(error => console.log(`  - ${error}`));
     } else {
-      console.log('🎉 Sync completed successfully!');
+      console.log('Sync completed successfully!');
     }
   }
 }
