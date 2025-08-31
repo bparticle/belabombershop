@@ -48,7 +48,7 @@ Snipcart Order Completed → Webhook → Printful API v1 → Order Created
 - Comprehensive validation and error handling
 
 ### 3. Variant Mapping
-**File**: `src/lib/product-id-mapping.ts`
+**File**: `src/lib/create-order-v1.ts` (embedded function)
 
 **Process**:
 1. Receives sync variant external ID from Snipcart
@@ -154,11 +154,9 @@ Snipcart Order Completed → Webhook → Printful API v1 → Order Created
 ## Testing
 
 ### Available Test Scripts
-- `npm run testWebhookOrderV1` - Test v1 order creation logic
-- `npm run test:webhook-v1` - Test v1 webhook endpoint
 - `npm run test:webhook-auth` - Test authentication
-- `npm run testOrderCreation` - Test complete order creation flow
-- `npm run test:webhook` - Test main webhook endpoint
+- `npm run getVariants` - List all product variants
+- `npm run testFileStructure` - Test file structure validation
 
 ### Test Data
 - **Test Variant ID**: `68b2fd4bbab7b4` (Fireskull Youth classic tee - Gold L)
