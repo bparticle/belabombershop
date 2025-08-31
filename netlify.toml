@@ -1,9 +1,10 @@
 [build]
-  command = "npm install && npm run build"
+  command = "npm install --include=dev && npm run build"
   publish = ".next"
 
 [build.environment]
   NODE_VERSION = "18"
+  NPM_CONFIG_PRODUCTION = "false"
 
 # Configure secrets scanning to ignore expected environment variables
 # NEXT_PUBLIC_SNIPCART_API_KEY is a public key that's safe to expose
