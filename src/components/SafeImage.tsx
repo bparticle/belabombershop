@@ -22,19 +22,34 @@ const SafeImage: React.FC<SafeImageProps> = ({
   sizes,
   onError,
 }) => {
+  // Fix image path for local images that might be missing the proper prefix
+  const fixedSrc = React.useMemo(() => {
+    if (!src || typeof src !== 'string') return src;
+    
+    // If it's already a proper local path, return as is
+    if (src.startsWith('/images/products/')) return src;
+    
+    // If it's just a filename, add the proper prefix
+    if (!src.startsWith('/') && !src.startsWith('http')) {
+      return `/images/products/${src}`;
+    }
+    
+    return src;
+  }, [src]);
+
   // Validate the image URL
   const isValidUrl = React.useMemo(() => {
-    if (!src || typeof src !== 'string') return false;
-    if (src.trim() === '') return false;
+    if (!fixedSrc || typeof fixedSrc !== 'string') return false;
+    if (fixedSrc.trim() === '') return false;
     // Allow both external URLs (http/https) and local paths (starting with /)
-    if (!src.startsWith('http') && !src.startsWith('/')) return false;
+    if (!fixedSrc.startsWith('http') && !fixedSrc.startsWith('/')) return false;
     return true;
-  }, [src]);
+  }, [fixedSrc]);
 
   // Debug logging
   React.useEffect(() => {
-    console.log('SafeImage debug:', { src, isValidUrl });
-  }, [src, isValidUrl]);
+    console.log('SafeImage debug:', { originalSrc: src, fixedSrc, isValidUrl });
+  }, [src, fixedSrc, isValidUrl]);
 
   // If URL is invalid, don't render the image
   if (!isValidUrl) {
@@ -46,18 +61,18 @@ const SafeImage: React.FC<SafeImageProps> = ({
   }
 
   const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    console.error('Image failed to load:', src, e);
+    console.error('Image failed to load:', fixedSrc, e);
     if (onError) {
       onError(e);
     }
   };
 
   // For local images (starting with /), use regular img tag to avoid Next.js optimization issues
-  if (src.startsWith('/')) {
+  if (fixedSrc.startsWith('/')) {
     if (fill) {
       return (
         <img
-          src={src}
+          src={fixedSrc}
           alt={alt}
           className={`w-full h-full object-cover ${className || ''}`}
           onError={handleError}
@@ -67,7 +82,7 @@ const SafeImage: React.FC<SafeImageProps> = ({
     
     return (
       <img
-        src={src}
+        src={fixedSrc}
         alt={alt}
         width={width || 300}
         height={height || 300}
@@ -81,7 +96,7 @@ const SafeImage: React.FC<SafeImageProps> = ({
   if (fill) {
     return (
       <Image
-        src={src}
+        src={fixedSrc}
         alt={alt}
         fill
         className={className}
@@ -93,7 +108,7 @@ const SafeImage: React.FC<SafeImageProps> = ({
 
   return (
     <Image
-      src={src}
+      src={fixedSrc}
       alt={alt}
       width={width || 300}
       height={height || 300}
