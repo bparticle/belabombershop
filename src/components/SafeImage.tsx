@@ -31,16 +31,53 @@ const SafeImage: React.FC<SafeImageProps> = ({
     return true;
   }, [src]);
 
+  // Debug logging
+  React.useEffect(() => {
+    console.log('SafeImage debug:', { src, isValidUrl });
+  }, [src, isValidUrl]);
+
   // If URL is invalid, don't render the image
   if (!isValidUrl) {
     return (
       <div className={`bg-gray-200 flex items-center justify-center text-gray-500 ${className || ''}`}>
-        <span className="text-sm">Invalid image</span>
+        <span className="text-sm">Invalid image: {src}</span>
       </div>
     );
   }
 
-  // When fill is true, don't pass width and height props
+  const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    console.error('Image failed to load:', src, e);
+    if (onError) {
+      onError(e);
+    }
+  };
+
+  // For local images (starting with /), use regular img tag to avoid Next.js optimization issues
+  if (src.startsWith('/')) {
+    if (fill) {
+      return (
+        <img
+          src={src}
+          alt={alt}
+          className={`w-full h-full object-cover ${className || ''}`}
+          onError={handleError}
+        />
+      );
+    }
+    
+    return (
+      <img
+        src={src}
+        alt={alt}
+        width={width || 300}
+        height={height || 300}
+        className={className}
+        onError={handleError}
+      />
+    );
+  }
+
+  // For external images, use Next.js Image component
   if (fill) {
     return (
       <Image
@@ -49,12 +86,11 @@ const SafeImage: React.FC<SafeImageProps> = ({
         fill
         className={className}
         sizes={sizes}
-        onError={onError}
+        onError={handleError}
       />
     );
   }
 
-  // Render the image with width and height when fill is false
   return (
     <Image
       src={src}
@@ -63,7 +99,7 @@ const SafeImage: React.FC<SafeImageProps> = ({
       height={height || 300}
       className={className}
       sizes={sizes}
-      onError={onError}
+      onError={handleError}
     />
   );
 };
