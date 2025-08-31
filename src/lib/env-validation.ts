@@ -1,9 +1,8 @@
 /**
- * Environment Variable Validation
+ * Server-Side Environment Variable Validation
  * 
- * This module validates that all required environment variables are present
- * and have the correct format. It should be imported early in the application
- * to fail fast if any required variables are missing.
+ * This module validates server-side environment variables only.
+ * It should NOT be imported in client-side code to avoid bundling secrets.
  */
 
 interface EnvironmentVariables {
@@ -19,11 +18,6 @@ interface EnvironmentVariables {
   DATABASE_USERNAME: string;
   DATABASE_PASSWORD: string;
   DATABASE_SSL: boolean;
-}
-
-interface ClientEnvironmentVariables {
-  NEXT_PUBLIC_SNIPCART_API_KEY?: string;
-  NODE_ENV: 'development' | 'production' | 'test';
 }
 
 /**
@@ -93,59 +87,9 @@ export function validateEnvironmentVariables(): EnvironmentVariables {
 }
 
 /**
- * Validates client-side environment variables only
- * This function is safe to call on the client side
- * @throws Error if any required client-side environment variables are missing
- */
-export function validateClientEnvironmentVariables(): ClientEnvironmentVariables {
-  const clientVars = {
-    NEXT_PUBLIC_SNIPCART_API_KEY: process.env.NEXT_PUBLIC_SNIPCART_API_KEY,
-    NODE_ENV: process.env.NODE_ENV as ClientEnvironmentVariables['NODE_ENV'],
-  };
-
-  // Validate NODE_ENV
-  if (!['development', 'production', 'test'].includes(clientVars.NODE_ENV)) {
-    throw new Error(
-      `Invalid NODE_ENV: ${clientVars.NODE_ENV}. Must be one of: development, production, test`
-    );
-  }
-
-  return clientVars as ClientEnvironmentVariables;
-}
-
-/**
  * Get validated environment variables
  * @returns Validated environment variables object
  */
 export function getEnv(): EnvironmentVariables {
   return validateEnvironmentVariables();
-}
-
-/**
- * Get validated client-side environment variables
- * @returns Validated client-side environment variables object
- */
-export function getClientEnv(): ClientEnvironmentVariables {
-  return validateClientEnvironmentVariables();
-}
-
-/**
- * Check if we're in development mode
- */
-export function isDevelopment(): boolean {
-  return process.env.NODE_ENV === 'development';
-}
-
-/**
- * Check if we're in production mode
- */
-export function isProduction(): boolean {
-  return process.env.NODE_ENV === 'production';
-}
-
-/**
- * Check if we're in test mode
- */
-export function isTest(): boolean {
-  return process.env.NODE_ENV === 'test';
 }

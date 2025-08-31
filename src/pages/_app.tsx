@@ -10,7 +10,7 @@ import { ThemeProvider } from "../context/theme";
 import Layout from "../components/Layout";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { useSnipcartTheme } from "../hooks/useSnipcartTheme";
-import { validateClientEnvironmentVariables } from "../lib/env-validation";
+import { validateClientEnvironmentVariables } from "../lib/client-env-validation";
 
 function MyApp({ Component, pageProps }: AppProps) {
   // Validate client-side environment variables on app startup
