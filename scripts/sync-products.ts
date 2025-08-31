@@ -274,6 +274,9 @@ async function main() {
   }
 }
 
+// Export the ProductSync class for use in other modules
+export { ProductSync };
+
 // Only run if this file is executed directly
 if (require.main === module) {
   main();

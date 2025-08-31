@@ -68,7 +68,7 @@ async function handleTriggerSync(req: NextApiRequest, res: NextApiResponse) {
     process.nextTick(async () => {
       try {
         // Import and run the sync
-        const { ProductSync } = await import('../../../scripts/sync-products');
+        const { ProductSync } = await import('../../../../scripts/sync-products');
         const sync = new ProductSync();
         await sync.syncProducts();
       } catch (error) {
