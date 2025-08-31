@@ -1,5 +1,6 @@
 import React, { useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import SafeImage from './SafeImage';
 
 interface GalleryImage {
   url: string;
@@ -22,6 +23,21 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
   onClose
 }) => {
   const [currentIndex, setCurrentIndex] = React.useState(initialIndex);
+
+  // Fix image path for local images that might be missing the proper prefix
+  const fixImagePath = (src: string) => {
+    if (!src || typeof src !== 'string') return src;
+    
+    // If it's already a proper local path, return as is
+    if (src.startsWith('/images/products/')) return src;
+    
+    // If it's just a filename, add the proper prefix
+    if (!src.startsWith('/') && !src.startsWith('http')) {
+      return `/images/products/${src}`;
+    }
+    
+    return src;
+  };
 
   // Reset index when modal opens with new initial index
   useEffect(() => {
@@ -100,11 +116,11 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center space-x-3">
-                            <h2 id="gallery-title" className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h2 id="gallery-title" className="text-lg font-semibold text-gray-900 dark:text-white">
               Product Gallery
             </h2>
             {images.length > 1 && (
-                              <span className="text-sm text-gray-500 dark:text-gray-400">
+              <span className="text-sm text-gray-500 dark:text-gray-400">
                 {currentIndex + 1} of {images.length}
               </span>
             )}
@@ -148,15 +164,10 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
 
           {/* Main Image */}
           <div className="relative max-w-full max-h-full">
-            <img
+            <SafeImage
               src={currentImage.url}
               alt={currentImage.alt}
               className="max-w-full max-h-[60vh] object-contain rounded"
-              loading="eager"
-              onError={(e) => {
-                console.error('Gallery image failed to load:', currentImage.url);
-                e.currentTarget.style.display = 'none';
-              }}
             />
           </div>
         </div>
@@ -191,10 +202,14 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
                   aria-label={`Go to image ${index + 1}`}
                 >
                   <img
-                    src={image.url}
+                    src={fixImagePath(image.url)}
                     alt={image.alt}
                     className="w-full h-full object-cover"
                     loading="lazy"
+                    onError={(e) => {
+                      console.error('Gallery thumbnail failed to load:', image.url);
+                      e.currentTarget.style.display = 'none';
+                    }}
                   />
                 </button>
               ))}
