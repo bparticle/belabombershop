@@ -429,7 +429,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
     // Import productService only on server side
     const { productService } = await import('../../lib/database/services/product-service');
     
-    const products = await productService.getAllProducts();
+    const products = await productService.getAllProductsForAdmin();
 
     // Convert Date objects to ISO strings for JSON serialization
     const serializedProducts = products.map(product => ({

@@ -72,7 +72,7 @@ class ProductSync {
       console.log(`Found ${printfulProducts.length} products in Printful`);
 
       // Get existing products from database
-      const existingProducts = await productService.getAllProducts();
+      const existingProducts = await productService.getActiveProducts();
       const existingProductIds = new Set(existingProducts.map(p => p.printfulId));
       const incomingProductIds = new Set(printfulProducts.map(p => p.id));
 

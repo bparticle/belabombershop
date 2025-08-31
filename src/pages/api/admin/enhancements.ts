@@ -32,7 +32,7 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
   }
 
   // Get all enhancements
-  const products = await productService.getAllProducts();
+  const products = await productService.getAllProductsForAdmin();
   const enhancements = products
     .filter(product => product.enhancement)
     .map(product => ({

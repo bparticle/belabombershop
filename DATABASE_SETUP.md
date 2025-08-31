@@ -144,8 +144,11 @@ The system provides several API endpoints:
 The `ProductService` class provides methods for:
 
 ```typescript
-// Get all active products
-const products = await productService.getAllProducts();
+// Get all active products (for frontend)
+const products = await productService.getActiveProducts();
+
+// Get all products including inactive ones (for admin)
+const products = await productService.getAllProductsForAdmin();
 
 // Get product by ID
 const product = await productService.getProductById(id);

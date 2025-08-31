@@ -32,9 +32,9 @@ export interface ProductWithEnhancement extends Product {
 
 export class ProductService {
   /**
-   * Get all active products with their variants and enhancements
+   * Get all active products with their variants and enhancements (for frontend)
    */
-  async getAllProducts(): Promise<ProductWithVariants[]> {
+  async getActiveProducts(): Promise<ProductWithVariants[]> {
     const dbProducts = await db
       .select()
       .from(products)
@@ -78,6 +78,61 @@ export class ProductService {
     }
 
     return productsWithVariants;
+  }
+
+  /**
+   * Get all products with their variants and enhancements (for admin - includes inactive)
+   */
+  async getAllProductsForAdmin(): Promise<ProductWithVariants[]> {
+    const dbProducts = await db
+      .select()
+      .from(products)
+      .orderBy(desc(products.createdAt));
+
+    const productsWithVariants: ProductWithVariants[] = [];
+
+    for (const product of dbProducts) {
+      const productVariants = await db
+        .select()
+        .from(variants)
+        .where(eq(variants.productId, product.id));
+
+      const enhancement = await db
+        .select()
+        .from(productEnhancements)
+        .where(and(
+          eq(productEnhancements.productId, product.id),
+          eq(productEnhancements.isActive, true)
+        ))
+        .limit(1);
+
+      const productCategoriesData = await db
+        .select({
+          id: categories.id,
+          name: categories.name,
+          slug: categories.slug,
+          color: categories.color,
+        })
+        .from(categories)
+        .innerJoin(productCategories, eq(categories.id, productCategories.categoryId))
+        .where(eq(productCategories.productId, product.id));
+
+      productsWithVariants.push({
+        ...product,
+        variants: productVariants,
+        enhancement: enhancement[0],
+        categories: productCategoriesData,
+      });
+    }
+
+    return productsWithVariants;
+  }
+
+  /**
+   * Get all active products with their variants and enhancements (legacy method for backward compatibility)
+   */
+  async getAllProducts(): Promise<ProductWithVariants[]> {
+    return this.getActiveProducts();
   }
 
   /**

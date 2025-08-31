@@ -371,7 +371,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
     const { productService } = await import('../../lib/database/services/product-service');
     
     const [products, syncLogs] = await Promise.all([
-      productService.getAllProducts(),
+      productService.getAllProductsForAdmin(),
       productService.getRecentSyncLogs(5),
     ]);
 

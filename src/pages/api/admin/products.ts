@@ -37,12 +37,12 @@ async function handleGetProducts(req: NextApiRequest, res: NextApiResponse) {
     if (category && typeof category === 'string') {
       products = await productService.getProductsByCategory(category);
     } else {
-      products = await productService.getAllProducts();
-    }
-
-    // Filter inactive products if not requested
-    if (includeInactive !== 'true') {
-      products = products.filter(p => p.isActive);
+      // Use different methods based on whether we want inactive products
+      if (includeInactive === 'true') {
+        products = await productService.getAllProductsForAdmin();
+      } else {
+        products = await productService.getActiveProducts();
+      }
     }
 
     // Apply pagination

@@ -420,7 +420,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
     const { productService } = await import("../../lib/database/services/product-service");
     
     // Get all active products from database
-    const dbProducts = await productService.getAllProducts();
+    const dbProducts = await productService.getActiveProducts();
     
     const paths = dbProducts
       .filter(product => product.isActive)

@@ -31,7 +31,7 @@ export const getStaticProps: GetStaticProps = async () => {
     const { productService } = await import("../lib/database/services/product-service");
     
     // Get all active products from database
-    const dbProducts = await productService.getAllProducts();
+    const dbProducts = await productService.getActiveProducts();
     
     // Convert database products to the format expected by the frontend
     const products: PrintfulProduct[] = dbProducts
