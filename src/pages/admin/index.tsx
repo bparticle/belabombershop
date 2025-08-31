@@ -36,8 +36,6 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
   const [syncLogs, setSyncLogs] = useState(initialSyncLogs);
   const [isSyncing, setIsSyncing] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
-  const [isMigrating, setIsMigrating] = useState(false);
-  const [migrationResults, setMigrationResults] = useState<any>(null);
 
   // Check authentication on component mount
   useEffect(() => {
@@ -139,35 +137,7 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
     }
   };
 
-  const triggerMigration = async () => {
-    const token = getAdminToken();
-    if (!token) {
-      router.push('/admin/login');
-      return;
-    }
 
-    setIsMigrating(true);
-    try {
-      const response = await fetch('/api/admin/enhancements?action=migrate', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const results = await response.json();
-        setMigrationResults(results);
-        refreshData(); // Refresh to show new enhancements
-      } else {
-        console.error('Failed to trigger migration');
-      }
-    } catch (error) {
-      console.error('Error triggering migration:', error);
-    } finally {
-      setIsMigrating(false);
-    }
-  };
 
   const formatDate = (date: Date | string | null | undefined) => {
     if (!date) return 'N/A';
@@ -206,13 +176,6 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
                >
                  Manage Enhancements
                </a>
-               <button
-                 onClick={triggerMigration}
-                 disabled={isMigrating}
-                 className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md"
-               >
-                 {isMigrating ? 'Migrating...' : 'Migrate Enhancements'}
-               </button>
                <button
                  onClick={triggerSync}
                  disabled={isSyncing}
@@ -396,57 +359,7 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
           </div>
         </div>
 
-        {/* Migration Results */}
-        {migrationResults && (
-          <div className="mt-6 px-4 py-6 sm:px-0">
-            <div className="bg-white shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">Migration Results</h2>
-                
-                <div className="mb-4">
-                  <div className="grid grid-cols-4 gap-4 text-sm">
-                    <div className="bg-green-50 p-3 rounded">
-                      <div className="text-green-800 font-medium">Total</div>
-                      <div className="text-green-600">{migrationResults.summary.total}</div>
-                    </div>
-                    <div className="bg-blue-50 p-3 rounded">
-                      <div className="text-blue-800 font-medium">Migrated</div>
-                      <div className="text-blue-600">{migrationResults.summary.migrated}</div>
-                    </div>
-                    <div className="bg-yellow-50 p-3 rounded">
-                      <div className="text-yellow-800 font-medium">Skipped</div>
-                      <div className="text-yellow-600">{migrationResults.summary.skipped}</div>
-                    </div>
-                    <div className="bg-red-50 p-3 rounded">
-                      <div className="text-red-800 font-medium">Errors</div>
-                      <div className="text-red-600">{migrationResults.summary.errors}</div>
-                    </div>
-                  </div>
-                </div>
 
-                <div className="max-h-64 overflow-y-auto">
-                  <div className="space-y-2">
-                    {migrationResults.results.map((result: any, index: number) => (
-                      <div
-                        key={index}
-                        className={`p-3 rounded text-sm ${
-                          result.status === 'migrated'
-                            ? 'bg-green-50 text-green-800'
-                            : result.status === 'skipped'
-                            ? 'bg-yellow-50 text-yellow-800'
-                            : 'bg-red-50 text-red-800'
-                        }`}
-                      >
-                        <div className="font-medium">{result.externalId}</div>
-                        <div>{result.message}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

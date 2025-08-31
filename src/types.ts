@@ -2,7 +2,14 @@ import type { NextApiRequest } from "next";
 
 declare global {
   interface Window {
-    Snipcart: any;
+    Snipcart: {
+      subscribe: (event: string, callback: (data: any) => void) => void;
+      store?: {
+        subscribe: (callback: () => void) => () => void;
+        getState: () => any;
+      };
+      [key: string]: any;
+    };
   }
   namespace JSX {
     interface IntrinsicElements {

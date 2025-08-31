@@ -29,18 +29,67 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   // Add Snipcart event handling and theme sync
   if (typeof window !== 'undefined') {
-    // Ensure Snipcart is loaded
-    window.addEventListener('load', () => {
-      if (window.Snipcart) {
-        // Handle order completion
-        window.Snipcart.subscribe('order.completed', (order: any) => {
-          // Clear any potential routing conflicts
-          setTimeout(() => {
-            window.location.href = '/success';
-          }, 100);
-        });
+    // Function to setup Snipcart event handlers
+    const setupSnipcartHandlers = () => {
+      if (window.Snipcart && typeof window.Snipcart.subscribe === 'function') {
+        try {
+          // Handle order completion
+          window.Snipcart.subscribe('order.completed', (order: any) => {
+            // Clear any potential routing conflicts
+            setTimeout(() => {
+              window.location.href = '/success';
+            }, 100);
+          });
+          
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Snipcart event handlers setup successfully');
+          }
+          return true;
+        } catch (error) {
+          if (process.env.NODE_ENV === 'development') {
+            console.error('Error setting up Snipcart handlers:', error);
+          }
+          return false;
+        }
       }
-    });
+      return false;
+    };
+
+    // Try to setup handlers immediately
+    if (!setupSnipcartHandlers()) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Snipcart not ready immediately, waiting for load event...');
+      }
+      
+      // If not ready, wait for load event and then poll
+      window.addEventListener('load', () => {
+        // Try immediately after load
+        if (!setupSnipcartHandlers()) {
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Snipcart still not ready after load, starting polling...');
+          }
+          
+          // If still not ready, poll every 100ms for up to 5 seconds
+          let attempts = 0;
+          const maxAttempts = 50; // 5 seconds max
+          
+          const pollInterval = setInterval(() => {
+            attempts++;
+            if (setupSnipcartHandlers()) {
+              if (process.env.NODE_ENV === 'development') {
+                console.log(`Snipcart ready after ${attempts * 100}ms`);
+              }
+              clearInterval(pollInterval);
+            } else if (attempts >= maxAttempts) {
+              if (process.env.NODE_ENV === 'development') {
+                console.warn('Snipcart failed to load within 5 seconds');
+              }
+              clearInterval(pollInterval);
+            }
+          }, 100);
+        }
+      });
+    }
   }
 
   return (
