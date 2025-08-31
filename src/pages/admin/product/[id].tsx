@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
-import { productService } from '../../../lib/database/services/product-service';
 import type { ProductWithEnhancement } from '../../../lib/database/services/product-service';
 import { getAdminToken } from '../../../lib/auth';
 
@@ -41,8 +40,13 @@ export default function ProductEnhancementEditor({ product: initialProduct }: Pr
       if (response.ok) {
         setMessage({ type: 'success', text: 'Enhancement saved successfully!' });
         // Refresh product data
-        const updatedProduct = await productService.getProductById(product.id);
-        if (updatedProduct) {
+        const refreshResponse = await fetch(`/api/admin/products?id=${product.id}`, {
+          headers: {
+            'Authorization': `Bearer ${getAdminToken()}`,
+          },
+        });
+        if (refreshResponse.ok) {
+          const updatedProduct = await refreshResponse.json();
           setProduct(updatedProduct);
         }
       } else {
@@ -451,6 +455,7 @@ export default function ProductEnhancementEditor({ product: initialProduct }: Pr
 
 export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   try {
+    const { productService } = await import('../../../lib/database/services/product-service');
     const productId = params?.id as string;
     if (!productId) {
       return { notFound: true };
