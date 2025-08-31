@@ -1,16 +1,187 @@
 import { useState, useEffect } from 'react';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
-import type { ProductWithEnhancement } from '../../../lib/database/services/product-service';
+import type { ProductWithVariants } from '../../../lib/database/services/product-service';
 import { getAdminToken } from '../../../lib/auth';
 
+interface Category {
+  id: string;
+  name: string;
+  color?: string;
+  icon?: string;
+}
+
+interface CategoryManagerProps {
+  product: ProductWithVariants;
+  onUpdate: (product: ProductWithVariants) => void;
+}
+
+// Type for serialized product data from getServerSideProps
+type SerializedProductWithVariants = Omit<ProductWithVariants, 'syncedAt' | 'createdAt' | 'updatedAt'> & {
+  syncedAt: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+  variants: Array<Omit<ProductWithVariants['variants'][0], 'syncedAt' | 'createdAt' | 'updatedAt'> & {
+    syncedAt: string | null;
+    createdAt: string | null;
+    updatedAt: string | null;
+  }>;
+  enhancement: Omit<ProductWithVariants['enhancement'], 'createdAt' | 'updatedAt'> & {
+    createdAt: string | null;
+    updatedAt: string | null;
+  } | null;
+};
+
 interface ProductEnhancementEditorProps {
-  product: ProductWithEnhancement;
+  product: SerializedProductWithVariants;
+}
+
+function CategoryManager({ product, onUpdate }: CategoryManagerProps) {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(
+    product.categories?.map(cat => cat.id) || []
+  );
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/categories');
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data.categories || []);
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  const handleCategoryToggle = async (categoryId: string) => {
+    const newSelectedCategories = selectedCategories.includes(categoryId)
+      ? selectedCategories.filter(id => id !== categoryId)
+      : [...selectedCategories, categoryId];
+
+    setSelectedCategories(newSelectedCategories);
+    setSaving(true);
+
+    try {
+      const response = await fetch(`/api/admin/products?id=${product.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${getAdminToken()}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          categoryIds: newSelectedCategories
+        }),
+      });
+
+      if (response.ok) {
+        const updatedProduct = await response.json();
+        onUpdate(updatedProduct);
+      } else {
+        // Revert on error
+        setSelectedCategories(product.categories?.map(cat => cat.id) || []);
+        alert('Failed to update categories');
+      }
+    } catch (error) {
+      console.error('Error updating categories:', error);
+      // Revert on error
+      setSelectedCategories(product.categories?.map(cat => cat.id) || []);
+      alert('Error updating categories');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="text-sm text-gray-500">Loading categories...</div>;
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="text-sm text-gray-600 mb-3">
+        Select categories for this product:
+      </div>
+      
+      <div className="space-y-2 max-h-48 overflow-y-auto">
+        {categories.map((category) => {
+          const isSelected = selectedCategories.includes(category.id);
+          return (
+            <label
+              key={category.id}
+              className={`flex items-center p-2 rounded-md border cursor-pointer transition-colors ${
+                isSelected
+                  ? 'border-blue-500 bg-blue-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={isSelected}
+                onChange={() => handleCategoryToggle(category.id)}
+                disabled={saving}
+                className="mr-3"
+              />
+              <div className="flex items-center flex-1">
+                {category.icon && (
+                  <span className="mr-2 text-lg">{category.icon}</span>
+                )}
+                <span className="text-sm font-medium">{category.name}</span>
+                {category.color && (
+                  <div
+                    className="ml-2 w-4 h-4 rounded-full border border-gray-300"
+                    style={{ backgroundColor: category.color }}
+                  />
+                )}
+              </div>
+            </label>
+          );
+        })}
+      </div>
+
+      {saving && (
+        <div className="text-sm text-blue-600">Saving...</div>
+      )}
+
+      {categories.length === 0 && (
+        <div className="text-sm text-gray-500">
+          No categories available. Create categories in the Categories section first.
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function ProductEnhancementEditor({ product: initialProduct }: ProductEnhancementEditorProps) {
   const router = useRouter();
-  const [product, setProduct] = useState(initialProduct);
+  
+  // Convert serialized dates back to Date objects for the component
+  const deserializedProduct: ProductWithVariants = {
+    ...initialProduct,
+    syncedAt: initialProduct.syncedAt ? new Date(initialProduct.syncedAt) : null,
+    createdAt: initialProduct.createdAt ? new Date(initialProduct.createdAt) : null,
+    updatedAt: initialProduct.updatedAt ? new Date(initialProduct.updatedAt) : null,
+    variants: initialProduct.variants?.map(variant => ({
+      ...variant,
+      syncedAt: variant.syncedAt ? new Date(variant.syncedAt) : null,
+      createdAt: variant.createdAt ? new Date(variant.createdAt) : null,
+      updatedAt: variant.updatedAt ? new Date(variant.updatedAt) : null,
+    })) || [],
+    enhancement: initialProduct.enhancement ? {
+      ...initialProduct.enhancement,
+      createdAt: initialProduct.enhancement.createdAt ? new Date(initialProduct.enhancement.createdAt) : null,
+      updatedAt: initialProduct.enhancement.updatedAt ? new Date(initialProduct.enhancement.updatedAt) : null,
+    } : null,
+  };
+  
+  const [product, setProduct] = useState<ProductWithVariants>(deserializedProduct);
   const [enhancement, setEnhancement] = useState({
     description: product.enhancement?.description || '',
     shortDescription: product.enhancement?.shortDescription || '',
@@ -186,7 +357,7 @@ export default function ProductEnhancementEditor({ product: initialProduct }: Pr
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Product Info */}
           <div className="bg-white shadow rounded-lg p-6">
             <h2 className="text-lg font-medium text-gray-900 mb-4">Product Information</h2>
@@ -198,10 +369,13 @@ export default function ProductEnhancementEditor({ product: initialProduct }: Pr
                 <strong>External ID:</strong> {product.externalId}
               </div>
               <div>
-                <strong>Category:</strong> {product.category || 'None'}
+                <strong>Categories:</strong> {product.categories && product.categories.length > 0 
+                  ? product.categories.map(cat => cat.name).join(', ')
+                  : 'None'
+                }
               </div>
               <div>
-                <strong>Variants:</strong> {product.variants.length}
+                <strong>Variants:</strong> {product.variants?.length || 0}
               </div>
               <div>
                 <strong>Status:</strong> 
@@ -210,6 +384,12 @@ export default function ProductEnhancementEditor({ product: initialProduct }: Pr
                 </span>
               </div>
             </div>
+          </div>
+
+          {/* Category Management */}
+          <div className="bg-white shadow rounded-lg p-6">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Category Management</h2>
+            <CategoryManager product={product} onUpdate={setProduct} />
           </div>
 
           {/* Default Variant */}
@@ -221,11 +401,11 @@ export default function ProductEnhancementEditor({ product: initialProduct }: Pr
               className="w-full border border-gray-300 rounded-md px-3 py-2"
             >
               <option value="">Select default variant</option>
-              {product.variants.map((variant) => (
+              {product.variants?.map((variant) => (
                 <option key={variant.id} value={variant.externalId}>
                   {variant.name} - {variant.color} {variant.size}
                 </option>
-              ))}
+              )) || []}
             </select>
           </div>
         </div>
@@ -461,14 +641,33 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
       return { notFound: true };
     }
 
-    const product = await productService.getProductById(productId);
+    const product = await productService.getProductWithFullInfo(productId);
     if (!product) {
       return { notFound: true };
     }
 
+    // Convert Date objects to ISO strings for JSON serialization
+    const serializedProduct = {
+      ...product,
+      syncedAt: product.syncedAt?.toISOString() || null,
+      createdAt: product.createdAt?.toISOString() || null,
+      updatedAt: product.updatedAt?.toISOString() || null,
+      variants: product.variants?.map(variant => ({
+        ...variant,
+        syncedAt: variant.syncedAt?.toISOString() || null,
+        createdAt: variant.createdAt?.toISOString() || null,
+        updatedAt: variant.updatedAt?.toISOString() || null,
+      })) || [],
+      enhancement: product.enhancement ? {
+        ...product.enhancement,
+        createdAt: product.enhancement.createdAt?.toISOString() || null,
+        updatedAt: product.enhancement.updatedAt?.toISOString() || null,
+      } : null,
+    };
+
     return {
       props: {
-        product,
+        product: serializedProduct,
       },
     };
   } catch (error) {

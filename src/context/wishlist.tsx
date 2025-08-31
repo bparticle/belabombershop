@@ -1,6 +1,7 @@
 import React, { createContext, useReducer, useEffect } from "react";
 
 import useLocalStorage from "../hooks/useLocalStorage";
+import { useClientOnly } from "../hooks/useClientOnly";
 
 import type { PrintfulProduct } from "../types";
 
@@ -63,11 +64,27 @@ export const WishlistProvider: React.FC<{ children?: React.ReactNode }> = ({
     }
   };
   
-  const [state, dispatch] = useReducer(reducer, getInitialState());
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const isClient = useClientOnly();
+
+  // Load initial state from localStorage after mount
+  useEffect(() => {
+    if (isClient) {
+      const savedState = getInitialState();
+      if (savedState.items.length > 0) {
+        // Reset to saved state
+        savedState.items.forEach(item => {
+          dispatch({ type: ADD_PRODUCT, payload: item });
+        });
+      }
+    }
+  }, [isClient]);
 
   useEffect(() => {
-    saveWishlist(JSON.stringify(state));
-  }, [state, saveWishlist]);
+    if (isClient) {
+      saveWishlist(JSON.stringify(state));
+    }
+  }, [state, saveWishlist, isClient]);
 
   const addItem = (item: PrintfulProduct) => {
     if (!item.id) return;

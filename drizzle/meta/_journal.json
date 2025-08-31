@@ -1,1 +1,13 @@
-{"version":"5","dialect":"pg","entries":[]}
+{
+  "version": "5",
+  "dialect": "pg",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1756639574953,
+      "tag": "0000_damp_toxin",
+      "breakpoints": true
+    }
+  ]
+}

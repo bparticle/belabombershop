@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useClientOnly } from './useClientOnly';
 
 interface UseResponsiveInteractionOptions {
   onDesktopHover?: () => void;
@@ -21,9 +22,12 @@ export const useResponsiveInteraction = (
   const [isHovering, setIsHovering] = useState(false);
   const [isMobileExpanded, setIsMobileExpanded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const isClient = useClientOnly();
 
   // Check if device is mobile on mount and resize
   useEffect(() => {
+    if (!isClient) return;
+    
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
     };
@@ -31,7 +35,7 @@ export const useResponsiveInteraction = (
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  }, [isClient]);
 
   // Handle hover for desktop
   const handleMouseEnter = useCallback(() => {

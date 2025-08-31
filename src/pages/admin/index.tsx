@@ -6,6 +6,7 @@ import type { SyncLog } from '../../lib/database/schema';
 import { getAdminToken, removeAdminToken } from '../../lib/auth';
 import { useTheme } from '../../context/theme';
 import ThemeToggle from '../../components/ThemeToggle';
+import { formatDate } from '../../lib/date-utils';
 
 // Types for serialized data from getServerSideProps
 type SerializedProductWithVariants = Omit<ProductWithVariants, 'syncedAt' | 'createdAt' | 'updatedAt'> & {
@@ -143,10 +144,7 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
 
 
 
-  const formatDate = (date: Date | string | null | undefined) => {
-    if (!date) return 'N/A';
-    return new Date(date).toLocaleString();
-  };
+
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -173,28 +171,40 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
         <div className="px-4 py-6 sm:px-0">
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Dashboard</h1>
-            <div className="flex space-x-4">
-              <ThemeToggle />
-              <a
-                href="/admin/enhancements"
-                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md transition-colors"
-              >
-                Manage Enhancements
-              </a>
-              <button
-                onClick={triggerSync}
-                disabled={isSyncing}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md transition-colors"
-              >
-                {isSyncing ? 'Syncing...' : 'Sync Products'}
-              </button>
-              <button
-                onClick={handleLogout}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors"
-              >
-                Logout
-              </button>
-            </div>
+                         <div className="flex space-x-4">
+               <ThemeToggle />
+               <a
+                 href="/admin/categories"
+                 className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors"
+               >
+                 Manage Categories
+               </a>
+               <a
+                 href="/admin/tags"
+                 className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md transition-colors"
+               >
+                 Manage Tags
+               </a>
+               <a
+                 href="/admin/enhancements"
+                 className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md transition-colors"
+               >
+                 Manage Enhancements
+               </a>
+               <button
+                 onClick={triggerSync}
+                 disabled={isSyncing}
+                 className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md transition-colors"
+               >
+                 {isSyncing ? 'Syncing...' : 'Sync Products'}
+               </button>
+               <button
+                 onClick={handleLogout}
+                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors"
+               >
+                 Logout
+               </button>
+             </div>
           </div>
         </div>
 
@@ -260,6 +270,15 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
                               >
                                 Toggle
                               </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.open(`/admin/product/${product.id}`, '_blank');
+                                }}
+                                className="text-sm text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300"
+                              >
+                                Manage
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -272,7 +291,12 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
                               <strong className="text-gray-900 dark:text-white">External ID:</strong> <span className="text-gray-600 dark:text-gray-300">{product.externalId}</span>
                             </div>
                             <div>
-                              <strong className="text-gray-900 dark:text-white">Category:</strong> <span className="text-gray-600 dark:text-gray-300">{product.category || 'None'}</span>
+                              <strong className="text-gray-900 dark:text-white">Categories:</strong> <span className="text-gray-600 dark:text-gray-300">
+                                {product.categories && product.categories.length > 0 
+                                  ? product.categories.map(cat => cat.name).join(', ')
+                                  : 'None'
+                                }
+                              </span>
                             </div>
                             <div>
                               <strong className="text-gray-900 dark:text-white">Created:</strong> <span className="text-gray-600 dark:text-gray-300">{formatDate(product.createdAt)}</span>

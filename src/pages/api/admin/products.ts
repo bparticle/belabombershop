@@ -75,7 +75,7 @@ async function handleCreateProduct(req: NextApiRequest, res: NextApiResponse) {
 
 async function handleUpdateProduct(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query;
-  const { isActive, enhancement } = req.body;
+  const { isActive, enhancement, categoryIds } = req.body;
 
   if (!id || typeof id !== 'string') {
     return res.status(400).json({ error: 'Product ID is required' });
@@ -90,6 +90,12 @@ async function handleUpdateProduct(req: NextApiRequest, res: NextApiResponse) {
     // Update product visibility
     if (typeof isActive === 'boolean') {
       const updatedProduct = await productService.toggleProductVisibility(id);
+      return res.status(200).json({ product: updatedProduct });
+    }
+
+    // Update categories
+    if (Array.isArray(categoryIds)) {
+      const updatedProduct = await productService.updateProductCategories(id, categoryIds);
       return res.status(200).json({ product: updatedProduct });
     }
 

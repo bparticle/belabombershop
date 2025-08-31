@@ -4,16 +4,14 @@ import { useRouter } from "next/router";
 import Head from "next/head";
 
 import { formatVariantName } from "../../lib/format-variant-name";
-import { PrintfulProduct, ProductCategory } from "../../types";
-import { 
-  determineProductCategory, 
-  getCategoryBySlug, 
-  PRODUCT_CATEGORIES 
-} from "../../lib/category-config";
+import { PrintfulProduct } from "../../types";
+import type { Category } from "../../lib/database/schema";
+
+import { categoryService } from "../../lib/database/services/category-service";
 import ProductGrid from "../../components/ProductGrid";
 
 interface CategoryPageProps {
-  category: ProductCategory;
+  category: Category;
   products: PrintfulProduct[];
 }
 
@@ -137,95 +135,70 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ category, products }) => {
 };
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  // Generate paths for all defined categories
-  const paths = PRODUCT_CATEGORIES.map((category) => ({
+  // Generate paths for all active categories from database
+  const categories = await categoryService.getAllCategories({
+    includeInactive: false,
+    includeSystem: true,
+  });
+
+  const paths = categories.map((category) => ({
     params: { slug: category.slug },
   }));
 
   return {
     paths,
-    fallback: false, // Return 404 for undefined categories
+    fallback: 'blocking', // Allow new categories to be generated at runtime
   };
 };
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
   try {
-    // Import printful only on server side
-    const { printful } = await import("../../lib/printful-client");
-    
     const slug = params?.slug as string;
     
     if (!slug) {
       return { notFound: true };
     }
 
-    // Get category information
-    const category = getCategoryBySlug(slug);
+    // Get category information from database
+    const category = await categoryService.getCategoryBySlug(slug);
     if (!category) {
       return { notFound: true };
     }
 
-    // Fetch all products (limited for build performance)
-    const { result: productIds } = await printful.get("sync/products");
-    
-    // Limit products to prevent build timeouts
-    const limitedProductIds = productIds.slice(0, 20);
-    
-    const allProducts = await Promise.all(
-      limitedProductIds.map(async ({ id }: { id: string }) => {
-        try {
-          const productData = await printful.get(`sync/products/${id}`);
-          return productData;
-        } catch (error) {
-          console.error(`Error fetching product ${id}:`, error);
-          return null;
-        }
-      })
-    );
+    // Get products for this category from database
+    const { productService } = await import("../../lib/database/services/product-service");
+    const dbProducts = await productService.getProductsByCategory(slug);
 
-    // Process products and filter by category
-    const products: PrintfulProduct[] = allProducts
-      .filter(Boolean) // Remove null results
-      .map(({ result: { sync_product, sync_variants } }) => {
-        // Determine product category
-        const productCategory = determineProductCategory({
-          name: sync_product.name || '',
-          tags: sync_product.tags || [],
-          metadata: sync_product.metadata || {}
-        });
-
-        // Extract description from metadata or use default
-        const description = sync_product.metadata?.description || 
-                          sync_product.metadata?.product_description ||
-                          `Premium quality ${sync_product.name || 'product'} featuring unique designs. Made with care and attention to detail, these pieces are perfect for everyday wear while showcasing your individual style.`;
-
-        return {
-          id: sync_product.id || '',
-          external_id: sync_product.external_id || '',
-          name: sync_product.name || 'Unnamed Product',
-          thumbnail_url: sync_product.thumbnail_url || '',
-          is_ignored: sync_product.is_ignored ?? false,
-          category: productCategory,
-          tags: sync_product.tags || [],
-          metadata: sync_product.metadata || {},
-          description: description,
-          variants: sync_variants.map((variant: any) => ({
-            id: variant.id || 0,
-            external_id: variant.external_id || '',
-            name: formatVariantName(variant.name, variant.options, variant.size, variant.color),
-            retail_price: variant.retail_price || '0',
-            currency: variant.currency || 'USD',
-            files: variant.files || [],
-            options: variant.options || [],
-            size: variant.size || null,
-            color: variant.color || null,
-            is_enabled: variant.is_enabled ?? true,
-            in_stock: variant.in_stock ?? true,
-            is_ignored: variant.is_ignored ?? false,
-          })),
-        };
-      })
-      .filter(product => product.category === category.id); // Filter by category
+    // Convert database products to frontend format
+    const products: PrintfulProduct[] = dbProducts.map(product => ({
+      id: product.externalId,
+      external_id: product.externalId,
+      name: product.name || 'Unnamed Product',
+      thumbnail_url: product.thumbnailUrl || '',
+      is_ignored: product.isIgnored || false,
+      category: category.id, // Use the database category ID
+      tags: product.tags?.map(tag => tag.name) || [],
+      metadata: product.metadata || {},
+      description: product.enhancement?.description || 
+                  product.description || 
+                  `Premium quality ${product.name || 'product'} featuring unique designs.`,
+      variants: product.variants
+        .filter(variant => variant.isEnabled)
+        .map(variant => ({
+          id: variant.printfulId,
+          external_id: variant.externalId,
+          name: formatVariantName(variant.name, variant.options || [], variant.size, variant.color),
+          retail_price: variant.retailPrice,
+          currency: variant.currency,
+          files: variant.files || [],
+          options: variant.options || [],
+          size: variant.size || null,
+          color: variant.color || null,
+          is_enabled: variant.isEnabled || false,
+          in_stock: variant.inStock || false,
+          is_ignored: variant.isIgnored || false,
+        })),
+    }));
 
     return {
       props: {

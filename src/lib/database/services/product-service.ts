@@ -6,6 +6,8 @@ import {
   productEnhancements, 
   categories, 
   productCategories,
+  tags,
+  productTags,
   syncLogs,
   type Product,
   type NewProduct,
@@ -13,16 +15,20 @@ import {
   type NewVariant,
   type ProductEnhancement as DBProductEnhancement,
   type NewProductEnhancement,
+  type Tag,
   type SyncLog,
   type NewSyncLog
 } from '../schema';
 import { printful } from '../../printful-client';
 import type { PrintfulProduct, PrintfulVariant } from '../../types';
+import { categoryService } from './category-service';
+import { tagService } from './tag-service';
 
 export interface ProductWithVariants extends Product {
   variants: Variant[];
   enhancement?: DBProductEnhancement;
-  categories: Array<{ id: string; name: string; slug: string; color?: string }>;
+  categories: Array<{ id: string; name: string; slug: string; color?: string; isPrimary: boolean }>;
+  tags: Tag[];
 }
 
 export interface ProductWithEnhancement extends Product {
@@ -64,16 +70,24 @@ export class ProductService {
           name: categories.name,
           slug: categories.slug,
           color: categories.color,
+          isPrimary: productCategories.isPrimary,
         })
         .from(categories)
         .innerJoin(productCategories, eq(categories.id, productCategories.categoryId))
         .where(eq(productCategories.productId, product.id));
+
+      const productTagsData = await db
+        .select(tags)
+        .from(tags)
+        .innerJoin(productTags, eq(tags.id, productTags.tagId))
+        .where(eq(productTags.productId, product.id));
 
       productsWithVariants.push({
         ...product,
         variants: productVariants,
         enhancement: enhancement[0],
         categories: productCategoriesData,
+        tags: productTagsData,
       });
     }
 
@@ -112,16 +126,24 @@ export class ProductService {
           name: categories.name,
           slug: categories.slug,
           color: categories.color,
+          isPrimary: productCategories.isPrimary,
         })
         .from(categories)
         .innerJoin(productCategories, eq(categories.id, productCategories.categoryId))
         .where(eq(productCategories.productId, product.id));
+
+      const productTagsData = await db
+        .select(tags)
+        .from(tags)
+        .innerJoin(productTags, eq(tags.id, productTags.tagId))
+        .where(eq(productTags.productId, product.id));
 
       productsWithVariants.push({
         ...product,
         variants: productVariants,
         enhancement: enhancement[0],
         categories: productCategoriesData,
+        tags: productTagsData,
       });
     }
 
@@ -486,6 +508,83 @@ export class ProductService {
       .from(syncLogs)
       .orderBy(desc(syncLogs.startedAt))
       .limit(limit);
+  }
+
+  /**
+   * Update product categories
+   */
+  async updateProductCategories(productId: string, categoryIds: string[], primaryCategoryId?: string): Promise<ProductWithVariants> {
+    // Remove existing category assignments
+    await db
+      .delete(productCategories)
+      .where(eq(productCategories.productId, productId));
+
+    // Add new category assignments
+    if (categoryIds.length > 0) {
+      const assignments = categoryIds.map(categoryId => ({
+        productId,
+        categoryId,
+        isPrimary: primaryCategoryId ? categoryId === primaryCategoryId : false,
+      }));
+
+      await db
+        .insert(productCategories)
+        .values(assignments);
+    }
+
+    // Return the updated product with full information
+    const updatedProduct = await this.getProductWithFullInfo(productId);
+    if (!updatedProduct) {
+      throw new Error('Product not found after update');
+    }
+    return updatedProduct;
+  }
+
+  /**
+   * Update product tags
+   */
+  async updateProductTags(productId: string, tagIds: string[]): Promise<void> {
+    await tagService.assignTagsToProduct(productId, tagIds);
+  }
+
+  /**
+   * Auto-categorize and auto-tag a product during sync
+   */
+  async autoCategorizeAndTagProduct(product: any): Promise<void> {
+    // Auto-categorize
+    const suggestedCategoryId = await categoryService.autoCategorizeProduct(product);
+    if (suggestedCategoryId) {
+      await categoryService.assignCategoryToProduct(product.id, suggestedCategoryId, true);
+    }
+
+    // Auto-tag
+    const autoTagIds = await tagService.autoTagProduct(product);
+    if (autoTagIds.length > 0) {
+      await tagService.assignTagsToProduct(product.id, autoTagIds);
+    }
+  }
+
+  /**
+   * Get product with full category and tag information
+   */
+  async getProductWithFullInfo(productId: string): Promise<ProductWithVariants | null> {
+    const product = await this.getProductById(productId);
+    if (!product) return null;
+
+    const categories = await categoryService.getCategoriesForProduct(productId);
+    const tags = await tagService.getTagsForProduct(productId);
+
+    return {
+      ...product,
+      categories: categories.map(cat => ({
+        id: cat.id,
+        name: cat.name,
+        slug: cat.slug,
+        color: cat.color,
+        isPrimary: cat.isPrimary,
+      })),
+      tags,
+    };
   }
 }
 

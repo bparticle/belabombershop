@@ -4,7 +4,7 @@ import shuffle from "lodash.shuffle";
 
 import { formatVariantName } from "../lib/format-variant-name";
 import { PrintfulProduct, LightweightProduct } from "../types";
-import { determineProductCategory } from "../lib/category-config";
+
 import { enhanceProductData, getDefaultDescription } from "../lib/product-enhancements";
 
 import ProductGrid from "../components/ProductGrid";
@@ -37,12 +37,9 @@ export const getStaticProps: GetStaticProps = async () => {
     const products: PrintfulProduct[] = dbProducts
       .filter(product => product.isActive) // Only show active products
       .map(product => {
-        // Determine product category based on metadata, tags, and name
-        const productCategory = determineProductCategory({
-          name: product.name || '',
-          tags: product.tags || [],
-          metadata: product.metadata || {}
-        });
+        // Get the primary category from database relationships
+        const primaryCategory = product.categories?.find(cat => cat.isPrimary) || product.categories?.[0];
+        const productCategory = primaryCategory?.id || 'default';
 
         // Create base product object with minimal data for homepage
         const baseProduct = {
@@ -51,8 +48,8 @@ export const getStaticProps: GetStaticProps = async () => {
           name: product.name || 'Unnamed Product',
           thumbnail_url: product.thumbnailUrl || '',
           is_ignored: product.isIgnored || false,
-          category: productCategory || 'default',
-          tags: product.tags || [],
+          category: productCategory,
+          tags: product.tags?.map(tag => tag.name) || [],
           metadata: product.metadata || {},
           description: product.enhancement?.description || 
                       product.description || 

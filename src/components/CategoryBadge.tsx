@@ -1,5 +1,5 @@
 import React from 'react';
-import { getCategoryById } from '../lib/category-config';
+import { useCategories } from '../hooks/useCategories';
 
 interface CategoryBadgeProps {
   categoryId: string;
@@ -12,7 +12,7 @@ interface CategoryBadgeProps {
  * CategoryBadge Component
  * 
  * Displays a styled badge showing the product category with optional icon
- * and different size variants. Uses the category configuration system
+ * and different size variants. Uses the database category system
  * for consistent styling and colors.
  */
 const CategoryBadge: React.FC<CategoryBadgeProps> = ({
@@ -21,7 +21,16 @@ const CategoryBadge: React.FC<CategoryBadgeProps> = ({
   showIcon = true,
   size = 'md'
 }) => {
+  const { getCategoryById, loading } = useCategories();
   const category = getCategoryById(categoryId);
+  
+  if (loading) {
+    return (
+      <span className={`inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-full bg-gray-100 text-gray-800 ${className}`}>
+        Loading...
+      </span>
+    );
+  }
   
   if (!category) {
     return null;

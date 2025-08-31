@@ -12,4 +12,5 @@ module.exports = {
   },
   verbose: true,
   strict: true,
+  driver: 'pg',
 };

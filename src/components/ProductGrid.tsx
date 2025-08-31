@@ -1,8 +1,8 @@
 import { useState, useMemo } from "react";
 import { PrintfulProduct, CategoryFilter as CategoryFilterType } from "../types";
-import { generateCategoryFilters } from "../lib/category-config";
 import ProductCard from "./ProductCard";
 import CategoryFilter from "./CategoryFilter";
+import { useCategories } from "../hooks/useCategories";
 
 interface ProductGridProps {
   products: PrintfulProduct[];
@@ -22,11 +22,26 @@ const ProductGrid: React.FC<ProductGridProps> = ({
   className = '' 
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
+  const { categories: dbCategories } = useCategories();
 
-  // Generate category filters from products
+  // Generate category filters from products and database categories
   const categoryFilters = useMemo(() => {
-    return generateCategoryFilters(products);
-  }, [products]);
+    const categoryCounts: Record<string, number> = {};
+    
+    // Count products in each category
+    products.forEach(product => {
+      const category = product.category || 'default';
+      categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+    });
+    
+    // Convert to array format and include only categories that exist in database
+    return Object.entries(categoryCounts)
+      .filter(([categoryId]) => dbCategories.some(cat => cat.id === categoryId))
+      .map(([category, count]) => ({
+        category,
+        count
+      }));
+  }, [products, dbCategories]);
 
   // Filter products based on selected category
   const filteredProducts = useMemo(() => {

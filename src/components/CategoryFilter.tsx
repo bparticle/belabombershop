@@ -1,6 +1,6 @@
 import React from 'react';
-import { CategoryFilter as CategoryFilterType, ProductCategory } from '../types';
-import { getCategoryById } from '../lib/category-config';
+import { CategoryFilter as CategoryFilterType } from '../types';
+import { useCategories } from '../hooks/useCategories';
 
 interface CategoryFilterProps {
   filters: CategoryFilterType[];
@@ -24,6 +24,7 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
   className = '',
   showCounts = true
 }) => {
+  const { getCategoryById, loading } = useCategories();
   const handleCategoryClick = (categoryId: string) => {
     // If clicking the same category, clear the filter
     if (selectedCategory === categoryId) {
@@ -54,50 +55,63 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
       </div>
       
       <div className="flex flex-wrap gap-2">
-        {filters.map((filter) => {
-          const category = getCategoryById(filter.category);
-          if (!category) return null;
+        {loading ? (
+          <div className="inline-flex items-center px-3 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-600">
+            Loading categories...
+          </div>
+        ) : (
+          filters.map((filter) => {
+            const category = getCategoryById(filter.category);
+            if (!category) {
+              // Show a loading state or skip this filter
+              return (
+                <div key={filter.category} className="inline-flex items-center px-3 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-600">
+                  Loading...
+                </div>
+              );
+            }
 
-          const isSelected = selectedCategory === filter.category;
-          
-          return (
-            <button
-              key={filter.category}
-              onClick={() => handleCategoryClick(filter.category)}
-              className={`
-                inline-flex items-center px-3 py-2 rounded-full text-sm font-medium
-                transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2
-                ${isSelected 
-                  ? 'ring-2 ring-offset-2' 
-                  : 'hover:scale-105 hover:shadow-md'
-                }
-              `}
-              style={{
-                backgroundColor: isSelected ? category.color : `${category.color}20`,
-                color: isSelected ? 'white' : category.color,
-                border: `1px solid ${isSelected ? category.color : `${category.color}40`}`,
-                boxShadow: isSelected ? `0 0 0 2px ${category.color}40` : 'none'
-              }}
-              aria-pressed={isSelected}
-              title={`${category.description} (${filter.count} products)`}
-            >
-              <span className="mr-1.5" aria-hidden="true">
-                {category.icon}
-              </span>
-              <span>{category.name}</span>
-              {showCounts && (
-                <span 
-                  className={`
-                    ml-1.5 px-1.5 py-0.5 rounded-full text-xs font-bold
-                    ${isSelected ? 'bg-white bg-opacity-20' : 'bg-white bg-opacity-80'}
-                  `}
-                >
-                  {filter.count}
+            const isSelected = selectedCategory === filter.category;
+            
+            return (
+              <button
+                key={filter.category}
+                onClick={() => handleCategoryClick(filter.category)}
+                className={`
+                  inline-flex items-center px-3 py-2 rounded-full text-sm font-medium
+                  transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2
+                  ${isSelected 
+                    ? 'ring-2 ring-offset-2' 
+                    : 'hover:scale-105 hover:shadow-md'
+                  }
+                `}
+                style={{
+                  backgroundColor: isSelected ? category.color : `${category.color}20`,
+                  color: isSelected ? 'white' : category.color,
+                  border: `1px solid ${isSelected ? category.color : `${category.color}40`}`,
+                  boxShadow: isSelected ? `0 0 0 2px ${category.color}40` : 'none'
+                }}
+                aria-pressed={isSelected}
+                title={`${category.description} (${filter.count} products)`}
+              >
+                <span className="mr-1.5" aria-hidden="true">
+                  {category.icon}
                 </span>
-              )}
-            </button>
-          );
-        })}
+                <span>{category.name}</span>
+                {showCounts && (
+                  <span 
+                    className={`
+                      ml-1.5 px-1.5 py-0.5 rounded-full text-xs font-bold
+                      ${isSelected ? 'bg-white bg-opacity-20' : 'bg-white bg-opacity-80'}
+                    `}
+                  >
+                    {filter.count}
+                  </span>
+                )}
+              </button>
+            );
+          })
+        )}
       </div>
       
       {filters.length === 0 && (
