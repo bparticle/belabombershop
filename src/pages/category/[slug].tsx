@@ -3,7 +3,6 @@ import { GetStaticProps, GetStaticPaths } from "next";
 import { useRouter } from "next/router";
 import Head from "next/head";
 
-import { printful } from "../../lib/printful-client";
 import { formatVariantName } from "../../lib/format-variant-name";
 import { PrintfulProduct, ProductCategory } from "../../types";
 import { 
@@ -151,6 +150,9 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
   try {
+    // Import printful only on server side
+    const { printful } = await import("../../lib/printful-client");
+    
     const slug = params?.slug as string;
     
     if (!slug) {

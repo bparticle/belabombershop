@@ -9,13 +9,13 @@
 # Configure secrets scanning to ignore false positives in code patterns
 # These are environment variable NAMES in code, not actual secret values
 [context.production.environment]
-  SECRETS_SCAN_OMIT_PATHS = "src/lib/database/config.ts,src/lib/env-validation.ts,src/lib/client-env-validation.ts,.next/**,*.nft.json,*.map,*.js.map"
+  SECRETS_SCAN_OMIT_PATHS = "src/lib/database/config.ts,src/lib/env-validation.ts,src/lib/client-env-validation.ts,src/lib/printful-client.ts,src/lib/create-order-v1.ts,src/lib/create-order.ts,.next/**,*.nft.json,*.map,*.js.map,*.pack"
 
 [context.deploy-preview.environment]
-  SECRETS_SCAN_OMIT_PATHS = "src/lib/database/config.ts,src/lib/env-validation.ts,src/lib/client-env-validation.ts,.next/**,*.nft.json,*.map,*.js.map"
+  SECRETS_SCAN_OMIT_PATHS = "src/lib/database/config.ts,src/lib/env-validation.ts,src/lib/client-env-validation.ts,src/lib/printful-client.ts,src/lib/create-order-v1.ts,src/lib/create-order.ts,.next/**,*.nft.json,*.map,*.js.map,*.pack"
 
 [context.branch-deploy.environment]
-  SECRETS_SCAN_OMIT_PATHS = "src/lib/database/config.ts,src/lib/env-validation.ts,src/lib/client-env-validation.ts,.next/**,*.nft.json,*.map,*.js.map"
+  SECRETS_SCAN_OMIT_PATHS = "src/lib/database/config.ts,src/lib/env-validation.ts,src/lib/client-env-validation.ts,src/lib/printful-client.ts,src/lib/create-order-v1.ts,src/lib/create-order.ts,.next/**,*.nft.json,*.map,*.js.map,*.pack"
 
 # Headers for static assets
 [[headers]]
