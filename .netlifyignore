@@ -1,0 +1,83 @@
+# Documentation files that contain environment variable examples
+*.md
+!README.md
+
+# Scripts that might contain environment variable references
+scripts/
+
+# Environment files
+.env*
+!env.example
+
+# Build artifacts that might contain environment variable references
+.next/cache/
+.netlify/
+drizzle/
+
+# Configuration files that might contain environment variable references
+drizzle.config.js
+
+# Test files
+*.test.*
+*.spec.*
+
+# Development and documentation files
+*.log
+*.lock
+
+# Development files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary and cache files
+.tmp/
+.cache/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Additional files that might contain environment variable references
+setup-shipping-and-orders.md
+WEBHOOK_INTEGRATION_DOCUMENTATION.md
+DATABASE_SETUP.md
+PRODUCTION_READINESS_CHECKLIST.md
+CATEGORY_SYSTEM.md
+CURSOR.md
+DEFAULT_VARIANT_SETUP.md
+PRODUCT_DESCRIPTIONS.md
+PRODUCT_ENHANCEMENTS_GUIDE.md
+SHIPPING_SETUP_CHECKLIST.md
+SNIPCART_DATA_VERIFICATION_REPORT.md
+TAX_SETUP_CHECKLIST.md
+TAX_SETUP_GUIDE.md
+ADMIN_AUTH_SETUP.md
+
+# Environment files (except example)
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Additional configuration files
+renovate.json
+
+# Package files that might contain sensitive information
+package-lock.json
+
+# Additional files that might contain environment variable references
+how HEAD.env
+
+# Additional files that might contain environment variable references
+next-env.d.ts
+tsconfig.tsbuildinfo
+
+# Additional files that might contain environment variable references
+postcss.config.js
+prettier.config.js

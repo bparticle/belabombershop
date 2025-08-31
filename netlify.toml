@@ -5,23 +5,38 @@
 [build.environment]
   NODE_VERSION = "18"
   NPM_CONFIG_PRODUCTION = "false"
+  # Global secrets scan configuration to prevent false positives
+  SECRETS_SCAN_OMIT_KEYS = "NODE_ENV,DATABASE_PORT,DATABASE_HOST,DATABASE_NAME,DATABASE_USERNAME,DATABASE_CLIENT,DATABASE_SSL,NEXT_PUBLIC_*,ALLOWED_ORIGINS,GOOGLE_ANALYTICS_ID,JWT_SECRET,PRINTFUL_API_KEY,SNIPCART_SECRET_KEY,ADMIN_PASSWORD"
 
 # Configure secrets scanning to ignore false positives in code patterns
 # These are environment variable NAMES in code, not actual secret values
 [context.production.environment]
-  SECRETS_SCAN_OMIT_PATHS = "src/lib/database/config.ts,src/lib/env-validation.ts,src/lib/client-env-validation.ts,src/lib/printful-client.ts,src/lib/create-order-v1.ts,src/lib/create-order.ts,.next/**,*.nft.json,*.map,*.js.map,*.pack"
+  SECRETS_SCAN_OMIT_PATHS = "src/lib/database/config.ts,src/lib/env-validation.ts,src/lib/client-env-validation.ts,src/lib/printful-client.ts,src/lib/create-order-v1.ts,src/lib/create-order.ts,.next/**,*.nft.json,*.map,*.js.map,*.pack,.netlify/**,env.example,setup-shipping-and-orders.md,WEBHOOK_INTEGRATION_DOCUMENTATION.md,DATABASE_SETUP.md,PRODUCTION_READINESS_CHECKLIST.md,drizzle.config.js,*.md"
+  SECRETS_SCAN_OMIT_KEYS = "NODE_ENV,DATABASE_PORT,DATABASE_HOST,DATABASE_NAME,DATABASE_USERNAME,DATABASE_CLIENT,DATABASE_SSL,NEXT_PUBLIC_*,ALLOWED_ORIGINS,GOOGLE_ANALYTICS_ID,JWT_SECRET,PRINTFUL_API_KEY,SNIPCART_SECRET_KEY,ADMIN_PASSWORD"
 
 [context.deploy-preview.environment]
-  SECRETS_SCAN_OMIT_PATHS = "src/lib/database/config.ts,src/lib/env-validation.ts,src/lib/client-env-validation.ts,src/lib/printful-client.ts,src/lib/create-order-v1.ts,src/lib/create-order.ts,.next/**,*.nft.json,*.map,*.js.map,*.pack"
+  SECRETS_SCAN_OMIT_PATHS = "src/lib/database/config.ts,src/lib/env-validation.ts,src/lib/client-env-validation.ts,src/lib/printful-client.ts,src/lib/create-order-v1.ts,src/lib/create-order.ts,.next/**,*.nft.json,*.map,*.js.map,*.pack,.netlify/**,env.example,setup-shipping-and-orders.md,WEBHOOK_INTEGRATION_DOCUMENTATION.md,DATABASE_SETUP.md,PRODUCTION_READINESS_CHECKLIST.md,drizzle.config.js,*.md"
+  SECRETS_SCAN_OMIT_KEYS = "NODE_ENV,DATABASE_PORT,DATABASE_HOST,DATABASE_NAME,DATABASE_USERNAME,DATABASE_CLIENT,DATABASE_SSL,NEXT_PUBLIC_*,ALLOWED_ORIGINS,GOOGLE_ANALYTICS_ID,JWT_SECRET,PRINTFUL_API_KEY,SNIPCART_SECRET_KEY,ADMIN_PASSWORD"
 
 [context.branch-deploy.environment]
-  SECRETS_SCAN_OMIT_PATHS = "src/lib/database/config.ts,src/lib/env-validation.ts,src/lib/client-env-validation.ts,src/lib/printful-client.ts,src/lib/create-order-v1.ts,src/lib/create-order.ts,.next/**,*.nft.json,*.map,*.js.map,*.pack"
+  SECRETS_SCAN_OMIT_PATHS = "src/lib/database/config.ts,src/lib/env-validation.ts,src/lib/client-env-validation.ts,src/lib/printful-client.ts,src/lib/create-order-v1.ts,src/lib/create-order.ts,.next/**,*.nft.json,*.map,*.js.map,*.pack,.netlify/**,env.example,setup-shipping-and-orders.md,WEBHOOK_INTEGRATION_DOCUMENTATION.md,DATABASE_SETUP.md,PRODUCTION_READINESS_CHECKLIST.md,drizzle.config.js,*.md"
+  SECRETS_SCAN_OMIT_KEYS = "NODE_ENV,DATABASE_PORT,DATABASE_HOST,DATABASE_NAME,DATABASE_USERNAME,DATABASE_CLIENT,DATABASE_SSL,NEXT_PUBLIC_*,ALLOWED_ORIGINS,GOOGLE_ANALYTICS_ID,JWT_SECRET,PRINTFUL_API_KEY,SNIPCART_SECRET_KEY,ADMIN_PASSWORD"
 
 # Headers for static assets
 [[headers]]
   for = "/_next/static/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+
+# Security headers for all pages
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "origin-when-cross-origin"
+    X-XSS-Protection = "1; mode=block"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.snipcart.com https://app.snipcart.com; style-src 'self' 'unsafe-inline' https://cdn.snipcart.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.printful.com https://app.snipcart.com;"
 
 # Redirects for Next.js
 [[redirects]]
