@@ -241,27 +241,32 @@ export function enhanceProductData(printfulProduct: any): any {
   if (!enhancement) {
     return {
       ...printfulProduct,
-      defaultVariant
+      defaultVariant: defaultVariant || null
     };
   }
 
   return {
     ...printfulProduct,
     // Override description if enhancement exists
-    description: enhancement.description || printfulProduct.description,
+    description: enhancement.description || printfulProduct.description || '',
     // Add enhancement data
     enhancement,
     // Add default variant information
-    defaultVariant
+    defaultVariant: defaultVariant || null
   };
 }
 
 /**
  * Get default variant for a product
  * @param product - The product data
- * @returns The default variant or the first available variant
+ * @returns The default variant or null if no variants available
  */
 export function getDefaultVariant(product: any): any {
+  // Ensure product has variants
+  if (!product.variants || product.variants.length === 0) {
+    return null;
+  }
+
   const enhancement = getProductEnhancement(product.external_id);
 
   // If we have a specific default variant in enhancements, use it
@@ -283,7 +288,7 @@ export function getDefaultVariant(product: any): any {
   }
 
   // If no black variant, return the first available variant
-  return product.variants[0];
+  return product.variants[0] || null;
 }
 
 /**

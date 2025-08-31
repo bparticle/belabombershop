@@ -2,7 +2,7 @@ import * as React from "react";
 import { GetStaticProps, GetStaticPaths } from "next";
 import { useRouter } from "next/router";
 
-import { printful } from "../../lib/printful-client";
+import { productService } from "../../lib/database/services/product-service";
 import { formatVariantName } from "../../lib/format-variant-name";
 import { PrintfulProduct, ProductImage } from "../../types";
 import { determineProductCategory } from "../../lib/category-config";
@@ -417,11 +417,14 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
 
 export const getStaticPaths: GetStaticPaths = async () => {
   try {
-    const { result: productIds } = await printful.get("sync/products");
+    // Get all active products from database
+    const dbProducts = await productService.getAllProducts();
     
-    const paths = productIds.map(({ id }: { id: string }) => ({
-      params: { id: id.toString() },
-    }));
+    const paths = dbProducts
+      .filter(product => product.isActive)
+      .map(product => ({
+        params: { id: product.externalId }, // Use external_id for URLs
+      }));
 
     return {
       paths,
@@ -444,40 +447,41 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
       return { notFound: true };
     }
 
-    const { result: { sync_product, sync_variants } } = await printful.get(`sync/products/${productId}`);
-
-    // Validate the response data
-    if (!sync_product || !sync_variants || !Array.isArray(sync_variants)) {
-      console.error('Invalid product data received from Printful');
+    // Get product from database by external ID (since URL now uses external_id)
+    const dbProduct = await productService.getProductByExternalId(productId);
+    
+    if (!dbProduct) {
       return { notFound: true };
     }
 
     // Determine product category based on metadata, tags, and name
     const productCategory = determineProductCategory({
-      name: sync_product.name || '',
-      tags: sync_product.tags || [],
-      metadata: sync_product.metadata || {}
+      name: dbProduct.name || '',
+      tags: dbProduct.tags || [],
+      metadata: dbProduct.metadata || {}
     });
 
     // Create base product object
     const baseProduct = {
-      id: sync_product.id?.toString() || '',
-      external_id: sync_product.external_id || '',
-      name: sync_product.name || 'Unnamed Product',
-      thumbnail_url: sync_product.thumbnail_url || '',
-      is_ignored: sync_product.is_ignored ?? false,
+      id: dbProduct.externalId, // Use external_id for frontend URLs
+      external_id: dbProduct.externalId,
+      name: dbProduct.name || 'Unnamed Product',
+      thumbnail_url: dbProduct.thumbnailUrl || '',
+      is_ignored: dbProduct.isIgnored,
       category: productCategory,
-      tags: sync_product.tags || [],
-      metadata: sync_product.metadata || {},
-      description: getDefaultDescription(sync_product.name || 'Product', productCategory),
-      variants: sync_variants
-        .filter((variant: any) => variant && variant.id) // Only include valid variants
-        .map((variant: any) => ({
-          id: variant.id || 0,
-          external_id: variant.external_id || '',
-          name: formatVariantName(variant.name, variant.options, variant.size, variant.color),
-          retail_price: variant.retail_price || '0',
-          currency: variant.currency || 'USD',
+      tags: dbProduct.tags || [],
+      metadata: dbProduct.metadata || {},
+      description: dbProduct.enhancement?.description || 
+                  dbProduct.description || 
+                  getDefaultDescription(dbProduct.name || 'Product', productCategory),
+      variants: dbProduct.variants
+        .filter(variant => variant.isEnabled) // Only include enabled variants
+        .map(variant => ({
+          id: variant.printfulId,
+          external_id: variant.externalId,
+          name: formatVariantName(variant.name, variant.options || [], variant.size, variant.color),
+          retail_price: variant.retailPrice,
+          currency: variant.currency,
           files: Array.isArray(variant.files) 
             ? variant.files.filter((file: any) => 
                 file && 
@@ -491,9 +495,9 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
           options: Array.isArray(variant.options) ? variant.options : [],
           size: variant.size || null,
           color: variant.color || null,
-          is_enabled: variant.is_enabled ?? true,
-          in_stock: variant.in_stock ?? true,
-          is_ignored: variant.is_ignored ?? false,
+          is_enabled: variant.isEnabled,
+          in_stock: variant.inStock,
+          is_ignored: variant.isIgnored,
         })),
     };
 

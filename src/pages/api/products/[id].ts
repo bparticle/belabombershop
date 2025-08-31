@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { printful } from "../../../lib/printful-client";
+import { productService } from "../../../lib/database/services/product-service";
 import { validateData, VariantIdSchema } from "../../../lib/validation";
 import { createRateLimiter, RATE_LIMITS } from "../../../lib/rate-limit";
 import { corsHandler, CORS_CONFIGS } from "../../../lib/cors";
@@ -43,13 +43,39 @@ async function handler(
   const validatedId = validateData(VariantIdSchema, req.query.id);
 
   try {
-    const { result } = await printful.get(`store/variants/@${validatedId}`);
+    // Try to find the variant by external ID
+    const product = await productService.getProductByExternalId(validatedId);
+    
+    if (!product) {
+      return res.status(404).json({
+        errors: [
+          {
+            key: 'product_not_found',
+            message: 'Product not found',
+          },
+        ],
+      });
+    }
+
+    // Find the specific variant
+    const variant = product.variants.find(v => v.externalId === validatedId);
+    
+    if (!variant) {
+      return res.status(404).json({
+        errors: [
+          {
+            key: 'variant_not_found',
+            message: 'Product variant not found',
+          },
+        ],
+      });
+    }
 
     res.setHeader("Cache-Control", "s-maxage=3600, stale-while-revalidate");
 
     res.status(200).json({
       id: validatedId,
-      price: result.retail_price,
+      price: parseFloat(variant.retailPrice),
       url: `/api/products/${validatedId}`,
     });
   } catch (err) {

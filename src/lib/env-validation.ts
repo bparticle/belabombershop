@@ -11,6 +11,14 @@ interface EnvironmentVariables {
   NEXT_PUBLIC_SNIPCART_API_KEY?: string;
   SNIPCART_SECRET_KEY?: string;
   NODE_ENV: 'development' | 'production' | 'test';
+  // Database configuration
+  DATABASE_CLIENT: string;
+  DATABASE_HOST: string;
+  DATABASE_PORT: string;
+  DATABASE_NAME: string;
+  DATABASE_USERNAME: string;
+  DATABASE_PASSWORD: string;
+  DATABASE_SSL: boolean;
 }
 
 interface ClientEnvironmentVariables {
@@ -26,6 +34,13 @@ export function validateEnvironmentVariables(): EnvironmentVariables {
   const requiredVars = {
     PRINTFUL_API_KEY: process.env.PRINTFUL_API_KEY,
     NODE_ENV: process.env.NODE_ENV as EnvironmentVariables['NODE_ENV'],
+    // Database variables
+    DATABASE_CLIENT: process.env.DATABASE_CLIENT,
+    DATABASE_HOST: process.env.DATABASE_HOST,
+    DATABASE_PORT: process.env.DATABASE_PORT,
+    DATABASE_NAME: process.env.DATABASE_NAME,
+    DATABASE_USERNAME: process.env.DATABASE_USERNAME,
+    DATABASE_PASSWORD: process.env.DATABASE_PASSWORD,
   };
 
   const optionalVars = {
@@ -56,6 +71,15 @@ export function validateEnvironmentVariables(): EnvironmentVariables {
     throw new Error('PRINTFUL_API_KEY must be a non-empty string');
   }
 
+  // Validate database port (should be a number)
+  const port = parseInt(requiredVars.DATABASE_PORT);
+  if (isNaN(port) || port < 1 || port > 65535) {
+    throw new Error(`Invalid DATABASE_PORT: ${requiredVars.DATABASE_PORT}. Must be a valid port number (1-65535)`);
+  }
+
+  // Validate DATABASE_SSL (should be a boolean)
+  const ssl = process.env.DATABASE_SSL === 'true';
+
   // Require SNIPCART_SECRET_KEY in production
   if (requiredVars.NODE_ENV === 'production' && !optionalVars.SNIPCART_SECRET_KEY) {
     throw new Error('SNIPCART_SECRET_KEY is required in production for webhook security');
@@ -64,6 +88,7 @@ export function validateEnvironmentVariables(): EnvironmentVariables {
   return {
     ...requiredVars,
     ...optionalVars,
+    DATABASE_SSL: ssl,
   } as EnvironmentVariables;
 }
 
