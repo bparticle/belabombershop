@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
-import type { ProductWithVariants, SyncLog } from '../../lib/database/services/product-service';
+import type { ProductWithVariants } from '../../lib/database/services/product-service';
+import type { SyncLog } from '../../lib/database/schema';
 import { getAdminToken, removeAdminToken } from '../../lib/auth';
+import { useTheme } from '../../context/theme';
+import ThemeToggle from '../../components/ThemeToggle';
 
 // Types for serialized data from getServerSideProps
 type SerializedProductWithVariants = Omit<ProductWithVariants, 'syncedAt' | 'createdAt' | 'updatedAt'> & {
@@ -32,6 +35,7 @@ interface AdminDashboardProps {
 
 export default function AdminDashboard({ products: initialProducts, syncLogs: initialSyncLogs }: AdminDashboardProps) {
   const router = useRouter();
+  const { isDark } = useTheme();
   const [products, setProducts] = useState(initialProducts);
   const [syncLogs, setSyncLogs] = useState(initialSyncLogs);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -163,131 +167,157 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="px-4 py-6 sm:px-0">
-                     <div className="flex justify-between items-center">
-             <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-             <div className="flex space-x-4">
-               <a
-                 href="/admin/enhancements"
-                 className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md"
-               >
-                 Manage Enhancements
-               </a>
-               <button
-                 onClick={triggerSync}
-                 disabled={isSyncing}
-                 className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md"
-               >
-                 {isSyncing ? 'Syncing...' : 'Sync Products'}
-               </button>
-               <button
-                 onClick={handleLogout}
-                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
-               >
-                 Logout
-               </button>
-             </div>
-           </div>
+          <div className="flex justify-between items-center">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Dashboard</h1>
+            <div className="flex space-x-4">
+              <ThemeToggle />
+              <a
+                href="/admin/enhancements"
+                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md transition-colors"
+              >
+                Manage Enhancements
+              </a>
+              <button
+                onClick={triggerSync}
+                disabled={isSyncing}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md transition-colors"
+              >
+                {isSyncing ? 'Syncing...' : 'Sync Products'}
+              </button>
+              <button
+                onClick={handleLogout}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Products List */}
           <div className="lg:col-span-2">
-            <div className="bg-white shadow rounded-lg">
+            <div className="bg-white dark:bg-gray-800 shadow rounded-lg transition-colors duration-200">
               <div className="px-4 py-5 sm:p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">Products ({products.length})</h2>
+                <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Products ({products.length})</h2>
                 <div className="space-y-4">
                   {products.map((product) => (
                     <div
                       key={product.id}
                       className={`border rounded-lg p-4 cursor-pointer transition-colors ${
-                        selectedProduct === product.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                        selectedProduct === product.id 
+                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
+                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                       } ${!product.isActive ? 'opacity-60' : ''}`}
                       onClick={() => setSelectedProduct(selectedProduct === product.id ? null : product.id)}
                     >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h3 className="font-medium text-gray-900">{product.name}</h3>
-                          <p className="text-sm text-gray-500">ID: {product.printfulId}</p>
-                          <p className="text-sm text-gray-500">Variants: {product.variants.length}</p>
-                          {product.enhancement && (
-                            <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded mt-1">
-                              Enhanced
-                            </span>
+                      <div className="flex items-start space-x-3">
+                        {/* Product Thumbnail */}
+                        <div className="flex-shrink-0">
+                          {product.variants.length > 0 && 
+                           product.variants[0].files && 
+                           product.variants[0].files.length > 0 && 
+                           product.variants[0].files[0].preview_url ? (
+                            <img
+                              src={product.variants[0].files[0].preview_url}
+                              alt={product.name}
+                              className="w-12 h-12 object-cover rounded-md border border-gray-200 dark:border-gray-600"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-md flex items-center justify-center">
+                              <span className="text-xs text-gray-500 dark:text-gray-400">No Image</span>
+                            </div>
                           )}
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <span className={`text-sm ${product.isActive ? 'text-green-600' : 'text-red-600'}`}>
-                            {product.isActive ? 'Active' : 'Inactive'}
-                          </span>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleProductVisibility(product.id);
-                            }}
-                            className="text-sm text-blue-600 hover:text-blue-800"
-                          >
-                            Toggle
-                          </button>
+                        
+                        {/* Product Details */}
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <h3 className="font-medium text-gray-900 dark:text-white">{product.name}</h3>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">ID: {product.printfulId}</p>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">Variants: {product.variants.length}</p>
+                              {product.enhancement && (
+                                <span className="inline-block bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 text-xs px-2 py-1 rounded mt-1">
+                                  Enhanced
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className={`text-sm ${product.isActive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                                {product.isActive ? 'Active' : 'Inactive'}
+                              </span>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleProductVisibility(product.id);
+                                }}
+                                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+                              >
+                                Toggle
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       </div>
                       
                       {selectedProduct === product.id && (
-                        <div className="mt-4 pt-4 border-t border-gray-200">
+                        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                           <div className="grid grid-cols-2 gap-4 text-sm">
                             <div>
-                              <strong>External ID:</strong> {product.externalId}
+                              <strong className="text-gray-900 dark:text-white">External ID:</strong> <span className="text-gray-600 dark:text-gray-300">{product.externalId}</span>
                             </div>
                             <div>
-                              <strong>Category:</strong> {product.category || 'None'}
+                              <strong className="text-gray-900 dark:text-white">Category:</strong> <span className="text-gray-600 dark:text-gray-300">{product.category || 'None'}</span>
                             </div>
                             <div>
-                              <strong>Created:</strong> {formatDate(product.createdAt)}
+                              <strong className="text-gray-900 dark:text-white">Created:</strong> <span className="text-gray-600 dark:text-gray-300">{formatDate(product.createdAt)}</span>
                             </div>
                             <div>
-                              <strong>Last Synced:</strong> {formatDate(product.syncedAt)}
+                              <strong className="text-gray-900 dark:text-white">Last Synced:</strong> <span className="text-gray-600 dark:text-gray-300">{formatDate(product.syncedAt)}</span>
                             </div>
                           </div>
                           
                           {product.enhancement && (
                             <div className="mt-4">
-                              <h4 className="font-medium text-gray-900 mb-2">Enhancement</h4>
-                              <div className="bg-gray-50 p-3 rounded space-y-3">
-                                {product.enhancement.shortDescription && (
+                              <h4 className="font-medium text-gray-900 dark:text-white mb-2">Enhancement</h4>
+                              <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded space-y-3">
+                                                                {product.enhancement.shortDescription && (
                                   <div>
-                                    <strong className="text-sm text-gray-700">Short Description:</strong>
-                                    <p className="text-sm text-gray-600 mt-1">{product.enhancement.shortDescription}</p>
+                                    <strong className="text-sm text-gray-700 dark:text-gray-300">Short Description:</strong>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{product.enhancement.shortDescription}</p>
                                   </div>
                                 )}
                                 {product.enhancement.description && (
                                   <div>
-                                    <strong className="text-sm text-gray-700">Description:</strong>
-                                    <p className="text-sm text-gray-600 mt-1">{product.enhancement.description}</p>
+                                    <strong className="text-sm text-gray-700 dark:text-gray-300">Description:</strong>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{product.enhancement.description}</p>
                                   </div>
                                 )}
                                 {product.enhancement.features && product.enhancement.features.length > 0 && (
                                   <div>
-                                    <strong className="text-sm text-gray-700">Features:</strong>
-                                    <ul className="text-sm text-gray-600 mt-1 list-disc list-inside">
+                                    <strong className="text-sm text-gray-700 dark:text-gray-300">Features:</strong>
+                                    <ul className="text-sm text-gray-600 dark:text-gray-400 mt-1 list-disc list-inside">
                                       {product.enhancement.features.map((feature, index) => (
                                         <li key={index}>{feature}</li>
                                       ))}
                                     </ul>
                                   </div>
                                 )}
-                                                                 {product.enhancement.defaultVariantId && (
+                                 {product.enhancement.defaultVariantId && (
                                    <div>
-                                     <strong className="text-sm text-gray-700">Default Variant ID:</strong>
-                                     <p className="text-sm text-gray-600 mt-1">{product.enhancement.defaultVariantId}</p>
+                                     <strong className="text-sm text-gray-700 dark:text-gray-300">Default Variant ID:</strong>
+                                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{product.enhancement.defaultVariantId}</p>
                                    </div>
                                  )}
                                  {product.enhancement.specifications && Object.keys(product.enhancement.specifications).length > 0 && (
                                    <div>
-                                     <strong className="text-sm text-gray-700">Specifications:</strong>
-                                     <div className="text-sm text-gray-600 mt-1">
+                                     <strong className="text-sm text-gray-700 dark:text-gray-300">Specifications:</strong>
+                                     <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                                        {Object.entries(product.enhancement.specifications).map(([key, value]) => (
                                          <div key={key} className="flex justify-between">
                                            <span className="font-medium">{key}:</span>
@@ -324,24 +354,24 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
 
           {/* Sync Logs */}
           <div className="lg:col-span-1">
-            <div className="bg-white shadow rounded-lg">
+            <div className="bg-white dark:bg-gray-800 shadow rounded-lg transition-colors duration-200">
               <div className="px-4 py-5 sm:p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">Recent Syncs</h2>
+                <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Recent Syncs</h2>
                 <div className="space-y-3">
                   {syncLogs.map((log) => (
-                    <div key={log.id} className="border-l-4 border-gray-200 pl-4">
+                    <div key={log.id} className="border-l-4 border-gray-200 dark:border-gray-700 pl-4">
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{log.operation}</p>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">{log.operation}</p>
                           <p className={`text-sm ${getStatusColor(log.status)}`}>
                             {log.status}
                           </p>
                         </div>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
                           {formatDate(log.startedAt)}
                         </span>
                       </div>
-                      <div className="mt-2 text-xs text-gray-600">
+                      <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
                         <p>Products: {log.productsCreated} created, {log.productsUpdated} updated, {log.productsDeleted} deleted</p>
                         <p>Variants: {log.variantsCreated} created, {log.variantsUpdated} updated, {log.variantsDeleted} deleted</p>
                         {log.duration && (
@@ -349,7 +379,7 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
                         )}
                       </div>
                       {log.errorMessage && (
-                        <p className="mt-1 text-xs text-red-600">{log.errorMessage}</p>
+                        <p className="mt-1 text-xs text-red-600 dark:text-red-400">{log.errorMessage}</p>
                       )}
                     </div>
                   ))}

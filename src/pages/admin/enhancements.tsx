@@ -3,6 +3,8 @@ import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
 import type { ProductWithVariants } from '../../lib/database/services/product-service';
 import { getAdminToken, removeAdminToken } from '../../lib/auth';
+import { useTheme } from '../../context/theme';
+import ThemeToggle from '../../components/ThemeToggle';
 
 interface EnhancementPageProps {
   products: ProductWithVariants[];
@@ -10,6 +12,7 @@ interface EnhancementPageProps {
 
 export default function EnhancementPage({ products: initialProducts }: EnhancementPageProps) {
   const router = useRouter();
+  const { isDark } = useTheme();
   const [products, setProducts] = useState(initialProducts);
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
   const [editingEnhancement, setEditingEnhancement] = useState<any>(null);
@@ -166,55 +169,57 @@ export default function EnhancementPage({ products: initialProducts }: Enhanceme
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="px-4 py-6 sm:px-0">
-                     <div className="flex justify-between items-center">
-             <h1 className="text-3xl font-bold text-gray-900">Product Enhancements</h1>
-             <div className="flex space-x-2">
+          <div className="flex justify-between items-center">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Product Enhancements</h1>
+                         <div className="flex space-x-2">
                <a
                  href="/admin"
-                 className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md"
+                 className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition-colors"
                >
                  Back to Admin
                </a>
                <button
                  onClick={handleLogout}
-                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
+                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors"
                >
                  Logout
                </button>
              </div>
-           </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Products List */}
           <div>
-            <div className="bg-white shadow rounded-lg">
+            <div className="bg-white dark:bg-gray-800 shadow rounded-lg transition-colors duration-200">
               <div className="px-4 py-5 sm:p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">Products</h2>
+                <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Products</h2>
                 <div className="space-y-4">
                   {products.map((product) => (
                     <div
                       key={product.id}
                       className={`border rounded-lg p-4 cursor-pointer transition-colors ${
-                        selectedProduct === product.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                        selectedProduct === product.id 
+                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
+                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                       }`}
                       onClick={() => handleEditEnhancement(product)}
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <h3 className="font-medium text-gray-900">{product.name}</h3>
-                          <p className="text-sm text-gray-500">ID: {product.printfulId}</p>
-                          <p className="text-sm text-gray-500">External ID: {product.externalId}</p>
+                          <h3 className="font-medium text-gray-900 dark:text-white">{product.name}</h3>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">ID: {product.printfulId}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">External ID: {product.externalId}</p>
                           {product.enhancement ? (
-                            <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded mt-1">
+                            <span className="inline-block bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 text-xs px-2 py-1 rounded mt-1">
                               Enhanced
                             </span>
                           ) : (
-                            <span className="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded mt-1">
+                            <span className="inline-block bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 text-xs px-2 py-1 rounded mt-1">
                               No Enhancement
                             </span>
                           )}
@@ -230,39 +235,39 @@ export default function EnhancementPage({ products: initialProducts }: Enhanceme
           {/* Enhancement Editor */}
           <div>
             {editingEnhancement ? (
-              <div className="bg-white shadow rounded-lg">
+              <div className="bg-white dark:bg-gray-800 shadow rounded-lg transition-colors duration-200">
                 <div className="px-4 py-5 sm:p-6">
-                  <h2 className="text-lg font-medium text-gray-900 mb-4">Edit Enhancement</h2>
+                  <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Edit Enhancement</h2>
                   
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Short Description</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Short Description</label>
                       <textarea
                         value={editingEnhancement.shortDescription}
                         onChange={(e) => setEditingEnhancement({
                           ...editingEnhancement,
                           shortDescription: e.target.value
                         })}
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        className="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white transition-colors duration-200"
                         rows={3}
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Description</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
                       <textarea
                         value={editingEnhancement.description}
                         onChange={(e) => setEditingEnhancement({
                           ...editingEnhancement,
                           description: e.target.value
                         })}
-                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        className="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white transition-colors duration-200"
                         rows={5}
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Features</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Features</label>
                       <div className="space-y-2">
                         {editingEnhancement.features?.map((feature: string, index: number) => (
                           <div key={index} className="flex space-x-2">
@@ -270,11 +275,11 @@ export default function EnhancementPage({ products: initialProducts }: Enhanceme
                               type="text"
                               value={feature}
                               onChange={(e) => updateFeature(index, e.target.value)}
-                              className="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                              className="flex-1 border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white transition-colors duration-200"
                             />
                             <button
                               onClick={() => removeFeature(index)}
-                              className="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                              className="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
                             >
                               Remove
                             </button>
@@ -282,7 +287,7 @@ export default function EnhancementPage({ products: initialProducts }: Enhanceme
                         ))}
                         <button
                           onClick={addFeature}
-                          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
                         >
                           Add Feature
                         </button>
@@ -392,7 +397,7 @@ export default function EnhancementPage({ products: initialProducts }: Enhanceme
                       <button
                         onClick={handleSaveEnhancement}
                         disabled={isSaving}
-                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md"
+                        className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md transition-colors"
                       >
                         {isSaving ? 'Saving...' : 'Save Enhancement'}
                       </button>
@@ -401,7 +406,7 @@ export default function EnhancementPage({ products: initialProducts }: Enhanceme
                           setEditingEnhancement(null);
                           setSelectedProduct(null);
                         }}
-                        className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md"
+                        className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition-colors"
                       >
                         Cancel
                       </button>
@@ -410,10 +415,10 @@ export default function EnhancementPage({ products: initialProducts }: Enhanceme
                 </div>
               </div>
             ) : (
-              <div className="bg-white shadow rounded-lg">
+              <div className="bg-white dark:bg-gray-800 shadow rounded-lg transition-colors duration-200">
                 <div className="px-4 py-5 sm:p-6">
-                  <h2 className="text-lg font-medium text-gray-900 mb-4">Enhancement Editor</h2>
-                  <p className="text-gray-500">Select a product from the list to edit its enhancement.</p>
+                  <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Enhancement Editor</h2>
+                  <p className="text-gray-500 dark:text-gray-400">Select a product from the list to edit its enhancement.</p>
                 </div>
               </div>
             )}
