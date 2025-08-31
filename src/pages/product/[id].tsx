@@ -474,7 +474,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
       description: dbProduct.enhancement?.description || 
                   dbProduct.description || 
                   getDefaultDescription(dbProduct.name || 'Product', productCategory),
-      enhancement: dbProduct.enhancement, // Pass the enhancement data from database
+      enhancement: dbProduct.enhancement || null, // Ensure enhancement is never undefined
       variants: dbProduct.variants
         .filter(variant => variant.isEnabled) // Only include enabled variants
         .map(variant => ({
@@ -509,6 +509,22 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
     if (product.variants.length === 0) {
       console.error('No valid variants found for product:', productId);
       return { notFound: true };
+    }
+
+    // Ensure all enhancement properties are serializable
+    if (product.enhancement) {
+      product.enhancement = {
+        description: product.enhancement.description || '',
+        shortDescription: product.enhancement.shortDescription || '',
+        features: product.enhancement.features || [],
+        specifications: product.enhancement.specifications || {},
+        additionalImages: product.enhancement.additionalImages || [],
+        seo: {
+          keywords: product.enhancement.seo?.keywords || [],
+          metaDescription: product.enhancement.seo?.metaDescription || ''
+        },
+        defaultVariant: product.enhancement.defaultVariant || null
+      };
     }
 
     return {
