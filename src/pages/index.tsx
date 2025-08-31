@@ -2,7 +2,6 @@ import * as React from "react";
 import { GetStaticProps } from "next";
 import shuffle from "lodash.shuffle";
 
-import { productService } from "../lib/database/services/product-service";
 import { formatVariantName } from "../lib/format-variant-name";
 import { PrintfulProduct, LightweightProduct } from "../types";
 import { determineProductCategory } from "../lib/category-config";
@@ -28,6 +27,9 @@ const IndexPage: React.FC<IndexPageProps> = ({ products }) => (
 
 export const getStaticProps: GetStaticProps = async () => {
   try {
+    // Import productService only on server side
+    const { productService } = await import("../lib/database/services/product-service");
+    
     // Get all active products from database
     const dbProducts = await productService.getAllProducts();
     

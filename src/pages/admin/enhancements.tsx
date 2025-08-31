@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
-import { productService } from '../../lib/database/services/product-service';
 import type { ProductWithVariants } from '../../lib/database/services/product-service';
 import { getAdminToken, removeAdminToken } from '../../lib/auth';
 
@@ -427,6 +426,9 @@ export default function EnhancementPage({ products: initialProducts }: Enhanceme
 
 export const getServerSideProps: GetServerSideProps = async () => {
   try {
+    // Import productService only on server side
+    const { productService } = await import('../../lib/database/services/product-service');
+    
     const products = await productService.getAllProducts();
 
     // Convert Date objects to ISO strings for JSON serialization
