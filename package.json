@@ -16,6 +16,8 @@
     "test:webhook-auth": "node scripts/dev/test-webhook-auth.js",
     "analyze": "ANALYZE=true npm run build",
     "syncProducts": "tsx scripts/sync-products.ts",
+    "optimizeImages": "tsx scripts/optimize-images.ts",
+    "optimizeImages:conservative": "tsx scripts/optimize-images-conservative.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio"
