@@ -1,5 +1,4 @@
 import { getEnv } from "./env-validation";
-import { mapToPrintfulVariantId } from "./product-id-mapping";
 import { printful } from "./printful-client";
 
 /**
