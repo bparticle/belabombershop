@@ -24,7 +24,7 @@ import type { PrintfulProduct, PrintfulVariant } from '../../../types';
 import { categoryService } from './category-service';
 import { tagService } from './tag-service';
 
-export interface ProductWithVariants extends Product {
+export interface ProductWithVariants extends Omit<Product, 'tags'> {
   variants: Variant[];
   enhancement?: DBProductEnhancement;
   categories: Array<{ id: string; name: string; slug: string; color?: string; isPrimary: boolean }>;
@@ -77,7 +77,17 @@ export class ProductService {
         .where(eq(productCategories.productId, product.id));
 
       const productTagsData = await db
-        .select(tags)
+        .select({
+          id: tags.id,
+          name: tags.name,
+          description: tags.description,
+          isActive: tags.isActive,
+          createdAt: tags.createdAt,
+          updatedAt: tags.updatedAt,
+          slug: tags.slug,
+          color: tags.color,
+          usageCount: tags.usageCount,
+        })
         .from(tags)
         .innerJoin(productTags, eq(tags.id, productTags.tagId))
         .where(eq(productTags.productId, product.id));
@@ -86,7 +96,10 @@ export class ProductService {
         ...product,
         variants: productVariants,
         enhancement: enhancement[0],
-        categories: productCategoriesData,
+        categories: productCategoriesData.map(cat => ({
+          ...cat,
+          isPrimary: cat.isPrimary ?? false,
+        })),
         tags: productTagsData,
       });
     }
@@ -133,7 +146,17 @@ export class ProductService {
         .where(eq(productCategories.productId, product.id));
 
       const productTagsData = await db
-        .select(tags)
+        .select({
+          id: tags.id,
+          name: tags.name,
+          description: tags.description,
+          isActive: tags.isActive,
+          createdAt: tags.createdAt,
+          updatedAt: tags.updatedAt,
+          slug: tags.slug,
+          color: tags.color,
+          usageCount: tags.usageCount,
+        })
         .from(tags)
         .innerJoin(productTags, eq(tags.id, productTags.tagId))
         .where(eq(productTags.productId, product.id));
@@ -142,7 +165,10 @@ export class ProductService {
         ...product,
         variants: productVariants,
         enhancement: enhancement[0],
-        categories: productCategoriesData,
+        categories: productCategoriesData.map(cat => ({
+          ...cat,
+          isPrimary: cat.isPrimary ?? false,
+        })),
         tags: productTagsData,
       });
     }
@@ -236,7 +262,6 @@ export class ProductService {
       name: printfulProduct.name,
       thumbnailUrl: printfulProduct.thumbnail_url,
       description: printfulProduct.description,
-      category: printfulProduct.category,
       tags: printfulProduct.tags,
       metadata: printfulProduct.metadata,
       isIgnored: printfulProduct.is_ignored,
@@ -454,6 +479,7 @@ export class ProductService {
           name: categories.name,
           slug: categories.slug,
           color: categories.color,
+          isPrimary: productCategories.isPrimary,
         })
         .from(categories)
         .innerJoin(productCategories, eq(categories.id, productCategories.categoryId))
@@ -463,7 +489,11 @@ export class ProductService {
         ...product,
         variants: productVariants,
         enhancement: enhancement[0],
-        categories: productCategoriesData,
+        categories: productCategoriesData.map(cat => ({
+          ...cat,
+          isPrimary: cat.isPrimary ?? false,
+        })),
+        tags: [], // Empty Tag[] array since we don't fetch tags in this method
       });
     }
 

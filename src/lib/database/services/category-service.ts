@@ -162,45 +162,57 @@ export class CategoryService {
   } = {}): Promise<Array<{ product: any; isPrimary: boolean }>> {
     const { includeInactive = false, limit, offset } = options;
     
-    let query = db
+    const baseQuery = db
       .select({
         product: products,
         isPrimary: productCategories.isPrimary,
       })
       .from(productCategories)
-      .innerJoin(products, eq(productCategories.productId, products.id))
-      .where(eq(productCategories.categoryId, categoryId));
+      .innerJoin(products, eq(productCategories.productId, products.id));
+    
+    const conditions = [eq(productCategories.categoryId, categoryId)];
     
     if (!includeInactive) {
-      query = query.where(eq(products.isActive, true));
+      conditions.push(eq(products.isActive, true));
     }
     
-    if (limit) {
-      query = query.limit(limit);
+    const queryWithWhere = baseQuery.where(and(...conditions));
+    const queryWithOrder = queryWithWhere.orderBy(desc(products.createdAt));
+    
+    let finalQuery;
+    if (limit && offset) {
+      finalQuery = await queryWithOrder.limit(limit).offset(offset);
+    } else if (limit) {
+      finalQuery = await queryWithOrder.limit(limit);
+    } else if (offset) {
+      finalQuery = await queryWithOrder.offset(offset);
+    } else {
+      finalQuery = await queryWithOrder;
     }
     
-    if (offset) {
-      query = query.offset(offset);
-    }
-    
-    return await query.orderBy(desc(products.createdAt));
+    // Map results to handle nullable isPrimary
+    return finalQuery.map(result => ({
+      ...result,
+      isPrimary: result.isPrimary ?? false,
+    }));
   }
 
   /**
    * Get product count for a category
    */
   async getProductCountForCategory(categoryId: string, includeInactive = false): Promise<number> {
-    let query = db
+    const conditions = [eq(productCategories.categoryId, categoryId)];
+    
+    if (!includeInactive) {
+      conditions.push(eq(products.isActive, true));
+    }
+    
+    const result = await db
       .select({ count: count() })
       .from(productCategories)
       .innerJoin(products, eq(productCategories.productId, products.id))
-      .where(eq(productCategories.categoryId, categoryId));
+      .where(and(...conditions));
     
-    if (!includeInactive) {
-      query = query.where(eq(products.isActive, true));
-    }
-    
-    const result = await query;
     return result[0]?.count || 0;
   }
 

@@ -22,28 +22,29 @@ export class TagService {
       sortOrder = 'asc' 
     } = options;
     
-    let query = db.select().from(tags);
-    
-    if (!includeInactive) {
-      query = query.where(eq(tags.isActive, true));
-    }
+    let baseQuery = db.select().from(tags);
     
     // Apply sorting
     const sortColumn = sortBy === 'usageCount' ? tags.usageCount : 
                       sortBy === 'createdAt' ? tags.createdAt : tags.name;
     const sortDirection = sortOrder === 'desc' ? desc : asc;
     
-    query = query.orderBy(sortDirection(sortColumn));
-    
-    if (limit) {
-      query = query.limit(limit);
+    let queryWithOrder;
+    if (!includeInactive) {
+      queryWithOrder = baseQuery.where(eq(tags.isActive, true)).orderBy(sortDirection(sortColumn));
+    } else {
+      queryWithOrder = baseQuery.orderBy(sortDirection(sortColumn));
     }
     
-    if (offset) {
-      query = query.offset(offset);
+    if (limit && offset) {
+      return await queryWithOrder.limit(limit).offset(offset);
+    } else if (limit) {
+      return await queryWithOrder.limit(limit);
+    } else if (offset) {
+      return await queryWithOrder.offset(offset);
+    } else {
+      return await queryWithOrder;
     }
-    
-    return await query;
   }
 
   /**
@@ -150,42 +151,60 @@ export class TagService {
   } = {}): Promise<any[]> {
     const { includeInactive = false, limit, offset } = options;
     
-    let query = db
-      .select(products)
-      .from(productTags)
-      .innerJoin(products, eq(productTags.productId, products.id))
-      .where(eq(productTags.tagId, tagId));
+    const conditions = [eq(productTags.tagId, tagId)];
     
     if (!includeInactive) {
-      query = query.where(eq(products.isActive, true));
+      conditions.push(eq(products.isActive, true));
     }
     
-    if (limit) {
-      query = query.limit(limit);
-    }
+    const baseQuery = db
+      .select({
+        id: products.id,
+        printfulId: products.printfulId,
+        externalId: products.externalId,
+        name: products.name,
+        thumbnailUrl: products.thumbnailUrl,
+        description: products.description,
+        tags: products.tags,
+        metadata: products.metadata,
+        isIgnored: products.isIgnored,
+        isActive: products.isActive,
+        syncedAt: products.syncedAt,
+        createdAt: products.createdAt,
+        updatedAt: products.updatedAt,
+      })
+      .from(productTags)
+      .innerJoin(products, eq(productTags.productId, products.id));
     
-    if (offset) {
-      query = query.offset(offset);
-    }
+    const queryWithWhere = baseQuery.where(and(...conditions));
+    const queryWithOrder = queryWithWhere.orderBy(desc(products.createdAt));
     
-    return await query.orderBy(desc(products.createdAt));
+    if (limit && offset) {
+      return await queryWithOrder.limit(limit).offset(offset);
+    } else if (limit) {
+      return await queryWithOrder.limit(limit);
+    } else if (offset) {
+      return await queryWithOrder.offset(offset);
+    } else {
+      return await queryWithOrder;
+    }
   }
 
   /**
    * Get product count for a tag
    */
   async getTagUsageCount(tagId: string, includeInactive = false): Promise<number> {
-    let query = db
+    const conditions = [eq(productTags.tagId, tagId)];
+    
+    if (!includeInactive) {
+      conditions.push(eq(products.isActive, true));
+    }
+    
+    const result = await db
       .select({ count: count() })
       .from(productTags)
       .innerJoin(products, eq(productTags.productId, products.id))
-      .where(eq(productTags.tagId, tagId));
-    
-    if (!includeInactive) {
-      query = query.where(eq(products.isActive, true));
-    }
-    
-    const result = await query;
+      .where(and(...conditions));
     return result[0]?.count || 0;
   }
 
@@ -225,7 +244,17 @@ export class TagService {
    */
   async getTagsForProduct(productId: string): Promise<Tag[]> {
     return await db
-      .select(tags)
+      .select({
+        id: tags.id,
+        name: tags.name,
+        description: tags.description,
+        isActive: tags.isActive,
+        createdAt: tags.createdAt,
+        updatedAt: tags.updatedAt,
+        slug: tags.slug,
+        color: tags.color,
+        usageCount: tags.usageCount,
+      })
       .from(productTags)
       .innerJoin(tags, eq(productTags.tagId, tags.id))
       .where(eq(productTags.productId, productId))

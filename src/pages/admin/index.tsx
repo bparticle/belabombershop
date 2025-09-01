@@ -87,7 +87,7 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
     }
   };
 
-    const refreshData = async () => {
+  const refreshData = async () => {
     const token = getAdminToken();
     if (!token) {
       router.push('/admin/login');
@@ -204,35 +204,35 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
         <div className="px-4 py-6 sm:px-0">
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Dashboard</h1>
-                         <div className="flex space-x-4">
-               <ThemeToggle />
-               <a
-                 href="/admin/categories"
-                 className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors"
-               >
-                 Manage Categories
-               </a>
-               <a
-                 href="/admin/tags"
-                 className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md transition-colors"
-               >
-                 Manage Tags
-               </a>
+            <div className="flex space-x-4">
+              <ThemeToggle />
+              <a
+                href="/admin/categories"
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors"
+              >
+                Manage Categories
+              </a>
+              <a
+                href="/admin/tags"
+                className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md transition-colors"
+              >
+                Manage Tags
+              </a>
 
-               <button
-                 onClick={triggerSync}
-                 disabled={isSyncing}
-                 className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md transition-colors"
-               >
-                 {isSyncing ? 'Syncing...' : 'Sync Products'}
-               </button>
-               <button
-                 onClick={handleLogout}
-                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors"
-               >
-                 Logout
-               </button>
-             </div>
+              <button
+                onClick={triggerSync}
+                disabled={isSyncing}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md transition-colors"
+              >
+                {isSyncing ? 'Syncing...' : 'Sync Products'}
+              </button>
+              <button
+                onClick={handleLogout}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors"
+              >
+                Logout
+              </button>
+            </div>
           </div>
         </div>
 
@@ -257,11 +257,10 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
                   {products.map((product) => (
                     <div
                       key={product.id}
-                      className={`border rounded-lg p-4 cursor-pointer transition-colors ${
-                        selectedProduct === product.id 
-                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
+                      className={`border rounded-lg p-4 cursor-pointer transition-colors ${selectedProduct === product.id
+                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                           : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                      } ${!product.isActive ? 'opacity-60' : ''}`}
+                        } ${!product.isActive ? 'opacity-60' : ''}`}
                       onClick={() => setSelectedProduct(selectedProduct === product.id ? null : product.id)}
                     >
                       <div className="flex items-start space-x-3">
@@ -270,7 +269,7 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
                           {(() => {
                             const thumbnailUrl = getProductThumbnail(product);
                             const indicators = getProductIndicators(product);
-                            
+
                             return thumbnailUrl ? (
                               <div className="relative">
                                 <img
@@ -281,13 +280,13 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
                                 {/* Indicator badges */}
                                 <div className="absolute -top-1 -right-1 flex flex-col gap-0.5">
                                   {indicators.hasDefaultVariant && (
-                                    <div 
+                                    <div
                                       className="w-3 h-3 bg-green-500 rounded-full border border-white dark:border-gray-800"
                                       title="Has default variant set"
                                     />
                                   )}
                                   {indicators.hasMainImage && (
-                                    <div 
+                                    <div
                                       className="w-3 h-3 bg-blue-500 rounded-full border border-white dark:border-gray-800"
                                       title="Has main product image"
                                     />
@@ -301,7 +300,7 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
                             );
                           })()}
                         </div>
-                        
+
                         {/* Product Details */}
                         <div className="flex-1">
                           <div className="flex justify-between items-start">
@@ -316,26 +315,47 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
                               )}
                             </div>
                             <div className="flex items-center space-x-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openProductModal(product);
+                                }}
+                                className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 p-1 rounded hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
+                                title="Manage product enhancements"
+                                aria-label="Manage product enhancements"
+                              >
+                                <svg
+                                  className="w-5 h-5"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={1.5}
+                                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                                  />
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={1.5}
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                  />
+                                </svg>
+                              </button>
                               <ToggleSwitch
                                 enabled={!!product.isActive}
                                 onChange={() => toggleProductVisibility(product.id)}
                                 size="sm"
                                 aria-label={`Toggle ${product.name} visibility`}
                               />
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openProductModal(product);
-                                }}
-                                className="text-sm text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300"
-                              >
-                                Manage
-                              </button>
                             </div>
                           </div>
                         </div>
                       </div>
-                      
+
                       {selectedProduct === product.id && (
                         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                           <div className="grid grid-cols-2 gap-4 text-sm">
@@ -344,7 +364,7 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
                             </div>
                             <div>
                               <strong className="text-gray-900 dark:text-white">Categories:</strong> <span className="text-gray-600 dark:text-gray-300">
-                                {product.categories && product.categories.length > 0 
+                                {product.categories && product.categories.length > 0
                                   ? product.categories.map(cat => cat.name).join(', ')
                                   : 'None'
                                 }
@@ -357,12 +377,12 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
                               <strong className="text-gray-900 dark:text-white">Last Synced:</strong> <span className="text-gray-600 dark:text-gray-300">{formatDate(product.syncedAt)}</span>
                             </div>
                           </div>
-                          
+
                           {product.enhancement && (
                             <div className="mt-4">
                               <h4 className="font-medium text-gray-900 dark:text-white mb-2">Enhancement</h4>
                               <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded space-y-3">
-                                                                {product.enhancement.shortDescription && (
+                                {product.enhancement.shortDescription && (
                                   <div>
                                     <strong className="text-sm text-gray-700 dark:text-gray-300">Short Description:</strong>
                                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{product.enhancement.shortDescription}</p>
@@ -384,38 +404,38 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
                                     </ul>
                                   </div>
                                 )}
-                                 {product.enhancement.defaultVariantId && (
-                                   <div>
-                                     <strong className="text-sm text-gray-700 dark:text-gray-300">Default Variant ID:</strong>
-                                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{product.enhancement.defaultVariantId}</p>
-                                   </div>
-                                 )}
-                                 {product.enhancement.specifications && Object.keys(product.enhancement.specifications).length > 0 && (
-                                   <div>
-                                     <strong className="text-sm text-gray-700 dark:text-gray-300">Specifications:</strong>
-                                     <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                       {Object.entries(product.enhancement.specifications).map(([key, value]) => (
-                                         <div key={key} className="flex justify-between">
-                                           <span className="font-medium">{key}:</span>
-                                           <span>{value as string}</span>
-                                         </div>
-                                       ))}
-                                     </div>
-                                   </div>
-                                 )}
-                                 {product.enhancement.additionalImages && product.enhancement.additionalImages.length > 0 && (
-                                   <div>
-                                     <strong className="text-sm text-gray-700">Additional Images:</strong>
-                                     <div className="text-sm text-gray-600 mt-1 space-y-1">
-                                       {product.enhancement.additionalImages.map((image: any, index: number) => (
-                                         <div key={index} className="flex items-center space-x-2">
-                                           <span className="text-xs bg-gray-100 px-2 py-1 rounded">Image {index + 1}</span>
-                                           <span className="truncate">{image.url}</span>
-                                         </div>
-                                       ))}
-                                     </div>
-                                   </div>
-                                 )}
+                                {product.enhancement.defaultVariantId && (
+                                  <div>
+                                    <strong className="text-sm text-gray-700 dark:text-gray-300">Default Variant ID:</strong>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{product.enhancement.defaultVariantId}</p>
+                                  </div>
+                                )}
+                                {product.enhancement.specifications && Object.keys(product.enhancement.specifications).length > 0 && (
+                                  <div>
+                                    <strong className="text-sm text-gray-700 dark:text-gray-300">Specifications:</strong>
+                                    <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                      {Object.entries(product.enhancement.specifications).map(([key, value]) => (
+                                        <div key={key} className="flex justify-between">
+                                          <span className="font-medium">{key}:</span>
+                                          <span>{value as string}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                {product.enhancement.additionalImages && product.enhancement.additionalImages.length > 0 && (
+                                  <div>
+                                    <strong className="text-sm text-gray-700">Additional Images:</strong>
+                                    <div className="text-sm text-gray-600 mt-1 space-y-1">
+                                      {product.enhancement.additionalImages.map((image: any, index: number) => (
+                                        <div key={index} className="flex items-center space-x-2">
+                                          <span className="text-xs bg-gray-100 px-2 py-1 rounded">Image {index + 1}</span>
+                                          <span className="truncate">{image.url}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           )}
@@ -486,7 +506,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
   try {
     // Import productService only on server side
     const { productService } = await import('../../lib/database/services/product-service');
-    
+
     const [products, syncLogs] = await Promise.all([
       productService.getAllProductsForAdmin(),
       productService.getRecentSyncLogs(5),
