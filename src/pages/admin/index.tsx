@@ -129,6 +129,15 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
       return;
     }
 
+    // Optimistically update the UI
+    setProducts(prevProducts => 
+      prevProducts.map(product => 
+        product.id === productId 
+          ? { ...product, isActive: !product.isActive }
+          : product
+      )
+    );
+
     try {
       const response = await fetch(`/api/admin/products?id=${productId}`, {
         method: 'PUT',
@@ -136,14 +145,36 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ isActive: true }), // This will toggle the current state
+        body: JSON.stringify({ isActive: true }), // Any boolean value triggers the toggle
       });
 
       if (response.ok) {
+        const result = await response.json();
+        console.log('Product visibility toggled successfully:', result);
+        // Refresh data to ensure consistency
         refreshData();
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to toggle product visibility:', response.status, errorData);
+        // Revert optimistic update on error
+        setProducts(prevProducts => 
+          prevProducts.map(product => 
+            product.id === productId 
+              ? { ...product, isActive: !product.isActive }
+              : product
+          )
+        );
       }
     } catch (error) {
       console.error('Error toggling product visibility:', error);
+      // Revert optimistic update on error
+      setProducts(prevProducts => 
+        prevProducts.map(product => 
+          product.id === productId 
+            ? { ...product, isActive: !product.isActive }
+            : product
+        )
+      );
     }
   };
 
@@ -258,8 +289,8 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
                     <div
                       key={product.id}
                       className={`border rounded-lg p-4 cursor-pointer transition-colors ${selectedProduct === product.id
-                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                         } ${!product.isActive ? 'opacity-60' : ''}`}
                       onClick={() => setSelectedProduct(selectedProduct === product.id ? null : product.id)}
                     >
@@ -315,6 +346,12 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
                               )}
                             </div>
                             <div className="flex items-center space-x-2">
+                              <ToggleSwitch
+                                enabled={!!product.isActive}
+                                onChange={() => toggleProductVisibility(product.id)}
+                                size="sm"
+                                aria-label={`Toggle ${product.name} visibility`}
+                              />
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -345,12 +382,6 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
                                   />
                                 </svg>
                               </button>
-                              <ToggleSwitch
-                                enabled={!!product.isActive}
-                                onChange={() => toggleProductVisibility(product.id)}
-                                size="sm"
-                                aria-label={`Toggle ${product.name} visibility`}
-                              />
                             </div>
                           </div>
                         </div>

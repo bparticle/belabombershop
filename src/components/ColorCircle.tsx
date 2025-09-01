@@ -62,6 +62,28 @@ const ColorCircle: React.FC<ColorCircleProps> = ({
     );
   };
 
+  // If no label is shown, return just the button without wrapper
+  if (!showLabel) {
+    return (
+      <button
+        onClick={onClick}
+        disabled={!isAvailable}
+        className={`
+          relative ${sizeClasses[size]} rounded-full border-2 transition-all duration-200
+          ${borderClasses} ${ringClasses} focus:ring-2 focus:ring-offset-2
+          ${isAvailable ? 'cursor-pointer hover:scale-105' : 'cursor-not-allowed opacity-50'}
+          ${isSelected ? 'ring-2 ring-offset-2' : ''} ${className}
+        `}
+        style={{ backgroundColor: colorHex }}
+        aria-label={`Select ${colorName} color`}
+        aria-pressed={isSelected}
+        title={colorName}
+      >
+        {getSelectionIndicator()}
+      </button>
+    );
+  }
+
   return (
     <div className={`flex flex-col items-center space-y-1 ${className}`}>
       <button

@@ -87,21 +87,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                   {uniqueColors.slice(0, 4).map((colorName: string) => {
                     const isSelected = currentColor === colorName;
                      return (
-                       <div
+                       <span
                          key={colorName}
                          onMouseEnter={() => handleColorHover(colorName)}
                          onMouseLeave={() => handleColorHover(currentColor || uniqueColors[0])}
                        >
-                                                   <ColorCircle
-                            colorName={colorName}
-                            isSelected={isSelected}
-                            isAvailable={true}
-                            onClick={(e) => handleColorClick(colorName, e!)}
-                            size="sm"
-                            showLabel={false}
-                            className="shadow-lg cursor-pointer"
-                          />
-                       </div>
+                         <ColorCircle
+                           colorName={colorName}
+                           isSelected={isSelected}
+                           isAvailable={true}
+                           onClick={(e) => handleColorClick(colorName, e!)}
+                           size="sm"
+                           showLabel={false}
+                           className="shadow-lg cursor-pointer"
+                         />
+                       </span>
                      );
                    })}
                    {uniqueColors.length > 4 && (
