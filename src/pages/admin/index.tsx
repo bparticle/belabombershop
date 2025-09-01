@@ -7,7 +7,9 @@ import { getAdminToken, removeAdminToken } from '../../lib/auth';
 import { useTheme } from '../../context/theme';
 import ThemeToggle from '../../components/ThemeToggle';
 import ProductEnhancementModal from '../../components/ProductEnhancementModal';
+import ToggleSwitch from '../../components/ToggleSwitch';
 import { formatDate } from '../../lib/date-utils';
+import { getProductThumbnail, getProductIndicators } from '../../lib/admin-utils';
 
 // Types for serialized data from getServerSideProps
 type SerializedProductWithVariants = Omit<ProductWithVariants, 'syncedAt' | 'createdAt' | 'updatedAt'> & {
@@ -239,7 +241,18 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
           <div className="lg:col-span-2">
             <div className="bg-white dark:bg-gray-800 shadow rounded-lg transition-colors duration-200">
               <div className="px-4 py-5 sm:p-6">
-                <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Products ({products.length})</h2>
+                <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Products ({products.length})</h2>
+                {/* Legend */}
+                <div className="flex items-center gap-4 mb-4 text-xs text-gray-500 dark:text-gray-400">
+                  <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span>Default variant set</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span>Main product image</span>
+                  </div>
+                </div>
                 <div className="space-y-4">
                   {products.map((product) => (
                     <div
@@ -253,21 +266,40 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
                     >
                       <div className="flex items-start space-x-3">
                         {/* Product Thumbnail */}
-                        <div className="flex-shrink-0">
-                          {product.variants.length > 0 && 
-                           product.variants[0].files && 
-                           product.variants[0].files.length > 0 && 
-                           product.variants[0].files[0].preview_url ? (
-                            <img
-                              src={product.variants[0].files[0].preview_url}
-                              alt={product.name}
-                              className="w-12 h-12 object-cover rounded-md border border-gray-200 dark:border-gray-600"
-                            />
-                          ) : (
-                            <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-md flex items-center justify-center">
-                              <span className="text-xs text-gray-500 dark:text-gray-400">No Image</span>
-                            </div>
-                          )}
+                        <div className="flex-shrink-0 relative">
+                          {(() => {
+                            const thumbnailUrl = getProductThumbnail(product);
+                            const indicators = getProductIndicators(product);
+                            
+                            return thumbnailUrl ? (
+                              <div className="relative">
+                                <img
+                                  src={thumbnailUrl}
+                                  alt={product.name}
+                                  className="w-12 h-12 object-cover rounded-md border border-gray-200 dark:border-gray-600"
+                                />
+                                {/* Indicator badges */}
+                                <div className="absolute -top-1 -right-1 flex flex-col gap-0.5">
+                                  {indicators.hasDefaultVariant && (
+                                    <div 
+                                      className="w-3 h-3 bg-green-500 rounded-full border border-white dark:border-gray-800"
+                                      title="Has default variant set"
+                                    />
+                                  )}
+                                  {indicators.hasMainImage && (
+                                    <div 
+                                      className="w-3 h-3 bg-blue-500 rounded-full border border-white dark:border-gray-800"
+                                      title="Has main product image"
+                                    />
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-md flex items-center justify-center">
+                                <span className="text-xs text-gray-500 dark:text-gray-400">No Image</span>
+                              </div>
+                            );
+                          })()}
                         </div>
                         
                         {/* Product Details */}
@@ -284,18 +316,12 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
                               )}
                             </div>
                             <div className="flex items-center space-x-2">
-                              <span className={`text-sm ${product.isActive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                                {product.isActive ? 'Active' : 'Inactive'}
-                              </span>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleProductVisibility(product.id);
-                                }}
-                                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
-                              >
-                                Toggle
-                              </button>
+                              <ToggleSwitch
+                                enabled={!!product.isActive}
+                                onChange={() => toggleProductVisibility(product.id)}
+                                size="sm"
+                                aria-label={`Toggle ${product.name} visibility`}
+                              />
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();

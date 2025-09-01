@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { ProductWithVariants } from '../lib/database/services/product-service';
 import { getAdminToken } from '../lib/auth';
-import ImageUpload from './ImageUpload';
+import ImageUploadThumbnail from './ImageUploadThumbnail';
 import { CloudinaryImage } from '../lib/cloudinary-client';
 
 interface Category {
@@ -162,6 +162,18 @@ export default function ProductEnhancementModal({
     seo: initialProduct.enhancement?.seo || { keywords: [], metaDescription: '' },
     defaultVariantId: initialProduct.enhancement?.defaultVariantId || '',
   });
+  
+  // Generate unique IDs for specifications to fix the key bug
+  const [specificationIds, setSpecificationIds] = useState<{ [key: string]: string }>({});
+  
+  // Initialize specification IDs
+  useEffect(() => {
+    const ids: { [key: string]: string } = {};
+    Object.keys(enhancement.specifications).forEach(key => {
+      ids[key] = `spec-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    });
+    setSpecificationIds(ids);
+  }, []);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -183,8 +195,17 @@ export default function ProductEnhancementModal({
     setIsSaving(true);
     setMessage(null);
 
+    // Use the original product ID from props to ensure it's always valid
+    const productId = initialProduct.id;
+
+    if (!productId) {
+      setMessage({ type: 'error', text: 'Product ID is missing' });
+      setIsSaving(false);
+      return;
+    }
+
     try {
-      const response = await fetch(`/api/admin/products?id=${product.id}`, {
+      const response = await fetch(`/api/admin/products?id=${productId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${getAdminToken()}`,
@@ -194,22 +215,33 @@ export default function ProductEnhancementModal({
       });
 
       if (response.ok) {
+        const result = await response.json();
         setMessage({ type: 'success', text: 'Enhancement saved successfully!' });
-        // Refresh product data
-        const refreshResponse = await fetch(`/api/admin/products?id=${product.id}`, {
-          headers: {
-            'Authorization': `Bearer ${getAdminToken()}`,
-          },
+        
+        // Update the enhancement in our local product state
+        const updatedProduct = {
+          ...product,
+          enhancement: result.enhancement
+        };
+        setProduct(updatedProduct);
+        onProductUpdate(updatedProduct);
+        
+        // Also update the enhancement state to reflect the saved data
+        setEnhancement({
+          description: result.enhancement?.description || '',
+          shortDescription: result.enhancement?.shortDescription || '',
+          features: result.enhancement?.features || [],
+          specifications: result.enhancement?.specifications || {},
+          additionalImages: result.enhancement?.additionalImages || [],
+          seo: result.enhancement?.seo || { keywords: [], metaDescription: '' },
+          defaultVariantId: result.enhancement?.defaultVariantId || '',
         });
-        if (refreshResponse.ok) {
-          const updatedProduct = await refreshResponse.json();
-          setProduct(updatedProduct);
-          onProductUpdate(updatedProduct);
-        }
       } else {
-        setMessage({ type: 'error', text: 'Failed to save enhancement' });
+        const errorData = await response.json().catch(() => ({}));
+        setMessage({ type: 'error', text: errorData.error || 'Failed to save enhancement' });
       }
     } catch (error) {
+      console.error('Save enhancement error:', error);
       setMessage({ type: 'error', text: 'Error saving enhancement' });
     } finally {
       setIsSaving(false);
@@ -243,17 +275,38 @@ export default function ProductEnhancementModal({
   };
 
   const addSpecification = () => {
+    const newKey = '';
+    const newId = `spec-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     setEnhancement(prev => ({
       ...prev,
-      specifications: { ...prev.specifications, '': '' },
+      specifications: { ...prev.specifications, [newKey]: '' },
+    }));
+    setSpecificationIds(prev => ({
+      ...prev,
+      [newKey]: newId
     }));
   };
 
-  const updateSpecification = (key: string, value: string) => {
-    setEnhancement(prev => ({
-      ...prev,
-      specifications: { ...prev.specifications, [key]: value },
-    }));
+  const updateSpecification = (oldKey: string, newKey: string, value: string) => {
+    setEnhancement(prev => {
+      const newSpecs = { ...prev.specifications };
+      if (oldKey !== newKey) {
+        delete newSpecs[oldKey];
+      }
+      newSpecs[newKey] = value;
+      return { ...prev, specifications: newSpecs };
+    });
+    
+    if (oldKey !== newKey) {
+      setSpecificationIds(prev => {
+        const newIds = { ...prev };
+        newIds[newKey] = prev[oldKey] || `spec-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        if (oldKey !== newKey) {
+          delete newIds[oldKey];
+        }
+        return newIds;
+      });
+    }
   };
 
   const removeSpecification = (key: string) => {
@@ -261,6 +314,11 @@ export default function ProductEnhancementModal({
       const newSpecs = { ...prev.specifications };
       delete newSpecs[key];
       return { ...prev, specifications: newSpecs };
+    });
+    setSpecificationIds(prev => {
+      const newIds = { ...prev };
+      delete newIds[key];
+      return newIds;
     });
   };
 
@@ -502,35 +560,33 @@ export default function ProductEnhancementModal({
                     </button>
                   </div>
                   <div className="space-y-2">
-                    {Object.entries(enhancement.specifications).map(([key, value]) => (
-                      <div key={key} className="flex gap-2">
-                        <input
-                          type="text"
-                          value={key}
-                          onChange={(e) => {
-                            const newSpecs = { ...enhancement.specifications };
-                            delete newSpecs[key];
-                            newSpecs[e.target.value] = value;
-                            setEnhancement(prev => ({ ...prev, specifications: newSpecs }));
-                          }}
-                          className="w-1/3 border border-gray-300 rounded-md px-3 py-2"
-                          placeholder="Specification name..."
-                        />
-                        <input
-                          type="text"
-                          value={value}
-                          onChange={(e) => updateSpecification(key, e.target.value)}
-                          className="flex-1 border border-gray-300 rounded-md px-3 py-2"
-                          placeholder="Specification value..."
-                        />
-                        <button
-                          onClick={() => removeSpecification(key)}
-                          className="text-red-600 hover:text-red-800 px-2"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
+                    {Object.entries(enhancement.specifications).map(([key, value]) => {
+                      const uniqueId = specificationIds[key] || `spec-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                      return (
+                        <div key={uniqueId} className="flex gap-2">
+                          <input
+                            type="text"
+                            value={key}
+                            onChange={(e) => updateSpecification(key, e.target.value, value)}
+                            className="w-1/3 border border-gray-300 rounded-md px-3 py-2"
+                            placeholder="Specification name..."
+                          />
+                          <input
+                            type="text"
+                            value={value}
+                            onChange={(e) => updateSpecification(key, key, e.target.value)}
+                            className="flex-1 border border-gray-300 rounded-md px-3 py-2"
+                            placeholder="Specification value..."
+                          />
+                          <button
+                            onClick={() => removeSpecification(key)}
+                            className="text-red-600 hover:text-red-800 px-2"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -560,39 +616,35 @@ export default function ProductEnhancementModal({
                           </button>
                         </div>
                         
-                        {/* Image Upload */}
-                        <ImageUpload
-                          onImageUploaded={(cloudinaryImage) => handleImageUploaded(index, cloudinaryImage)}
-                          onError={(error) => console.error('Upload error:', error)}
-                          className="mb-3"
-                        />
-                        
-                        {/* Image Preview */}
-                        {image.url && (
-                          <div className="mb-3">
-                            <img
-                              src={image.url}
-                              alt={image.alt || 'Product image'}
-                              className="w-full h-32 object-cover rounded border"
+                        {/* New Layout: Image Upload Thumbnail Left, Fields Right */}
+                        <div className="flex gap-4">
+                          {/* Image Upload Thumbnail */}
+                          <div className="flex-shrink-0">
+                            <ImageUploadThumbnail
+                              imageUrl={image.url}
+                              alt={image.alt}
+                              onImageUploaded={(cloudinaryImage) => handleImageUploaded(index, cloudinaryImage)}
+                              onError={(error) => console.error('Upload error:', error)}
                             />
                           </div>
-                        )}
-                        
-                        <div className="grid grid-cols-1 gap-2">
-                          <input
-                            type="text"
-                            placeholder="Alt text"
-                            value={image.alt || ''}
-                            onChange={(e) => updateImage(index, 'alt', e.target.value)}
-                            className="border border-gray-300 rounded-md px-3 py-2 text-sm"
-                          />
-                          <input
-                            type="text"
-                            placeholder="Caption (optional)"
-                            value={image.caption || ''}
-                            onChange={(e) => updateImage(index, 'caption', e.target.value)}
-                            className="border border-gray-300 rounded-md px-3 py-2 text-sm"
-                          />
+                          
+                          {/* Text Fields */}
+                          <div className="flex-1 space-y-2">
+                            <input
+                              type="text"
+                              placeholder="Alt text"
+                              value={image.alt || ''}
+                              onChange={(e) => updateImage(index, 'alt', e.target.value)}
+                              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                            />
+                            <input
+                              type="text"
+                              placeholder="Caption (optional)"
+                              value={image.caption || ''}
+                              onChange={(e) => updateImage(index, 'caption', e.target.value)}
+                              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                            />
+                          </div>
                         </div>
                       </div>
                     ))}
