@@ -9,6 +9,7 @@ import type { Category } from "../../lib/database/schema";
 
 import { categoryService } from "../../lib/database/services/category-service";
 import ProductGrid from "../../components/ProductGrid";
+import CategoryNavigation from "../../components/CategoryNavigation";
 
 // Serialized Category type for getStaticProps
 type SerializedCategory = Omit<Category, 'createdAt' | 'updatedAt'> & {
@@ -101,22 +102,36 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ category, products }) => {
 
         {/* Category Header */}
         <div className="text-center pb-6 md:pb-12">
-          <div className="flex items-center justify-center mb-4">
-            <span className="text-4xl mr-3" aria-hidden="true">
-              {category.icon}
-            </span>
+          <div className="flex items-center justify-center mb-6">
+            <div 
+              className="w-16 h-16 md:w-20 md:h-20 rounded-full mr-4"
+              style={{ backgroundColor: category.color }}
+              aria-hidden="true"
+            >
+            </div>
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white">
-              {category.name}
+              {category.name} Collection
             </h1>
           </div>
           {category.description && (
-            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-4">
               {category.description}
             </p>
           )}
-          <p className="text-sm text-gray-500 mt-4">
-            {products.length} product{products.length !== 1 ? 's' : ''} found
-          </p>
+          <div className="flex items-center justify-center space-x-4 text-sm text-gray-500">
+            <span>
+              {products.length} product{products.length !== 1 ? 's' : ''} available
+            </span>
+            <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
+            <span>Premium Quality</span>
+            <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
+            <span>Free Shipping</span>
+          </div>
+        </div>
+
+        {/* Category Navigation */}
+        <div className="mb-8">
+          <CategoryNavigation currentSlug={category.slug} />
         </div>
 
         {/* Products Grid */}

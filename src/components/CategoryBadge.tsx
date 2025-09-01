@@ -63,9 +63,11 @@ const CategoryBadge: React.FC<CategoryBadgeProps> = ({
       title={category.description}
     >
       {showIcon && (
-        <span className={iconSizeClasses[size]} aria-hidden="true">
-          {category.icon}
-        </span>
+        <div 
+          className={`w-3 h-3 rounded-full ${size === 'sm' ? 'mr-1' : size === 'md' ? 'mr-1.5' : 'mr-2'}`}
+          style={{ backgroundColor: category.color }}
+          aria-hidden="true"
+        ></div>
       )}
       {category.name}
     </span>

@@ -13,10 +13,10 @@ import { ProductCategory } from '../types';
 
 export const PRODUCT_CATEGORIES: ProductCategory[] = [
   {
-    id: 'children',
-    name: 'Children',
+    id: 'kids',
+    name: 'Kids',
     description: 'Products designed for kids and children',
-    slug: 'children',
+    slug: 'kids',
     color: '#FF6B6B',
     icon: '👶'
   },
@@ -54,7 +54,7 @@ export const PRODUCT_CATEGORIES: ProductCategory[] = [
 export const CATEGORY_MAPPING_RULES = {
   // Keywords in product name that indicate category
   nameKeywords: {
-    children: ['kids', 'child', 'children', 'baby', 'toddler', 'youth', 'junior'],
+    kids: ['kids', 'child', 'children', 'baby', 'toddler', 'youth', 'junior'],
     adults: ['adult', 'men', 'women', 'grown', 'mature'],
     accessories: ['bag', 'backpack', 'hat', 'cap', 'accessory', 'accessories'],
     'home-living': ['home', 'living', 'decor', 'decoration', 'house', 'room', 'wall', 'cushion', 'pillow', 'blanket']
@@ -62,7 +62,7 @@ export const CATEGORY_MAPPING_RULES = {
   
   // Tags that indicate category
   tagKeywords: {
-    children: ['kids', 'children', 'child', 'baby', 'toddler', 'youth'],
+    kids: ['kids', 'children', 'child', 'baby', 'toddler', 'youth'],
     adults: ['adult', 'men', 'women', 'grown'],
     accessories: ['accessory', 'accessories', 'bag', 'hat'],
     'home-living': ['home', 'living', 'decor', 'decoration', 'house', 'room']

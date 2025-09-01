@@ -372,9 +372,9 @@ export class CategoryService {
   async initializeDefaultCategories(): Promise<void> {
     const defaultCategories = [
       {
-        name: 'Children',
+        name: 'Kids',
         description: 'Products designed for kids and children',
-        slug: 'children',
+        slug: 'kids',
         color: '#FF6B6B',
         icon: '👶',
         isSystem: true,
@@ -416,6 +416,17 @@ export class CategoryService {
       }
     }
 
+    // Handle migration from 'children' to 'kids' slug
+    const oldChildrenCategory = await this.getCategoryBySlug('children');
+    if (oldChildrenCategory) {
+      // Update the old 'children' category to 'kids'
+      await this.updateCategory(oldChildrenCategory.id, {
+        name: 'Kids',
+        slug: 'kids',
+        description: 'Products designed for kids and children',
+      });
+    }
+
     // Initialize default mapping rules
     await this.initializeDefaultMappingRules();
   }
@@ -424,21 +435,21 @@ export class CategoryService {
    * Initialize default mapping rules
    */
   async initializeDefaultMappingRules(): Promise<void> {
-    const childrenCategory = await this.getCategoryBySlug('children');
+    const kidsCategory = await this.getCategoryBySlug('kids');
     const adultsCategory = await this.getCategoryBySlug('adults');
     const accessoriesCategory = await this.getCategoryBySlug('accessories');
     const homeLivingCategory = await this.getCategoryBySlug('home-living');
 
     const defaultRules = [
-      // Children rules
-      ...(childrenCategory ? [
-        { categoryId: childrenCategory.id, ruleType: 'name_keyword', ruleValue: 'kids', priority: 10 },
-        { categoryId: childrenCategory.id, ruleType: 'name_keyword', ruleValue: 'child', priority: 10 },
-        { categoryId: childrenCategory.id, ruleType: 'name_keyword', ruleValue: 'children', priority: 10 },
-        { categoryId: childrenCategory.id, ruleType: 'name_keyword', ruleValue: 'baby', priority: 10 },
-        { categoryId: childrenCategory.id, ruleType: 'name_keyword', ruleValue: 'toddler', priority: 10 },
-        { categoryId: childrenCategory.id, ruleType: 'name_keyword', ruleValue: 'youth', priority: 10 },
-        { categoryId: childrenCategory.id, ruleType: 'name_keyword', ruleValue: 'junior', priority: 10 },
+      // Kids rules
+      ...(kidsCategory ? [
+        { categoryId: kidsCategory.id, ruleType: 'name_keyword', ruleValue: 'kids', priority: 10 },
+        { categoryId: kidsCategory.id, ruleType: 'name_keyword', ruleValue: 'child', priority: 10 },
+        { categoryId: kidsCategory.id, ruleType: 'name_keyword', ruleValue: 'children', priority: 10 },
+        { categoryId: kidsCategory.id, ruleType: 'name_keyword', ruleValue: 'baby', priority: 10 },
+        { categoryId: kidsCategory.id, ruleType: 'name_keyword', ruleValue: 'toddler', priority: 10 },
+        { categoryId: kidsCategory.id, ruleType: 'name_keyword', ruleValue: 'youth', priority: 10 },
+        { categoryId: kidsCategory.id, ruleType: 'name_keyword', ruleValue: 'junior', priority: 10 },
       ] : []),
 
       // Adults rules

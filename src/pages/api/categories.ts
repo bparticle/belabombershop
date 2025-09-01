@@ -9,6 +9,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: `Method ${method} Not Allowed` });
   }
 
+  // Set caching headers for better performance
+  res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+
   try {
     const { 
       includeInactive = 'false', 

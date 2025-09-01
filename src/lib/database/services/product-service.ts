@@ -247,6 +247,21 @@ export class ProductService {
   }
 
   /**
+   * Get a product by external ID with full category and tag information
+   */
+  async getProductByExternalIdWithFullInfo(externalId: string): Promise<ProductWithVariants | null> {
+    const product = await db
+      .select()
+      .from(products)
+      .where(eq(products.externalId, externalId))
+      .limit(1);
+
+    if (!product[0]) return null;
+
+    return this.getProductWithFullInfo(product[0].id);
+  }
+
+  /**
    * Create or update a product from Printful data
    */
   async upsertProduct(printfulProduct: PrintfulProduct): Promise<Product> {

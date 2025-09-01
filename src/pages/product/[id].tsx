@@ -4,7 +4,6 @@ import { useRouter } from "next/router";
 
 import { formatVariantName } from "../../lib/format-variant-name";
 import { PrintfulProduct, ProductImage } from "../../types";
-import { determineProductCategory } from "../../lib/category-config";
 import { enhanceProductData, getDefaultDescription } from "../../lib/product-enhancements";
 import VariantPicker from "../../components/VariantPicker";
 import ProductVariants from "../../components/ProductVariants";
@@ -455,19 +454,15 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
       return { notFound: true };
     }
 
-    // Get product from database by external ID (since URL now uses external_id)
-    const dbProduct = await productService.getProductByExternalId(productId);
+    // Get product from database by external ID with full category and tag information
+    const dbProduct = await productService.getProductByExternalIdWithFullInfo(productId);
     
     if (!dbProduct) {
       return { notFound: true };
     }
 
-    // Determine product category based on metadata, tags, and name
-    const productCategory = determineProductCategory({
-      name: dbProduct.name || '',
-      tags: dbProduct.tags || [],
-      metadata: dbProduct.metadata || {}
-    });
+    // Get the primary category for this product from the database relationships
+    const primaryCategory = dbProduct.categories?.find(cat => cat.isPrimary) || dbProduct.categories?.[0];
 
     // Create base product object
     const baseProduct = {
@@ -476,12 +471,12 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
       name: dbProduct.name || 'Unnamed Product',
       thumbnail_url: dbProduct.thumbnailUrl || '',
       is_ignored: dbProduct.isIgnored,
-      category: productCategory,
-      tags: dbProduct.tags || [],
+      category: primaryCategory?.id || 'default', // Use database category ID
+      tags: dbProduct.tags?.map(tag => tag.name) || [],
       metadata: dbProduct.metadata || {},
       description: dbProduct.enhancement?.description || 
                   dbProduct.description || 
-                  getDefaultDescription(dbProduct.name || 'Product', productCategory),
+                  getDefaultDescription(dbProduct.name || 'Product', primaryCategory?.slug || 'default'),
       enhancement: dbProduct.enhancement || null, // Ensure enhancement is never undefined
       variants: dbProduct.variants
         .filter(variant => variant.isEnabled) // Only include enabled variants

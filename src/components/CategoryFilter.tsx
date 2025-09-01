@@ -94,9 +94,11 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
                 aria-pressed={isSelected}
                 title={`${category.description} (${filter.count} products)`}
               >
-                <span className="mr-1.5" aria-hidden="true">
-                  {category.icon}
-                </span>
+                <div 
+                  className="w-3 h-3 rounded-full mr-1.5" 
+                  style={{ backgroundColor: isSelected ? 'white' : category.color }}
+                  aria-hidden="true"
+                ></div>
                 <span>{category.name}</span>
                 {showCounts && (
                   <span 

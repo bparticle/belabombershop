@@ -26,6 +26,8 @@ export function useCategories(options: UseCategoriesOptions = {}) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let isCancelled = false;
+
     const fetchCategories = async () => {
       try {
         setLoading(true);
@@ -35,23 +37,39 @@ export function useCategories(options: UseCategoriesOptions = {}) {
         if (options.includeInactive) params.append('includeInactive', 'true');
         if (options.includeSystem) params.append('includeSystem', 'true');
 
-        const response = await fetch(`/api/categories?${params.toString()}`);
+        const response = await fetch(`/api/categories?${params.toString()}`, {
+          // Add caching headers for better performance
+          headers: {
+            'Cache-Control': 'public, max-age=300', // Cache for 5 minutes
+          },
+        });
         
         if (!response.ok) {
           throw new Error('Failed to fetch categories');
         }
 
         const data = await response.json();
-        setCategories(data.categories || []);
+        
+        if (!isCancelled) {
+          setCategories(data.categories || []);
+        }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
-        console.error('Error fetching categories:', err);
+        if (!isCancelled) {
+          setError(err instanceof Error ? err.message : 'Unknown error');
+          console.error('Error fetching categories:', err);
+        }
       } finally {
-        setLoading(false);
+        if (!isCancelled) {
+          setLoading(false);
+        }
       }
     };
 
     fetchCategories();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [options.includeInactive, options.includeSystem]);
 
   const getCategoryById = (id: string): Category | undefined => {
