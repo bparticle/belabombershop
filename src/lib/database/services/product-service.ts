@@ -23,6 +23,7 @@ import { printful } from '../../printful-client';
 import type { PrintfulProduct, PrintfulVariant } from '../../../types';
 import { categoryService } from './category-service';
 import { tagService } from './tag-service';
+import { SyncProgressUpdate, DEFAULT_SYNC_PROGRESS, type SyncStatus } from '../../sync-progress';
 
 export interface ProductWithVariants extends Omit<Product, 'tags'> {
   variants: Variant[];
@@ -472,9 +473,34 @@ export class ProductService {
 
   /**
    * Delete a product and all its related data
+   * Handles cascading deletes for variants, enhancements, categories, and tags
    */
   async deleteProduct(productId: string): Promise<void> {
-    await db.delete(products).where(eq(products.id, productId));
+    try {
+      // Delete in proper order to handle any potential foreign key issues
+      // Even though we have CASCADE, let's be explicit for reliability
+      
+      // 1. Delete product-category relationships
+      await db.delete(productCategories).where(eq(productCategories.productId, productId));
+      
+      // 2. Delete product-tag relationships  
+      await db.delete(productTags).where(eq(productTags.productId, productId));
+      
+      // 3. Delete product enhancements
+      await db.delete(productEnhancements).where(eq(productEnhancements.productId, productId));
+      
+      // 4. Delete variants (should cascade automatically, but being explicit)
+      await db.delete(variants).where(eq(variants.productId, productId));
+      
+      // 5. Finally delete the main product record
+      const result = await db.delete(products).where(eq(products.id, productId));
+      
+      console.log(`✅ Successfully deleted product ${productId} and all related data`);
+      
+    } catch (error) {
+      console.error(`❌ Error deleting product ${productId}:`, error);
+      throw error;
+    }
   }
 
   /**
@@ -638,28 +664,39 @@ export class ProductService {
   }
 
   /**
-   * Create a sync log entry
+   * Create a sync log entry with enhanced progress tracking
    */
   async createSyncLog(logData: Omit<NewSyncLog, 'id' | 'startedAt'>): Promise<SyncLog> {
+    const enhancedLogData = {
+      ...DEFAULT_SYNC_PROGRESS,
+      ...logData,
+    };
+
     const [syncLog] = await db
       .insert(syncLogs)
-      .values(logData)
+      .values(enhancedLogData)
       .returning();
 
     return syncLog;
   }
 
   /**
-   * Update a sync log entry
+   * Update a sync log entry with progress information
    */
   async updateSyncLog(id: string, updates: Partial<NewSyncLog>): Promise<SyncLog> {
+    const updateData: Partial<NewSyncLog> = {
+      ...updates,
+      lastUpdated: new Date(),
+    };
+
+    // Only set completedAt if the status indicates completion
+    if (updates.status && ['success', 'error', 'partial', 'cancelled'].includes(updates.status)) {
+      updateData.completedAt = new Date();
+    }
+
     const [updatedLog] = await db
       .update(syncLogs)
-      .set({
-        ...updates,
-        completedAt: new Date(),
-        duration: updates.duration || 0,
-      })
+      .set(updateData)
       .where(eq(syncLogs.id, id))
       .returning();
 
@@ -667,14 +704,99 @@ export class ProductService {
   }
 
   /**
-   * Get recent sync logs
+   * Update sync progress with detailed tracking
    */
-  async getRecentSyncLogs(limit: number = 10): Promise<SyncLog[]> {
+  async updateSyncProgress(progressUpdate: SyncProgressUpdate): Promise<SyncLog> {
+    const updateData: Partial<NewSyncLog> = {
+      lastUpdated: new Date(),
+    };
+
+    // Map progress update fields to database fields
+    if (progressUpdate.status) updateData.status = progressUpdate.status;
+    if (progressUpdate.currentStep) updateData.currentStep = progressUpdate.currentStep;
+    if (typeof progressUpdate.progress === 'number') updateData.progress = progressUpdate.progress;
+    if (typeof progressUpdate.totalProducts === 'number') updateData.totalProducts = progressUpdate.totalProducts;
+    if (typeof progressUpdate.currentProductIndex === 'number') updateData.currentProductIndex = progressUpdate.currentProductIndex;
+    if (progressUpdate.currentProductName) updateData.currentProductName = progressUpdate.currentProductName;
+    if (typeof progressUpdate.estimatedTimeRemaining === 'number') updateData.estimatedTimeRemaining = progressUpdate.estimatedTimeRemaining;
+    
+    // Statistics updates (accumulative)
+    if (typeof progressUpdate.productsProcessed === 'number') updateData.productsProcessed = progressUpdate.productsProcessed;
+    if (typeof progressUpdate.productsCreated === 'number') updateData.productsCreated = progressUpdate.productsCreated;
+    if (typeof progressUpdate.productsUpdated === 'number') updateData.productsUpdated = progressUpdate.productsUpdated;
+    if (typeof progressUpdate.productsDeleted === 'number') updateData.productsDeleted = progressUpdate.productsDeleted;
+    if (typeof progressUpdate.variantsProcessed === 'number') updateData.variantsProcessed = progressUpdate.variantsProcessed;
+    if (typeof progressUpdate.variantsCreated === 'number') updateData.variantsCreated = progressUpdate.variantsCreated;
+    if (typeof progressUpdate.variantsUpdated === 'number') updateData.variantsUpdated = progressUpdate.variantsUpdated;
+    if (typeof progressUpdate.variantsDeleted === 'number') updateData.variantsDeleted = progressUpdate.variantsDeleted;
+    
+    // Error and warning handling
+    if (progressUpdate.errorMessage) updateData.errorMessage = progressUpdate.errorMessage;
+    if (progressUpdate.warnings && progressUpdate.warnings.length > 0) {
+      updateData.warnings = JSON.stringify(progressUpdate.warnings);
+    }
+
+    // Set completion time for final statuses
+    if (progressUpdate.status && ['success', 'error', 'partial', 'cancelled'].includes(progressUpdate.status)) {
+      updateData.completedAt = new Date();
+    }
+
+    return this.updateSyncLog(progressUpdate.syncLogId, updateData);
+  }
+
+  /**
+   * Get a specific sync log by ID with full progress information
+   */
+  async getSyncLogById(id: string): Promise<SyncLog | null> {
+    const result = await db
+      .select()
+      .from(syncLogs)
+      .where(eq(syncLogs.id, id))
+      .limit(1);
+
+    return result[0] || null;
+  }
+
+  /**
+   * Get recent sync logs with enhanced filtering
+   */
+  async getRecentSyncLogs(limit: number = 10, includeActive: boolean = true): Promise<SyncLog[]> {
+    let query = db
+      .select()
+      .from(syncLogs)
+      .orderBy(desc(syncLogs.startedAt));
+
+    if (!includeActive) {
+      query = query.where(
+        inArray(syncLogs.status, ['success', 'error', 'partial', 'cancelled'])
+      );
+    }
+
+    return query.limit(limit);
+  }
+
+  /**
+   * Get currently active sync operations
+   */
+  async getActiveSyncLogs(): Promise<SyncLog[]> {
     return db
       .select()
       .from(syncLogs)
-      .orderBy(desc(syncLogs.startedAt))
-      .limit(limit);
+      .where(
+        inArray(syncLogs.status, ['queued', 'fetching_products', 'processing_products', 'finalizing'])
+      )
+      .orderBy(desc(syncLogs.startedAt));
+  }
+
+  /**
+   * Cancel an active sync operation
+   */
+  async cancelSync(syncLogId: string): Promise<SyncLog> {
+    return this.updateSyncLog(syncLogId, {
+      status: 'cancelled',
+      currentStep: 'Sync cancelled by user',
+      errorMessage: 'Operation cancelled by user request',
+    });
   }
 
   /**

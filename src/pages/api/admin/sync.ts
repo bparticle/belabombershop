@@ -30,21 +30,31 @@ export default async function handler(
 }
 
 async function handleGetSyncLogs(req: NextApiRequest, res: NextApiResponse) {
-  const { limit } = req.query;
-  
   try {
-    const limitNum = limit ? parseInt(limit as string) : 10;
-    const syncLogs = await productService.getRecentSyncLogs(limitNum);
+    const { limit = '10', active } = req.query;
+    const limitNum = parseInt(limit as string, 10);
     
+    let syncLogs;
+    
+    if (active === 'true') {
+      // Get only active sync operations
+      syncLogs = await productService.getActiveSyncLogs();
+    } else {
+      // Get recent sync logs (can include or exclude active based on parameter)
+      const includeActive = active !== 'false';
+      syncLogs = await productService.getRecentSyncLogs(limitNum, includeActive);
+    }
+
     return res.status(200).json({
-      syncLogs,
-      total: syncLogs.length,
+      success: true,
+      syncLogs: syncLogs || [],
+      activeSyncs: active === 'true' ? syncLogs : undefined,
     });
   } catch (error) {
     console.error('Error fetching sync logs:', error);
     return res.status(500).json({ error: 'Failed to fetch sync logs' });
   }
-}
+};
 
 async function handleTriggerSync(req: NextApiRequest, res: NextApiResponse) {
   try {

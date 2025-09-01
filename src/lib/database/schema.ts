@@ -160,11 +160,21 @@ export const categoryMappingRules = pgTable('category_mapping_rules', {
   isActiveIdx: index('category_mapping_rules_is_active_idx').on(table.isActive),
 }));
 
-// Sync logs table - for tracking sync operations
+// Sync logs table - for tracking sync operations with enhanced progress tracking
 export const syncLogs = pgTable('sync_logs', {
   id: text('id').primaryKey().$defaultFn(() => createId()),
-  operation: text('operation').notNull(), // 'full_sync', 'product_update', etc.
-  status: text('status').notNull(), // 'success', 'error', 'partial'
+  operation: text('operation').notNull(), // 'full_sync', 'manual_sync', 'product_update', etc.
+  status: text('status').notNull(), // 'queued', 'fetching_products', 'processing_products', 'finalizing', 'success', 'error', 'partial', 'cancelled'
+  
+  // Enhanced progress tracking fields
+  currentStep: text('current_step'), // Human-readable current operation
+  progress: integer('progress').default(0), // 0-100 percentage
+  totalProducts: integer('total_products').default(0), // Total products to process
+  currentProductIndex: integer('current_product_index').default(0), // Current product being processed
+  currentProductName: text('current_product_name'), // Name of current product being processed
+  estimatedTimeRemaining: integer('estimated_time_remaining'), // milliseconds
+  
+  // Existing statistics fields
   productsProcessed: integer('products_processed').default(0),
   productsCreated: integer('products_created').default(0),
   productsUpdated: integer('products_updated').default(0),
@@ -173,14 +183,19 @@ export const syncLogs = pgTable('sync_logs', {
   variantsCreated: integer('variants_created').default(0),
   variantsUpdated: integer('variants_updated').default(0),
   variantsDeleted: integer('variants_deleted').default(0),
+  
+  // Error and timing fields
   errorMessage: text('error_message'),
+  warnings: text('warnings'), // JSON array of warning messages
   startedAt: timestamp('started_at').defaultNow(),
   completedAt: timestamp('completed_at'),
   duration: integer('duration'), // in milliseconds
+  lastUpdated: timestamp('last_updated').defaultNow(), // For tracking real-time updates
 }, (table) => ({
   operationIdx: index('sync_logs_operation_idx').on(table.operation),
   statusIdx: index('sync_logs_status_idx').on(table.status),
   startedAtIdx: index('sync_logs_started_at_idx').on(table.startedAt),
+  lastUpdatedIdx: index('sync_logs_last_updated_idx').on(table.lastUpdated),
 }));
 
 // Types for TypeScript

@@ -7,9 +7,11 @@ import { getAdminToken, removeAdminToken } from '../../lib/auth';
 import { useTheme } from '../../context/theme';
 import ThemeToggle from '../../components/ThemeToggle';
 import ProductEnhancementModal from '../../components/ProductEnhancementModal';
+import SyncProgressBar from '../../components/SyncProgressBar';
 import ToggleSwitch from '../../components/ToggleSwitch';
 import { formatDate } from '../../lib/date-utils';
 import { getProductThumbnail, getProductIndicators } from '../../lib/admin-utils';
+import { useSyncProgress } from '../../hooks/useSyncProgress';
 
 // Types for serialized data from getServerSideProps
 type SerializedProductWithVariants = Omit<ProductWithVariants, 'syncedAt' | 'createdAt' | 'updatedAt'> & {
@@ -27,9 +29,10 @@ type SerializedProductWithVariants = Omit<ProductWithVariants, 'syncedAt' | 'cre
   } | null;
 };
 
-type SerializedSyncLog = Omit<SyncLog, 'startedAt' | 'completedAt'> & {
+type SerializedSyncLog = Omit<SyncLog, 'startedAt' | 'completedAt' | 'lastUpdated'> & {
   startedAt: string | null;
   completedAt: string | null;
+  lastUpdated: string | null;
 };
 
 interface AdminDashboardProps {
@@ -41,11 +44,29 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
   const router = useRouter();
   const { isDark } = useTheme();
   const [products, setProducts] = useState(initialProducts);
-  const [syncLogs, setSyncLogs] = useState(initialSyncLogs);
-  const [isSyncing, setIsSyncing] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
   const [modalProduct, setModalProduct] = useState<ProductWithVariants | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isRefreshingProducts, setIsRefreshingProducts] = useState(false);
+
+  // Enhanced sync progress management
+  const {
+    activeSyncLog,
+    recentSyncLogs,
+    isLoading: isSyncLoading,
+    error: syncError,
+    triggerSync,
+    cancelSync,
+    refresh: refreshSyncData,
+  } = useSyncProgress({
+    activePollInterval: 2000, // Poll every 2 seconds during active sync
+    inactivePollInterval: 10000, // Poll every 10 seconds when inactive
+    maxRecentLogs: 5,
+  });
+
+  // Determine if there's an active sync
+  const hasActiveSync = activeSyncLog && ['queued', 'fetching_products', 'processing_products', 'finalizing'].includes(activeSyncLog.status);
+  const isSyncing = hasActiveSync || isSyncLoading;
 
   // Check authentication on component mount
   useEffect(() => {
@@ -55,35 +76,61 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
     }
   }, [router]);
 
-  const triggerSync = async () => {
+  // Auto-refresh product data when sync completes
+  useEffect(() => {
+    if (!activeSyncLog) return;
+    
+    const isCompleted = ['success', 'error', 'partial', 'cancelled'].includes(activeSyncLog.status);
+    
+    // Only refresh if sync just completed and had some product changes
+    if (isCompleted && (
+      (activeSyncLog.productsCreated && activeSyncLog.productsCreated > 0) ||
+      (activeSyncLog.productsUpdated && activeSyncLog.productsUpdated > 0) ||
+      (activeSyncLog.productsDeleted && activeSyncLog.productsDeleted > 0)
+    )) {
+      // Small delay to ensure database updates are complete
+      const timeoutId = setTimeout(async () => {
+        console.log('🔄 Sync completed with product changes, refreshing data...');
+        setIsRefreshingProducts(true);
+        try {
+          await refreshData();
+        } catch (error) {
+          console.error('Error refreshing data:', error);
+        } finally {
+          setIsRefreshingProducts(false);
+        }
+      }, 1500); // Slightly longer delay for database consistency
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [activeSyncLog?.status, activeSyncLog?.productsCreated, activeSyncLog?.productsUpdated, activeSyncLog?.productsDeleted]);
+
+  const handleTriggerSync = async () => {
     const token = getAdminToken();
     if (!token) {
       router.push('/admin/login');
       return;
     }
 
-    setIsSyncing(true);
-    try {
-      const response = await fetch('/api/admin/sync', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+    const result = await triggerSync();
+    if (result.error) {
+      console.error('Failed to trigger sync:', result.error);
+      // Show error to user - you might want to add a toast notification here
+    } else {
+      console.log('Sync started successfully:', result.syncLogId);
+      // Note: refreshData() will be called automatically when sync completes
+      // via the useEffect that watches for sync completion
+    }
+  };
 
-      if (response.ok) {
-        // Poll for sync completion
-        setTimeout(() => {
-          refreshData();
-        }, 5000);
-      } else {
-        console.error('Failed to trigger sync');
-      }
-    } catch (error) {
-      console.error('Error triggering sync:', error);
-    } finally {
-      setIsSyncing(false);
+  const handleCancelSync = async () => {
+    if (!activeSyncLog) return;
+    
+    const result = await cancelSync(activeSyncLog.id);
+    if (result.error) {
+      console.error('Failed to cancel sync:', result.error);
+    } else {
+      console.log('Sync cancelled successfully');
     }
   };
 
@@ -95,28 +142,19 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
     }
 
     try {
-      const [productsResponse, syncLogsResponse] = await Promise.all([
-        fetch('/api/admin/products?includeInactive=true', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        }),
-        fetch('/api/admin/sync?limit=5', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        }),
-      ]);
+      const productsResponse = await fetch('/api/admin/products?includeInactive=true', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
 
       if (productsResponse.ok) {
         const productsData = await productsResponse.json();
         setProducts(productsData.products);
       }
 
-      if (syncLogsResponse.ok) {
-        const syncLogsData = await syncLogsResponse.json();
-        setSyncLogs(syncLogsData.syncLogs);
-      }
+      // Refresh sync data through the hook
+      await refreshSyncData();
     } catch (error) {
       console.error('Error refreshing data:', error);
     }
@@ -250,13 +288,35 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
                 Manage Tags
               </a>
 
-              <button
-                onClick={triggerSync}
-                disabled={isSyncing}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md transition-colors"
-              >
-                {isSyncing ? 'Syncing...' : 'Sync Products'}
-              </button>
+              <div className="flex space-x-2">
+                <button
+                  onClick={handleTriggerSync}
+                  disabled={isSyncing}
+                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md transition-colors flex items-center space-x-2"
+                >
+                  {isSyncing ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>Syncing...</span>
+                    </>
+                  ) : (
+                    <span>Sync Products</span>
+                  )}
+                </button>
+                
+                {hasActiveSync && (
+                  <button
+                    onClick={handleCancelSync}
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors"
+                    title="Cancel sync"
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
               <button
                 onClick={handleLogout}
                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors"
@@ -267,12 +327,53 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
           </div>
         </div>
 
+        {/* Enhanced Sync Progress Display */}
+        {hasActiveSync && (
+          <div className="mb-6">
+            <SyncProgressBar 
+              syncLog={activeSyncLog} 
+              isActive={hasActiveSync}
+              className="shadow-lg"
+            />
+          </div>
+        )}
+
+        {/* Error Display */}
+        {syncError && (
+          <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+            <div className="flex items-center space-x-2">
+              <span className="text-red-600 dark:text-red-400">❌</span>
+              <div>
+                <h3 className="text-sm font-medium text-red-800 dark:text-red-300">
+                  Sync Error
+                </h3>
+                <p className="text-sm text-red-700 dark:text-red-400 mt-1">
+                  {syncError}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Products List */}
           <div className="lg:col-span-2">
             <div className="bg-white dark:bg-gray-800 shadow rounded-lg transition-colors duration-200">
               <div className="px-4 py-5 sm:p-6">
-                <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Products ({products.length})</h2>
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                    Products ({products.length})
+                  </h2>
+                  {isRefreshingProducts && (
+                    <div className="flex items-center text-sm text-blue-600 dark:text-blue-400">
+                      <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Updating...
+                    </div>
+                  )}
+                </div>
                 {/* Legend */}
                 <div className="flex items-center gap-4 mb-4 text-xs text-gray-500 dark:text-gray-400">
                   <div className="flex items-center gap-1">
@@ -485,7 +586,7 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
               <div className="px-4 py-5 sm:p-6">
                 <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Recent Syncs</h2>
                 <div className="space-y-3">
-                  {syncLogs.map((log) => (
+                  {recentSyncLogs.map((log) => (
                     <div key={log.id} className="border-l-4 border-gray-200 dark:border-gray-700 pl-4">
                       <div className="flex justify-between items-start">
                         <div>
@@ -540,7 +641,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
 
     const [products, syncLogs] = await Promise.all([
       productService.getAllProductsForAdmin(),
-      productService.getRecentSyncLogs(5),
+      productService.getRecentSyncLogs(5, false), // Exclude active syncs from initial load
     ]);
 
     // Convert Date objects to ISO strings for JSON serialization
@@ -566,6 +667,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
       ...log,
       startedAt: log.startedAt?.toISOString() || null,
       completedAt: log.completedAt?.toISOString() || null,
+      lastUpdated: log.lastUpdated?.toISOString() || null,
     }));
 
     return {
