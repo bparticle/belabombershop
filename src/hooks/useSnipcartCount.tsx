@@ -46,7 +46,7 @@ const useSnipcartCount = () => {
       if (hasSnipcart() && window.Snipcart.store) {
         try {
           const unsubscribe = window.Snipcart.store.subscribe(() => {
-            const itemsCount = window.Snipcart.store.getState();
+            const itemsCount = window.Snipcart.store?.getState();
             dispatch({ type: "SET", payload: itemsCount });
           });
 

@@ -12,7 +12,7 @@ const nextConfig = {
   },
   // Optimize images
   images: {
-    domains: ['files.cdn.printful.com'],
+    domains: ['files.cdn.printful.com', 'res.cloudinary.com'],
     formats: ['image/webp'],
     minimumCacheTTL: 60,
   },

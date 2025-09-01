@@ -5,6 +5,7 @@ import SafeImage from './SafeImage';
 interface AdditionalViewsGalleryProps {
   images: ProductImage[];
   onImageClick: (imageIndex: number) => void;
+  allGalleryImages?: Array<{ url: string; alt: string; caption?: string; source: 'printful' | 'enhancement' }>;
   maxVisibleThumbnails?: number;
   className?: string;
 }
@@ -12,6 +13,7 @@ interface AdditionalViewsGalleryProps {
 const AdditionalViewsGallery: React.FC<AdditionalViewsGalleryProps> = ({
   images,
   onImageClick,
+  allGalleryImages = [],
   maxVisibleThumbnails = 3,
   className = ''
 }) => {
@@ -21,8 +23,12 @@ const AdditionalViewsGallery: React.FC<AdditionalViewsGalleryProps> = ({
   const hasMoreImages = images.length > maxVisibleThumbnails;
   const remainingCount = images.length - maxVisibleThumbnails;
 
-  const handleImageClick = (index: number) => {
-    onImageClick(index);
+  const handleImageClick = (image: ProductImage, index: number) => {
+    // Find the actual index in the combined gallery images array
+    const actualIndex = allGalleryImages.findIndex(img => img.url === image.url);
+    if (actualIndex >= 0) {
+      onImageClick(actualIndex);
+    }
   };
 
   const handleMoreClick = () => {
@@ -37,7 +43,7 @@ const AdditionalViewsGallery: React.FC<AdditionalViewsGalleryProps> = ({
           <div key={`${image.url}-${index}`} className="space-y-1">
             <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
               <button
-                onClick={() => handleImageClick(index)}
+                onClick={() => handleImageClick(image, index)}
                 className="w-full h-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 aria-label={`View larger image: ${image.alt}`}
               >
@@ -47,6 +53,7 @@ const AdditionalViewsGallery: React.FC<AdditionalViewsGalleryProps> = ({
                   fill
                   className="object-cover hover:opacity-90 transition-opacity"
                   sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  useDownsized={true}
                 />
                 {/* Click indicator */}
                 <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-10 transition-all duration-200 flex items-center justify-center">

@@ -71,12 +71,11 @@ export const useProductGallery = ({
   }, []);
 
   // Handle enhancement image clicks
-  const handleEnhancementImageClick = useCallback((enhancementIndex: number) => {
-    const printfulImageCount = printfulImages.length;
-    const galleryIndex = printfulImageCount + enhancementIndex;
+  const handleEnhancementImageClick = useCallback((galleryIndex: number) => {
+    // galleryIndex is now the correct index in the allGalleryImages array
     setGalleryStartIndex(galleryIndex);
     setGalleryOpen(true);
-  }, [printfulImages.length]);
+  }, []);
 
   return {
     selectedImage,

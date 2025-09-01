@@ -10,6 +10,7 @@ interface EnvironmentVariables {
   NEXT_PUBLIC_SNIPCART_API_KEY?: string;
   SNIPCART_SECRET_KEY?: string;
   NODE_ENV: 'development' | 'production' | 'test';
+  JWT_SECRET: string;
   // Database configuration
   DATABASE_CLIENT: string;
   DATABASE_HOST: string;
@@ -18,6 +19,11 @@ interface EnvironmentVariables {
   DATABASE_USERNAME: string;
   DATABASE_PASSWORD: string;
   DATABASE_SSL: boolean;
+  // Cloudinary configuration
+  CLOUDINARY_CLOUD_NAME: string;
+  CLOUDINARY_API_KEY: string;
+  CLOUDINARY_API_SECRET: string;
+  NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: string;
 }
 
 /**
@@ -28,6 +34,7 @@ export function validateEnvironmentVariables(): EnvironmentVariables {
   const requiredVars = {
     PRINTFUL_API_KEY: process.env.PRINTFUL_API_KEY,
     NODE_ENV: process.env.NODE_ENV as EnvironmentVariables['NODE_ENV'],
+    JWT_SECRET: process.env.JWT_SECRET,
     // Database variables
     DATABASE_CLIENT: process.env.DATABASE_CLIENT,
     DATABASE_HOST: process.env.DATABASE_HOST,
@@ -35,6 +42,11 @@ export function validateEnvironmentVariables(): EnvironmentVariables {
     DATABASE_NAME: process.env.DATABASE_NAME,
     DATABASE_USERNAME: process.env.DATABASE_USERNAME,
     DATABASE_PASSWORD: process.env.DATABASE_PASSWORD,
+    // Cloudinary variables (now required)
+    CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
+    CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
+    CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
+    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
   };
 
   const optionalVars = {
@@ -66,7 +78,7 @@ export function validateEnvironmentVariables(): EnvironmentVariables {
   }
 
   // Validate database port (should be a number)
-  const port = parseInt(requiredVars.DATABASE_PORT);
+  const port = parseInt(requiredVars.DATABASE_PORT || '5432');
   if (isNaN(port) || port < 1 || port > 65535) {
     throw new Error(`Invalid DATABASE_PORT: ${requiredVars.DATABASE_PORT}. Must be a valid port number (1-65535)`);
   }

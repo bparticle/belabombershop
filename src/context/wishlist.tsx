@@ -73,7 +73,7 @@ export const WishlistProvider: React.FC<{ children?: React.ReactNode }> = ({
       const savedState = getInitialState();
       if (savedState.items.length > 0) {
         // Reset to saved state
-        savedState.items.forEach(item => {
+        savedState.items.forEach((item: any) => {
           dispatch({ type: ADD_PRODUCT, payload: item });
         });
       }

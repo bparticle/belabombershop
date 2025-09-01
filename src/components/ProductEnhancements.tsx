@@ -55,32 +55,7 @@ const ProductEnhancements: React.FC<ProductEnhancementsProps> = ({
         </div>
       )}
 
-      {/* Additional Images */}
-      {enhancement.additionalImages && enhancement.additionalImages.length > 0 && (
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Additional Views</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {enhancement.additionalImages.map((image, index) => (
-              <div key={index} className="group cursor-pointer" onClick={() => handleImageClick(index)}>
-                <div className="relative aspect-square overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
-                  <SafeImage
-                    src={image.url}
-                    alt={image.alt}
-                    fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  />
-                </div>
-                {image.caption && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 text-center">
-                    {image.caption}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+
     </div>
   );
 };

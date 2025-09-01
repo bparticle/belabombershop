@@ -231,6 +231,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
                     fill
                     className="object-contain cursor-pointer hover:opacity-95 transition-opacity"
                     sizes="(max-width: 768px) 100vw, 50vw"
+                    useDownsized={true}
                     onError={(e) => {
                       console.error('Image failed to load:', selectedImage);
                       e.currentTarget.style.display = 'none';
@@ -267,6 +268,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
                selectedImage={selectedImage}
                onImageSelect={setSelectedImage}
                onGalleryOpen={openGallery}
+               allGalleryImages={allGalleryImages}
                maxVisibleThumbnails={6}
              />
 
@@ -274,6 +276,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product }) => {
              <AdditionalViewsGallery
                images={enhancementImages}
                onImageClick={handleEnhancementImageClick}
+               allGalleryImages={allGalleryImages}
                maxVisibleThumbnails={3}
              />
 

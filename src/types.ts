@@ -173,6 +173,7 @@ export interface ProductImage {
   url: string;
   alt: string;
   caption?: string;
+  public_id?: string; // Cloudinary public ID for transformations
 }
 
 export interface ProductSpecifications {

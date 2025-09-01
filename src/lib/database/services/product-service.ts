@@ -20,7 +20,7 @@ import {
   type NewSyncLog
 } from '../schema';
 import { printful } from '../../printful-client';
-import type { PrintfulProduct, PrintfulVariant } from '../../types';
+import type { PrintfulProduct, PrintfulVariant } from '../../../types';
 import { categoryService } from './category-service';
 import { tagService } from './tag-service';
 

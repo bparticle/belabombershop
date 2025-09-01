@@ -24,20 +24,15 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
 }) => {
   const [currentIndex, setCurrentIndex] = React.useState(initialIndex);
 
-  // Fix image path for local images that might be missing the proper prefix
-  const fixImagePath = (src: string) => {
-    if (!src || typeof src !== 'string') return src;
-    
-    // If it's already a proper local path, return as is
-    if (src.startsWith('/images/products/')) return src;
-    
-    // If it's just a filename, add the proper prefix
-    if (!src.startsWith('/') && !src.startsWith('http')) {
-      return `/images/products/${src}`;
-    }
-    
-    return src;
-  };
+  // Fixed image path function (currently unused but kept for potential future use)
+  // const fixImagePath = (src: string) => {
+  //   if (!src || typeof src !== 'string') return src;
+  //   if (src.startsWith('/images/products/')) return src;
+  //   if (!src.startsWith('/') && !src.startsWith('http')) {
+  //     return `/images/products/${src}`;
+  //   }
+  //   return src;
+  // };
 
   // Reset index when modal opens with new initial index
   useEffect(() => {
@@ -168,6 +163,7 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
               src={currentImage.url}
               alt={currentImage.alt}
               className="max-w-full max-h-[60vh] object-contain rounded"
+              useDownsized={true}
             />
           </div>
         </div>
@@ -194,18 +190,19 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
                 <button
                   key={`${image.url}-${index}`}
                   onClick={() => goToImage(index)}
-                  className={`flex-shrink-0 w-16 h-16 rounded overflow-hidden border-2 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  className={`relative flex-shrink-0 w-16 h-16 rounded overflow-hidden border-2 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                     index === currentIndex
                       ? 'border-blue-500'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                   aria-label={`Go to image ${index + 1}`}
                 >
-                  <img
-                    src={fixImagePath(image.url)}
+                  <SafeImage
+                    src={image.url}
                     alt={image.alt}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
+                    fill
+                    className="object-cover"
+                    useDownsized={true}
                     onError={(e) => {
                       console.error('Gallery thumbnail failed to load:', image.url);
                       e.currentTarget.style.display = 'none';

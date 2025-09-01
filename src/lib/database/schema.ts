@@ -67,6 +67,7 @@ export const productEnhancements = pgTable('product_enhancements', {
     url: string;
     alt: string;
     caption?: string;
+    public_id?: string; // Cloudinary public ID for transformations
   }>>(),
   seo: jsonb('seo').$type<{
     keywords: string[];
@@ -81,7 +82,7 @@ export const productEnhancements = pgTable('product_enhancements', {
 }));
 
 // Enhanced categories table - for better organization
-export const categories = pgTable('categories', {
+export const categories: any = pgTable('categories', {
   id: text('id').primaryKey().$defaultFn(() => createId()),
   name: text('name').notNull(),
   description: text('description'),

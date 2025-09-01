@@ -13,6 +13,7 @@ interface ProductImageGalleryProps {
   selectedImage: string;
   onImageSelect: (imageUrl: string) => void;
   onGalleryOpen: (startIndex?: number) => void;
+  allGalleryImages?: Array<{ url: string; alt: string; caption?: string; source: 'printful' | 'enhancement' }>;
   maxVisibleThumbnails?: number;
   className?: string;
 }
@@ -22,6 +23,7 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
   selectedImage,
   onImageSelect,
   onGalleryOpen,
+  allGalleryImages = [],
   maxVisibleThumbnails = 6,
   className = ''
 }) => {
@@ -33,8 +35,8 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
 
   const handleThumbnailClick = (image: ProductImage, index: number) => {
     onImageSelect(image.url);
-    // Find the actual index in the full images array
-    const actualIndex = images.findIndex(img => img.url === image.url);
+    // Find the actual index in the combined gallery images array
+    const actualIndex = allGalleryImages.findIndex(img => img.url === image.url);
     if (actualIndex >= 0) {
       onGalleryOpen(actualIndex);
     }
@@ -66,6 +68,7 @@ const ProductImageGallery: React.FC<ProductImageGalleryProps> = ({
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 25vw, 12.5vw"
+                useDownsized={true}
                 onError={(e) => {
                   console.error('Gallery image failed to load:', image.url);
                   e.currentTarget.style.display = 'none';

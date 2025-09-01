@@ -191,10 +191,10 @@ class ProductSync {
             description: existingEnhancement.description,
             shortDescription: existingEnhancement.shortDescription,
             features: existingEnhancement.features,
-            specifications: existingEnhancement.specifications,
+            specifications: existingEnhancement.specifications as Record<string, string> | null,
             additionalImages: existingEnhancement.additionalImages,
             seo: existingEnhancement.seo,
-            defaultVariant: existingEnhancement.defaultVariant,
+            defaultVariantId: existingEnhancement.defaultVariant,
           });
           console.log(`Preserved enhancement for: ${product.name}`);
         }

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import type { ProductWithVariants } from '../lib/database/services/product-service';
 import { getAdminToken } from '../lib/auth';
+import ImageUpload from './ImageUpload';
+import { CloudinaryImage } from '../lib/cloudinary-client';
 
 interface Category {
   id: string;
@@ -278,6 +280,20 @@ export default function ProductEnhancementModal({
     }));
   };
 
+  const handleImageUploaded = (index: number, cloudinaryImage: CloudinaryImage) => {
+    setEnhancement(prev => ({
+      ...prev,
+      additionalImages: prev.additionalImages.map((image, i) => 
+        i === index ? {
+          ...image,
+          url: cloudinaryImage.url,
+          public_id: cloudinaryImage.public_id,
+          alt: cloudinaryImage.alt,
+        } : image
+      ),
+    }));
+  };
+
   const removeImage = (index: number) => {
     setEnhancement(prev => ({
       ...prev,
@@ -534,35 +550,50 @@ export default function ProductEnhancementModal({
                   <div className="space-y-4">
                     {enhancement.additionalImages.map((image, index) => (
                       <div key={index} className="border border-gray-200 rounded-md p-4">
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="text-sm font-medium text-gray-600">Image {index + 1}</span>
+                          <button
+                            onClick={() => removeImage(index)}
+                            className="text-red-600 hover:text-red-800 text-sm"
+                          >
+                            Remove Image
+                          </button>
+                        </div>
+                        
+                        {/* Image Upload */}
+                        <ImageUpload
+                          onImageUploaded={(cloudinaryImage) => handleImageUploaded(index, cloudinaryImage)}
+                          onError={(error) => console.error('Upload error:', error)}
+                          className="mb-3"
+                        />
+                        
+                        {/* Image Preview */}
+                        {image.url && (
+                          <div className="mb-3">
+                            <img
+                              src={image.url}
+                              alt={image.alt || 'Product image'}
+                              className="w-full h-32 object-cover rounded border"
+                            />
+                          </div>
+                        )}
+                        
                         <div className="grid grid-cols-1 gap-2">
                           <input
                             type="text"
-                            value={image.url}
-                            onChange={(e) => updateImage(index, 'url', e.target.value)}
-                            className="border border-gray-300 rounded-md px-3 py-2"
-                            placeholder="Image URL..."
-                          />
-                          <input
-                            type="text"
-                            value={image.alt}
+                            placeholder="Alt text"
+                            value={image.alt || ''}
                             onChange={(e) => updateImage(index, 'alt', e.target.value)}
-                            className="border border-gray-300 rounded-md px-3 py-2"
-                            placeholder="Alt text..."
+                            className="border border-gray-300 rounded-md px-3 py-2 text-sm"
                           />
                           <input
                             type="text"
-                            value={image.caption}
+                            placeholder="Caption (optional)"
+                            value={image.caption || ''}
                             onChange={(e) => updateImage(index, 'caption', e.target.value)}
-                            className="border border-gray-300 rounded-md px-3 py-2"
-                            placeholder="Caption..."
+                            className="border border-gray-300 rounded-md px-3 py-2 text-sm"
                           />
                         </div>
-                        <button
-                          onClick={() => removeImage(index)}
-                          className="mt-2 text-red-600 hover:text-red-800"
-                        >
-                          Remove Image
-                        </button>
                       </div>
                     ))}
                   </div>

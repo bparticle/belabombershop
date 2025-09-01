@@ -78,7 +78,7 @@ async function handleTriggerSync(req: NextApiRequest, res: NextApiResponse) {
         await productService.updateSyncLog(syncLog.id, {
           status: 'error',
           errorMessage: error instanceof Error ? error.message : String(error),
-          duration: Date.now() - syncLog.startedAt.getTime(),
+          duration: Date.now() - (syncLog.startedAt?.getTime() || Date.now()),
         });
       }
     });

@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import { isCloudinaryUrl } from '../lib/cloudinary-client';
 
 interface SafeImageProps {
   src: string;
@@ -10,6 +11,7 @@ interface SafeImageProps {
   className?: string;
   sizes?: string;
   onError?: (e: React.SyntheticEvent<HTMLImageElement, Event>) => void;
+  useDownsized?: boolean; // Whether to use downsized version for Cloudinary images
 }
 
 const SafeImage: React.FC<SafeImageProps> = ({
@@ -21,10 +23,18 @@ const SafeImage: React.FC<SafeImageProps> = ({
   className,
   sizes,
   onError,
+  useDownsized = false,
 }) => {
   // Fix image path for local images that might be missing the proper prefix
   const fixedSrc = React.useMemo(() => {
     if (!src || typeof src !== 'string') return src;
+    
+    // Handle Cloudinary images
+    if (isCloudinaryUrl(src)) {
+      // For Cloudinary images, just return the original URL
+      // Don't try to apply additional transformations if the URL already has them
+      return src;
+    }
     
     // If it's already a proper local path, return as is
     if (src.startsWith('/images/products/')) return src;
@@ -35,7 +45,7 @@ const SafeImage: React.FC<SafeImageProps> = ({
     }
     
     return src;
-  }, [src]);
+  }, [src, useDownsized]);
 
   // Validate the image URL
   const isValidUrl = React.useMemo(() => {
@@ -46,10 +56,10 @@ const SafeImage: React.FC<SafeImageProps> = ({
     return true;
   }, [fixedSrc]);
 
-  // Debug logging
-  React.useEffect(() => {
-    console.log('SafeImage debug:', { originalSrc: src, fixedSrc, isValidUrl });
-  }, [src, fixedSrc, isValidUrl]);
+  // Debug logging (disabled)
+  // React.useEffect(() => {
+  //   console.log('SafeImage debug:', { originalSrc: src, fixedSrc, isValidUrl });
+  // }, [src, fixedSrc, isValidUrl]);
 
   // If URL is invalid, don't render the image
   if (!isValidUrl) {

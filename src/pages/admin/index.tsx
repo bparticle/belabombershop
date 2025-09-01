@@ -216,12 +216,7 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
                >
                  Manage Tags
                </a>
-               <a
-                 href="/admin/enhancements"
-                 className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md transition-colors"
-               >
-                 Manage Enhancements
-               </a>
+
                <button
                  onClick={triggerSync}
                  disabled={isSyncing}

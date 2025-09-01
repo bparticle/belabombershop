@@ -241,6 +241,7 @@ export function enhanceProductData(printfulProduct: any): any {
   const defaultVariant = getDefaultVariant(printfulProduct);
 
   // Transform database enhancement to match frontend type expectations
+  // Use ONLY database enhancement data (Cloudinary images), ignore hardcoded data
   let enhancement = null;
   if (dbEnhancement) {
     enhancement = {
@@ -248,12 +249,23 @@ export function enhanceProductData(printfulProduct: any): any {
       shortDescription: dbEnhancement.shortDescription || '',
       features: dbEnhancement.features || [],
       specifications: dbEnhancement.specifications || {},
+      // Use ONLY Cloudinary images from database
       additionalImages: dbEnhancement.additionalImages || [],
       seo: dbEnhancement.seo || { keywords: [], metaDescription: '' },
-      defaultVariant: dbEnhancement.defaultVariantId || '', // Transform defaultVariantId to defaultVariant
+      defaultVariant: dbEnhancement.defaultVariantId || '',
     };
   } else if (hardcodedEnhancement) {
-    enhancement = hardcodedEnhancement;
+    // Fallback to hardcoded enhancement but WITHOUT local images
+    enhancement = {
+      description: hardcodedEnhancement.description || '',
+      shortDescription: hardcodedEnhancement.shortDescription || '',
+      features: hardcodedEnhancement.features || [],
+      specifications: hardcodedEnhancement.specifications || {},
+      // Remove local images - use empty array
+      additionalImages: [],
+      seo: hardcodedEnhancement.seo || { keywords: [], metaDescription: '' },
+      defaultVariant: hardcodedEnhancement.defaultVariant || '',
+    };
   }
 
   if (!enhancement) {
