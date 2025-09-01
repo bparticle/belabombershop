@@ -106,13 +106,13 @@ const ProductsPageWithFilters: React.FC<ProductsPageWithFiltersProps> = ({
       return products;
     }
     return products.filter(product => 
-      selectedCategories.includes(product.category)
+      product.category && selectedCategories.includes(product.category)
     );
   }, [products, selectedCategories]);
 
   // Get categories that have products
   const availableCategories = useMemo(() => {
-    const productCategoryIds = new Set(products.map(p => p.category));
+    const productCategoryIds = new Set(products.map(p => p.category).filter(Boolean));
     return categories.filter(cat => 
       cat.isActive && productCategoryIds.has(cat.id)
     ).sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));

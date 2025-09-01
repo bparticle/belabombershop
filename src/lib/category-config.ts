@@ -85,22 +85,22 @@ export function determineProductCategory(product: any): string {
     if (metadata[key]) {
       const value = metadata[key].toLowerCase();
       
-      if (CATEGORY_MAPPING_RULES.nameKeywords.children.some(keyword => 
+      if (CATEGORY_MAPPING_RULES.nameKeywords.kids.some((keyword: string) => 
         value.includes(keyword))) {
-        return 'children';
+        return 'kids';
       }
       
-      if (CATEGORY_MAPPING_RULES.nameKeywords.adults.some(keyword => 
+      if (CATEGORY_MAPPING_RULES.nameKeywords.adults.some((keyword: string) => 
         value.includes(keyword))) {
         return 'adults';
       }
       
-      if (CATEGORY_MAPPING_RULES.nameKeywords.accessories.some(keyword => 
+      if (CATEGORY_MAPPING_RULES.nameKeywords.accessories.some((keyword: string) => 
         value.includes(keyword))) {
         return 'accessories';
       }
       
-      if (CATEGORY_MAPPING_RULES.nameKeywords['home-living'].some(keyword => 
+      if (CATEGORY_MAPPING_RULES.nameKeywords['home-living'].some((keyword: string) => 
         value.includes(keyword))) {
         return 'home-living';
       }
@@ -111,22 +111,22 @@ export function determineProductCategory(product: any): string {
   for (const tag of tags) {
     const tagLower = tag.toLowerCase();
     
-    if (CATEGORY_MAPPING_RULES.tagKeywords.children.some(keyword => 
+    if (CATEGORY_MAPPING_RULES.tagKeywords.kids.some((keyword: string) => 
       tagLower.includes(keyword))) {
-      return 'children';
+      return 'kids';
     }
     
-    if (CATEGORY_MAPPING_RULES.tagKeywords.adults.some(keyword => 
+    if (CATEGORY_MAPPING_RULES.tagKeywords.adults.some((keyword: string) => 
       tagLower.includes(keyword))) {
       return 'adults';
     }
     
-    if (CATEGORY_MAPPING_RULES.tagKeywords.accessories.some(keyword => 
+    if (CATEGORY_MAPPING_RULES.tagKeywords.accessories.some((keyword: string) => 
       tagLower.includes(keyword))) {
       return 'accessories';
     }
     
-    if (CATEGORY_MAPPING_RULES.tagKeywords['home-living'].some(keyword => 
+    if (CATEGORY_MAPPING_RULES.tagKeywords['home-living'].some((keyword: string) => 
       tagLower.includes(keyword))) {
       return 'home-living';
     }
@@ -135,22 +135,22 @@ export function determineProductCategory(product: any): string {
   // Check product name
   const nameLower = name.toLowerCase();
   
-  if (CATEGORY_MAPPING_RULES.nameKeywords.children.some(keyword => 
+  if (CATEGORY_MAPPING_RULES.nameKeywords.kids.some((keyword: string) => 
     nameLower.includes(keyword))) {
-    return 'children';
+    return 'kids';
   }
   
-  if (CATEGORY_MAPPING_RULES.nameKeywords.adults.some(keyword => 
+  if (CATEGORY_MAPPING_RULES.nameKeywords.adults.some((keyword: string) => 
     nameLower.includes(keyword))) {
     return 'adults';
   }
   
-  if (CATEGORY_MAPPING_RULES.nameKeywords.accessories.some(keyword => 
+  if (CATEGORY_MAPPING_RULES.nameKeywords.accessories.some((keyword: string) => 
     nameLower.includes(keyword))) {
     return 'accessories';
   }
   
-  if (CATEGORY_MAPPING_RULES.nameKeywords['home-living'].some(keyword => 
+  if (CATEGORY_MAPPING_RULES.nameKeywords['home-living'].some((keyword: string) => 
     nameLower.includes(keyword))) {
     return 'home-living';
   }

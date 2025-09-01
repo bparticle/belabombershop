@@ -1,5 +1,5 @@
 import { eq, and, inArray, desc } from 'drizzle-orm';
-import { db } from '../config';
+import { db, logQueryPerformance } from '../config';
 import { 
   products, 
   variants, 
@@ -39,72 +39,122 @@ export interface ProductWithEnhancement extends Product {
 export class ProductService {
   /**
    * Get all active products with their variants and enhancements (for frontend)
+   * OPTIMIZED: Uses JOIN queries instead of N+1 pattern for better performance
    */
   async getActiveProducts(): Promise<ProductWithVariants[]> {
+    return logQueryPerformance('getActiveProducts', async () => {
+    // Step 1: Get all active products in one query
     const dbProducts = await db
       .select()
       .from(products)
       .where(eq(products.isActive, true))
       .orderBy(desc(products.createdAt));
 
-    const productsWithVariants: ProductWithVariants[] = [];
-
-    for (const product of dbProducts) {
-      const productVariants = await db
-        .select()
-        .from(variants)
-        .where(eq(variants.productId, product.id));
-
-      const enhancement = await db
-        .select()
-        .from(productEnhancements)
-        .where(and(
-          eq(productEnhancements.productId, product.id),
-          eq(productEnhancements.isActive, true)
-        ))
-        .limit(1);
-
-      const productCategoriesData = await db
-        .select({
-          id: categories.id,
-          name: categories.name,
-          slug: categories.slug,
-          color: categories.color,
-          isPrimary: productCategories.isPrimary,
-        })
-        .from(categories)
-        .innerJoin(productCategories, eq(categories.id, productCategories.categoryId))
-        .where(eq(productCategories.productId, product.id));
-
-      const productTagsData = await db
-        .select({
-          id: tags.id,
-          name: tags.name,
-          description: tags.description,
-          isActive: tags.isActive,
-          createdAt: tags.createdAt,
-          updatedAt: tags.updatedAt,
-          slug: tags.slug,
-          color: tags.color,
-          usageCount: tags.usageCount,
-        })
-        .from(tags)
-        .innerJoin(productTags, eq(tags.id, productTags.tagId))
-        .where(eq(productTags.productId, product.id));
-
-      productsWithVariants.push({
-        ...product,
-        variants: productVariants,
-        enhancement: enhancement[0],
-        categories: productCategoriesData.map(cat => ({
-          ...cat,
-          isPrimary: cat.isPrimary ?? false,
-        })),
-        tags: productTagsData,
-      });
+    if (dbProducts.length === 0) {
+      return [];
     }
 
+    const productIds = dbProducts.map(p => p.id);
+
+    // Step 2: Get all variants for all products in one query
+    const allVariants = await db
+      .select()
+      .from(variants)
+      .where(inArray(variants.productId, productIds));
+
+    // Step 3: Get all enhancements for all products in one query
+    const allEnhancements = await db
+      .select()
+      .from(productEnhancements)
+      .where(and(
+        inArray(productEnhancements.productId, productIds),
+        eq(productEnhancements.isActive, true)
+      ));
+
+    // Step 4: Get all categories for all products in one query
+    const allProductCategories = await db
+      .select({
+        productId: productCategories.productId,
+        id: categories.id,
+        name: categories.name,
+        slug: categories.slug,
+        color: categories.color,
+        isPrimary: productCategories.isPrimary,
+      })
+      .from(productCategories)
+      .innerJoin(categories, eq(categories.id, productCategories.categoryId))
+      .where(inArray(productCategories.productId, productIds));
+
+    // Step 5: Get all tags for all products in one query
+    const allProductTags = await db
+      .select({
+        productId: productTags.productId,
+        id: tags.id,
+        name: tags.name,
+        description: tags.description,
+        isActive: tags.isActive,
+        createdAt: tags.createdAt,
+        updatedAt: tags.updatedAt,
+        slug: tags.slug,
+        color: tags.color,
+        usageCount: tags.usageCount,
+      })
+      .from(productTags)
+      .innerJoin(tags, eq(tags.id, productTags.tagId))
+      .where(inArray(productTags.productId, productIds));
+
+    // Step 6: Group the related data by product ID for efficient lookup
+    const variantsByProduct = new Map<string, typeof allVariants>();
+    const enhancementsByProduct = new Map<string, typeof allEnhancements[0] | undefined>();
+    const categoriesByProduct = new Map<string, typeof allProductCategories>();
+    const tagsByProduct = new Map<string, typeof allProductTags>();
+
+    // Group variants
+    for (const variant of allVariants) {
+      if (!variantsByProduct.has(variant.productId)) {
+        variantsByProduct.set(variant.productId, []);
+      }
+      variantsByProduct.get(variant.productId)!.push(variant);
+    }
+
+    // Group enhancements (only one per product)
+    for (const enhancement of allEnhancements) {
+      enhancementsByProduct.set(enhancement.productId, enhancement);
+    }
+
+    // Group categories
+    for (const category of allProductCategories) {
+      if (!categoriesByProduct.has(category.productId)) {
+        categoriesByProduct.set(category.productId, []);
+      }
+      categoriesByProduct.get(category.productId)!.push(category);
+    }
+
+    // Group tags
+    for (const tag of allProductTags) {
+      if (!tagsByProduct.has(tag.productId)) {
+        tagsByProduct.set(tag.productId, []);
+      }
+      tagsByProduct.get(tag.productId)!.push(tag);
+    }
+
+    // Step 7: Combine all data into final result
+    const productsWithVariants: ProductWithVariants[] = dbProducts.map(product => ({
+      ...product,
+      variants: variantsByProduct.get(product.id) || [],
+      enhancement: enhancementsByProduct.get(product.id),
+      categories: (categoriesByProduct.get(product.id) || []).map(cat => ({
+        id: cat.id,
+        name: cat.name,
+        slug: cat.slug,
+        color: cat.color,
+        isPrimary: cat.isPrimary ?? false,
+      })),
+      tags: tagsByProduct.get(product.id) || [],
+    }));
+
     return productsWithVariants;
+    });
   }
 
   /**
@@ -185,35 +235,41 @@ export class ProductService {
 
   /**
    * Get a single product by ID with variants and enhancement
+   * OPTIMIZED: Uses optimized queries for single product lookup
    */
   async getProductById(id: string): Promise<ProductWithEnhancement | null> {
-    const product = await db
-      .select()
-      .from(products)
-      .where(eq(products.id, id))
-      .limit(1);
+    return logQueryPerformance(`getProductById(${id})`, async () => {
+      const product = await db
+        .select()
+        .from(products)
+        .where(eq(products.id, id))
+        .limit(1);
 
-    if (!product[0]) return null;
+      if (!product[0]) return null;
 
-    const productVariants = await db
-      .select()
-      .from(variants)
-      .where(eq(variants.productId, id));
+      // Use parallel queries instead of sequential for better performance
+      const [productVariants, enhancement] = await Promise.all([
+        db
+          .select()
+          .from(variants)
+          .where(eq(variants.productId, id)),
+        
+        db
+          .select()
+          .from(productEnhancements)
+          .where(and(
+            eq(productEnhancements.productId, id),
+            eq(productEnhancements.isActive, true)
+          ))
+          .limit(1)
+      ]);
 
-    const enhancement = await db
-      .select()
-      .from(productEnhancements)
-      .where(and(
-        eq(productEnhancements.productId, id),
-        eq(productEnhancements.isActive, true)
-      ))
-      .limit(1);
-
-    return {
-      ...product[0],
-      variants: productVariants,
-      enhancement: enhancement[0],
-    };
+      return {
+        ...product[0],
+        variants: productVariants,
+        enhancement: enhancement[0],
+      };
+    });
   }
 
   /**
@@ -449,8 +505,11 @@ export class ProductService {
 
   /**
    * Get products by category
+   * OPTIMIZED: Uses JOIN queries instead of N+1 pattern for better performance
    */
   async getProductsByCategory(categorySlug: string): Promise<ProductWithVariants[]> {
+    return logQueryPerformance(`getProductsByCategory(${categorySlug})`, async () => {
+    // Step 1: Get product IDs for the category
     const categoryProducts = await db
       .select({
         productId: productCategories.productId,
@@ -463,56 +522,119 @@ export class ProductService {
     
     if (productIds.length === 0) return [];
 
+    // Step 2: Get all active products for this category in one query
     const dbProducts = await db
       .select()
       .from(products)
       .where(and(
         inArray(products.id, productIds),
         eq(products.isActive, true)
+      ))
+      .orderBy(desc(products.createdAt));
+
+    if (dbProducts.length === 0) return [];
+
+    const filteredProductIds = dbProducts.map(p => p.id);
+
+    // Step 3: Get all variants for these products in one query
+    const allVariants = await db
+      .select()
+      .from(variants)
+      .where(inArray(variants.productId, filteredProductIds));
+
+    // Step 4: Get all enhancements for these products in one query
+    const allEnhancements = await db
+      .select()
+      .from(productEnhancements)
+      .where(and(
+        inArray(productEnhancements.productId, filteredProductIds),
+        eq(productEnhancements.isActive, true)
       ));
 
-    const productsWithVariants: ProductWithVariants[] = [];
+    // Step 5: Get all categories for these products in one query
+    const allProductCategories = await db
+      .select({
+        productId: productCategories.productId,
+        id: categories.id,
+        name: categories.name,
+        slug: categories.slug,
+        color: categories.color,
+        isPrimary: productCategories.isPrimary,
+      })
+      .from(productCategories)
+      .innerJoin(categories, eq(categories.id, productCategories.categoryId))
+      .where(inArray(productCategories.productId, filteredProductIds));
 
-    for (const product of dbProducts) {
-      const productVariants = await db
-        .select()
-        .from(variants)
-        .where(eq(variants.productId, product.id));
+    // Step 6: Get all tags for these products in one query
+    const allProductTags = await db
+      .select({
+        productId: productTags.productId,
+        id: tags.id,
+        name: tags.name,
+        description: tags.description,
+        isActive: tags.isActive,
+        createdAt: tags.createdAt,
+        updatedAt: tags.updatedAt,
+        slug: tags.slug,
+        color: tags.color,
+        usageCount: tags.usageCount,
+      })
+      .from(productTags)
+      .innerJoin(tags, eq(tags.id, productTags.tagId))
+      .where(inArray(productTags.productId, filteredProductIds));
 
-      const enhancement = await db
-        .select()
-        .from(productEnhancements)
-        .where(and(
-          eq(productEnhancements.productId, product.id),
-          eq(productEnhancements.isActive, true)
-        ))
-        .limit(1);
+    // Step 7: Group the related data by product ID for efficient lookup
+    const variantsByProduct = new Map<string, typeof allVariants>();
+    const enhancementsByProduct = new Map<string, typeof allEnhancements[0] | undefined>();
+    const categoriesByProduct = new Map<string, typeof allProductCategories>();
+    const tagsByProduct = new Map<string, typeof allProductTags>();
 
-      const productCategoriesData = await db
-        .select({
-          id: categories.id,
-          name: categories.name,
-          slug: categories.slug,
-          color: categories.color,
-          isPrimary: productCategories.isPrimary,
-        })
-        .from(categories)
-        .innerJoin(productCategories, eq(categories.id, productCategories.categoryId))
-        .where(eq(productCategories.productId, product.id));
-
-      productsWithVariants.push({
-        ...product,
-        variants: productVariants,
-        enhancement: enhancement[0],
-        categories: productCategoriesData.map(cat => ({
-          ...cat,
-          isPrimary: cat.isPrimary ?? false,
-        })),
-        tags: [], // Empty Tag[] array since we don't fetch tags in this method
-      });
+    // Group variants
+    for (const variant of allVariants) {
+      if (!variantsByProduct.has(variant.productId)) {
+        variantsByProduct.set(variant.productId, []);
+      }
+      variantsByProduct.get(variant.productId)!.push(variant);
     }
 
+    // Group enhancements (only one per product)
+    for (const enhancement of allEnhancements) {
+      enhancementsByProduct.set(enhancement.productId, enhancement);
+    }
+
+    // Group categories
+    for (const category of allProductCategories) {
+      if (!categoriesByProduct.has(category.productId)) {
+        categoriesByProduct.set(category.productId, []);
+      }
+      categoriesByProduct.get(category.productId)!.push(category);
+    }
+
+    // Group tags
+    for (const tag of allProductTags) {
+      if (!tagsByProduct.has(tag.productId)) {
+        tagsByProduct.set(tag.productId, []);
+      }
+      tagsByProduct.get(tag.productId)!.push(tag);
+    }
+
+    // Step 8: Combine all data into final result
+    const productsWithVariants: ProductWithVariants[] = dbProducts.map(product => ({
+      ...product,
+      variants: variantsByProduct.get(product.id) || [],
+      enhancement: enhancementsByProduct.get(product.id),
+      categories: (categoriesByProduct.get(product.id) || []).map(cat => ({
+        id: cat.id,
+        name: cat.name,
+        slug: cat.slug,
+        color: cat.color,
+        isPrimary: cat.isPrimary ?? false,
+      })),
+      tags: tagsByProduct.get(product.id) || [],
+    }));
+
     return productsWithVariants;
+    });
   }
 
   /**
@@ -611,25 +733,82 @@ export class ProductService {
 
   /**
    * Get product with full category and tag information
+   * OPTIMIZED: Uses direct JOIN queries instead of calling multiple service methods
    */
   async getProductWithFullInfo(productId: string): Promise<ProductWithVariants | null> {
-    const product = await this.getProductById(productId);
-    if (!product) return null;
+    return logQueryPerformance(`getProductWithFullInfo(${productId})`, async () => {
+      // Step 1: Get the product basic info
+      const product = await db
+        .select()
+        .from(products)
+        .where(eq(products.id, productId))
+        .limit(1);
 
-    const categories = await categoryService.getCategoriesForProduct(productId);
-    const tags = await tagService.getTagsForProduct(productId);
+      if (!product[0]) return null;
 
-    return {
-      ...product,
-      categories: categories.map(cat => ({
-        id: cat.id,
-        name: cat.name,
-        slug: cat.slug,
-        color: cat.color,
-        isPrimary: cat.isPrimary,
-      })),
-      tags,
-    };
+      // Step 2: Use parallel queries to get all related data efficiently
+      const [productVariants, enhancement, productCategoriesData, productTagsData] = await Promise.all([
+        // Get variants
+        db
+          .select()
+          .from(variants)
+          .where(eq(variants.productId, productId)),
+        
+        // Get enhancement
+        db
+          .select()
+          .from(productEnhancements)
+          .where(and(
+            eq(productEnhancements.productId, productId),
+            eq(productEnhancements.isActive, true)
+          ))
+          .limit(1),
+        
+        // Get categories with JOIN
+        db
+          .select({
+            id: categories.id,
+            name: categories.name,
+            slug: categories.slug,
+            color: categories.color,
+            isPrimary: productCategories.isPrimary,
+          })
+          .from(productCategories)
+          .innerJoin(categories, eq(categories.id, productCategories.categoryId))
+          .where(eq(productCategories.productId, productId)),
+        
+        // Get tags with JOIN
+        db
+          .select({
+            id: tags.id,
+            name: tags.name,
+            description: tags.description,
+            isActive: tags.isActive,
+            createdAt: tags.createdAt,
+            updatedAt: tags.updatedAt,
+            slug: tags.slug,
+            color: tags.color,
+            usageCount: tags.usageCount,
+          })
+          .from(productTags)
+          .innerJoin(tags, eq(tags.id, productTags.tagId))
+          .where(eq(productTags.productId, productId))
+      ]);
+
+      return {
+        ...product[0],
+        variants: productVariants,
+        enhancement: enhancement[0],
+        categories: productCategoriesData.map(cat => ({
+          id: cat.id,
+          name: cat.name,
+          slug: cat.slug,
+          color: cat.color,
+          isPrimary: cat.isPrimary ?? false,
+        })),
+        tags: productTagsData,
+      };
+    });
   }
 }
 
