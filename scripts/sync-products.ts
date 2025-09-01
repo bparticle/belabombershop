@@ -9,14 +9,14 @@
  * - Creating/updating products in our database
  * - Creating/updating variants
  * - Removing products that no longer exist in Printful
- * - Preserving product enhancements
+ * - Automatically preserving database-stored product enhancements
  * - Logging sync operations
  */
 
 import 'dotenv/config';
 import { printful } from '../src/lib/printful-client';
 import { productService } from '../src/lib/database/services/product-service';
-import { getProductEnhancement } from '../src/lib/product-enhancements';
+// Note: Hardcoded enhancements have been removed - all enhancements are now database-driven
 import type { PrintfulProduct, PrintfulVariant } from '../src/types';
 
 interface SyncStats {
@@ -183,22 +183,8 @@ class ProductSync {
       // Process variants
       await this.processVariants(product.id, variants);
 
-      // Check if we have existing enhancements and preserve them
-      if (isNewProduct) {
-        const existingEnhancement = getProductEnhancement(printfulProduct.external_id);
-        if (existingEnhancement) {
-          await productService.upsertEnhancement(product.id, {
-            description: existingEnhancement.description,
-            shortDescription: existingEnhancement.shortDescription,
-            features: existingEnhancement.features,
-            specifications: existingEnhancement.specifications as Record<string, string> | null,
-            additionalImages: existingEnhancement.additionalImages,
-            seo: existingEnhancement.seo,
-            defaultVariantId: existingEnhancement.defaultVariant,
-          });
-          console.log(`Preserved enhancement for: ${product.name}`);
-        }
-      }
+      // Note: Enhancements are now managed through the database via admin interface
+      // No hardcoded enhancement logic needed - database enhancements are automatically preserved
 
     } catch (error) {
       console.error(`❌ Failed to fetch details for product ${printfulProduct.name}:`, error);
