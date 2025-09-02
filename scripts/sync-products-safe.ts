@@ -14,7 +14,13 @@
  * @created 2024-12-19
  */
 
-import 'dotenv/config';
+import { config } from 'dotenv';
+import { resolve } from 'path';
+
+// Load environment variables from .env.local (Next.js default) BEFORE importing anything else
+config({ path: resolve(process.cwd(), '.env.local') });
+
+// Now import modules that depend on environment variables
 import { printful } from '../src/lib/printful-client';
 import { productService } from '../src/lib/database/services/product-service';
 import { SyncProgressTracker, ProgressUtils } from '../src/lib/sync-progress';
@@ -65,6 +71,14 @@ class SafeProductSync {
    */
   async syncProducts(existingSyncLogId?: string): Promise<void> {
     this.logWithIcon('🚀', 'Starting SAFE product sync (data loss prevention enabled)...');
+    
+    // Debug environment information
+    this.logWithIcon('🔧', `Node ENV: ${process.env.NODE_ENV || 'undefined'}`);
+    this.logWithIcon('🔑', `API Key available: ${process.env.PRINTFUL_API_KEY ? 'YES' : 'NO'}`);
+    if (process.env.PRINTFUL_API_KEY) {
+      this.logWithIcon('🔑', `API Key: ${process.env.PRINTFUL_API_KEY.substring(0, 8)}...`);
+    }
+    
     const startTime = Date.now();
 
     // Use existing sync log if provided, otherwise create a new one
@@ -348,27 +362,41 @@ class SafeProductSync {
    * Fetch all products from Printful API
    */
   private async fetchAllProducts(): Promise<PrintfulProduct[]> {
+    this.logWithIcon('🔍', 'Starting to fetch products from Printful API...');
+    
     const allProducts: PrintfulProduct[] = [];
     let offset = 0;
     const limit = 100;
 
     while (true) {
-      const response = await printful.get('store/products', {
-        offset,
-        limit,
-      }) as { result: PrintfulProduct[] };
+      this.logWithIcon('📡', `Fetching products: offset=${offset}, limit=${limit}`);
+      
+      try {
+        const response = await printful.get('store/products', {
+          offset,
+          limit,
+        }) as { result: PrintfulProduct[] };
 
-      if (!response.result || response.result.length === 0) {
-        break;
+        this.logWithIcon('📊', `API Response: ${JSON.stringify(response, null, 2)}`);
+
+        if (!response.result || response.result.length === 0) {
+          this.logWithIcon('🔍', `No more products found. Breaking at offset ${offset}`);
+          break;
+        }
+
+        this.logWithIcon('✅', `Found ${response.result.length} products in this batch`);
+        allProducts.push(...response.result);
+        offset += limit;
+
+        // Add a small delay to be respectful to the API
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } catch (error) {
+        this.logWithIcon('❌', `Error fetching products at offset ${offset}: ${error}`);
+        throw error;
       }
-
-      allProducts.push(...response.result);
-      offset += limit;
-
-      // Add a small delay to be respectful to the API
-      await new Promise(resolve => setTimeout(resolve, 100));
     }
 
+    this.logWithIcon('🎉', `Total products fetched: ${allProducts.length}`);
     return allProducts;
   }
 
