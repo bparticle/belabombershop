@@ -32,7 +32,16 @@
     "migrate:run": "tsx scripts/run-migration.ts",
     "db:generate": "drizzle-kit generate:pg",
     "db:migrate": "drizzle-kit up:pg",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "db:migrate:production": "tsx scripts/production-db-migration.ts",
+    "db:migrate:production:check": "tsx scripts/production-db-migration.ts -- --schema-only",
+    "db:migrate:production:force": "tsx scripts/production-db-migration.ts -- --force",
+    "sync:diagnostic": "tsx scripts/simple-sync-diagnostic.ts",
+    "sync:fix": "tsx scripts/fix-sync-issues.ts",
+    "sync:quick-fix": "tsx scripts/quick-sync-fix.ts",
+    "sync:improved": "tsx scripts/sync-products-working.ts",
+    "env:check": "tsx scripts/check-environment.ts",
+    "sync:production": "tsx scripts/sync-to-production.ts"
   },
   "author": "Jamie Barton <jamie@notrab.dev> (https://notrab.dev)",
   "dependencies": {

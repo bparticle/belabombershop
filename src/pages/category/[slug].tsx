@@ -8,6 +8,7 @@ import { PrintfulProduct } from "../../types";
 import type { Category } from "../../lib/database/schema";
 
 import { categoryService } from "../../lib/database/services/category-service";
+import { toISOStringOrNull } from "../../lib/utils/date-serialization";
 import ProductGrid from "../../components/ProductGrid";
 import CategoryNavigation from "../../components/CategoryNavigation";
 
@@ -198,8 +199,8 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
     // Serialize category data
     const serializedCategory: SerializedCategory = {
       ...category,
-      createdAt: category.createdAt ? category.createdAt.toISOString() : null,
-      updatedAt: category.updatedAt ? category.updatedAt.toISOString() : null,
+      createdAt: toISOStringOrNull(category.createdAt),
+      updatedAt: toISOStringOrNull(category.updatedAt),
     };
 
     // Get products for this category from database

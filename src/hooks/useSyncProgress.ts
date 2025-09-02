@@ -213,7 +213,7 @@ export const useSyncProgress = (options: SyncProgressOptions = {}): UseSyncProgr
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const response = await fetch('/api/admin/sync', {
+      const response = await fetch('/api/admin/sync-working', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

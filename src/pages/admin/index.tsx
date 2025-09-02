@@ -11,6 +11,7 @@ import SyncProgressBar from '../../components/SyncProgressBar';
 import ToggleSwitch from '../../components/ToggleSwitch';
 import { formatDate } from '../../lib/date-utils';
 import { getProductThumbnail, getProductIndicators } from '../../lib/admin-utils';
+import { toISOStringOrNull } from '../../lib/utils/date-serialization';
 import { useSyncProgress } from '../../hooks/useSyncProgress';
 
 // Types for serialized data from getServerSideProps
@@ -308,8 +309,8 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
           ...p,
           enhancement: updatedProduct.enhancement ? {
             ...updatedProduct.enhancement,
-            createdAt: updatedProduct.enhancement.createdAt?.toISOString() || null,
-            updatedAt: updatedProduct.enhancement.updatedAt?.toISOString() || null,
+            createdAt: toISOStringOrNull(updatedProduct.enhancement.createdAt),
+            updatedAt: toISOStringOrNull(updatedProduct.enhancement.updatedAt),
           } : null
         } as SerializedProductWithVariants : p
       )
@@ -697,27 +698,27 @@ export const getServerSideProps: GetServerSideProps = async () => {
     // Convert Date objects to ISO strings for JSON serialization
     const serializedProducts = products.map(product => ({
       ...product,
-      syncedAt: product.syncedAt?.toISOString() || null,
-      createdAt: product.createdAt?.toISOString() || null,
-      updatedAt: product.updatedAt?.toISOString() || null,
+      syncedAt: toISOStringOrNull(product.syncedAt),
+      createdAt: toISOStringOrNull(product.createdAt),
+      updatedAt: toISOStringOrNull(product.updatedAt),
       variants: product.variants.map(variant => ({
         ...variant,
-        syncedAt: variant.syncedAt?.toISOString() || null,
-        createdAt: variant.createdAt?.toISOString() || null,
-        updatedAt: variant.updatedAt?.toISOString() || null,
+        syncedAt: toISOStringOrNull(variant.syncedAt),
+        createdAt: toISOStringOrNull(variant.createdAt),
+        updatedAt: toISOStringOrNull(variant.updatedAt),
       })),
       enhancement: product.enhancement ? {
         ...product.enhancement,
-        createdAt: product.enhancement.createdAt?.toISOString() || null,
-        updatedAt: product.enhancement.updatedAt?.toISOString() || null,
+        createdAt: toISOStringOrNull(product.enhancement.createdAt),
+        updatedAt: toISOStringOrNull(product.enhancement.updatedAt),
       } : null,
     }));
 
     const serializedSyncLogs = syncLogs.map(log => ({
       ...log,
-      startedAt: log.startedAt?.toISOString() || null,
-      completedAt: log.completedAt?.toISOString() || null,
-      lastUpdated: log.lastUpdated?.toISOString() || null,
+      startedAt: toISOStringOrNull(log.startedAt),
+      completedAt: toISOStringOrNull(log.completedAt),
+      lastUpdated: toISOStringOrNull(log.lastUpdated),
     }));
 
     return {

@@ -489,21 +489,30 @@ class SafeProductSync {
    * Update sync progress with enhanced error handling
    */
   private async updateProgress(update: any): Promise<void> {
+    this.logWithIcon('📈', `Updating progress: ${JSON.stringify(update, null, 2)}`);
+    
     try {
-      await productService.updateSyncLog(this.syncLog!.id, update);
+      const result = await productService.updateSyncLog(this.syncLog!.id, update);
+      this.logWithIcon('✅', `Progress update successful: ${result.status} - ${result.currentStep} (${result.progress}%)`);
     } catch (error) {
       // Log the error but don't let it break the sync
-      console.error('Failed to update sync progress:', error);
+      this.logWithIcon('❌', `Failed to update sync progress: ${error}`);
+      console.error('Full error details:', error);
       
       // Try a simpler update that just updates the status and step
       try {
-        await productService.updateSyncLog(this.syncLog!.id, {
+        const fallbackUpdate = {
           status: update.status || 'processing_products',
           currentStep: update.currentStep || 'Processing (progress update failed)',
           lastUpdated: new Date(),
-        });
+        };
+        this.logWithIcon('🔄', `Trying fallback update: ${JSON.stringify(fallbackUpdate)}`);
+        
+        const fallbackResult = await productService.updateSyncLog(this.syncLog!.id, fallbackUpdate);
+        this.logWithIcon('✅', `Fallback update successful: ${fallbackResult.status}`);
       } catch (fallbackError) {
-        console.error('Even fallback progress update failed:', fallbackError);
+        this.logWithIcon('💥', `Even fallback progress update failed: ${fallbackError}`);
+        console.error('Fallback error details:', fallbackError);
         // Continue sync regardless - don't let progress tracking break the actual sync
       }
     }
