@@ -107,9 +107,9 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
       aria-describedby="gallery-description"
     >
       {/* Modal Container */}
-      <div className="relative bg-white rounded-lg shadow-2xl w-[95vw] h-[95vh] max-w-7xl max-h-[95vh] overflow-hidden">
+      <div className="relative bg-white rounded-lg shadow-2xl w-[95vw] max-w-7xl max-h-[95vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 sm:p-5 lg:p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-3 sm:p-4 lg:p-5 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center space-x-3">
             <h2 id="gallery-title" className="text-lg font-semibold text-gray-900 dark:text-white">
               Product Gallery
@@ -131,8 +131,8 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
           </button>
         </div>
 
-        {/* Image Container */}
-        <div className="relative flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
+        {/* Image Container - Auto-sizing based on content */}
+        <div className="relative flex items-center justify-center p-4 sm:p-6 lg:p-8">
           {/* Navigation buttons */}
           {images.length > 1 && (
             <>
@@ -157,62 +157,73 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
             </>
           )}
 
-          {/* Main Image */}
-          <div className="relative max-w-full max-h-full">
-            <SafeImage
+          {/* Main Image - Auto-sizing based on intrinsic dimensions */}
+          <div className="flex items-center justify-center">
+            <img
               src={currentImage.url}
               alt={currentImage.alt}
-              className="max-w-full max-h-[75vh] sm:max-h-[80vh] lg:max-h-[85vh] object-contain rounded"
-              useDownsized={true}
+              className="max-w-full max-h-[70vh] object-contain rounded"
+              style={{
+                imageRendering: 'crisp-edges',
+                width: 'auto',
+                height: 'auto'
+              }}
+              onError={(e) => {
+                console.error('Gallery image failed to load:', currentImage.url);
+                e.currentTarget.style.display = 'none';
+              }}
             />
           </div>
         </div>
 
-        {/* Image Info */}
-        {(currentImage.caption || currentImage.alt) && (
-          <div className="px-4 sm:px-6 lg:px-8 pb-4 border-t border-gray-200 pt-4">
-            <div className="text-gray-900">
-              {currentImage.caption && (
-                <p className="text-sm font-medium mb-1">{currentImage.caption}</p>
-              )}
-              <p className="text-xs text-gray-600">
-                {currentImage.alt}
-              </p>
+        {/* Bottom Section - Compact and efficient */}
+        <div className="flex-shrink-0">
+          {/* Image Info - Only show if there's meaningful content */}
+          {(currentImage.caption || currentImage.alt) && (
+            <div className="px-3 sm:px-4 lg:px-5 py-3 border-t border-gray-200">
+              <div className="text-gray-900">
+                {currentImage.caption && (
+                  <p className="text-sm font-medium mb-1">{currentImage.caption}</p>
+                )}
+                <p className="text-xs text-gray-600">
+                  {currentImage.alt}
+                </p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Thumbnail Navigation */}
-        {images.length > 1 && (
-          <div className="px-4 sm:px-6 lg:px-8 pb-4">
-            <div className="flex space-x-2 max-w-full overflow-x-auto">
-              {images.map((image, index) => (
-                <button
-                  key={`${image.url}-${index}`}
-                  onClick={() => goToImage(index)}
-                  className={`relative flex-shrink-0 w-16 h-16 rounded overflow-hidden border-2 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                    index === currentIndex
-                      ? 'border-blue-500'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                  aria-label={`Go to image ${index + 1}`}
-                >
-                  <SafeImage
-                    src={image.url}
-                    alt={image.alt}
-                    fill
-                    className="object-cover"
-                    useDownsized={true}
-                    onError={(e) => {
-                      console.error('Gallery thumbnail failed to load:', image.url);
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                </button>
-              ))}
+          {/* Thumbnail Navigation - Compact but functional */}
+          {images.length > 1 && (
+            <div className="px-3 sm:px-4 lg:px-5 pb-3">
+              <div className="flex space-x-2 max-w-full overflow-x-auto">
+                {images.map((image, index) => (
+                  <button
+                    key={`${image.url}-${index}`}
+                    onClick={() => goToImage(index)}
+                    className={`relative flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded overflow-hidden border-2 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      index === currentIndex
+                        ? 'border-blue-500'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    aria-label={`Go to image ${index + 1}`}
+                  >
+                    <SafeImage
+                      src={image.url}
+                      alt={image.alt}
+                      fill
+                      className="object-cover"
+                      useDownsized={true}
+                      onError={(e) => {
+                        console.error('Gallery thumbnail failed to load:', image.url);
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Screen reader only content */}
         <div className="sr-only">
