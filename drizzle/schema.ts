@@ -79,6 +79,16 @@ export const syncLogs = pgTable("sync_logs", {
 	id: text("id").primaryKey().notNull(),
 	operation: text("operation").notNull(),
 	status: text("status").notNull(),
+	
+	// Enhanced progress tracking fields
+	currentStep: text("current_step"),
+	progress: integer("progress").default(0),
+	totalProducts: integer("total_products").default(0),
+	currentProductIndex: integer("current_product_index").default(0),
+	currentProductName: text("current_product_name"),
+	estimatedTimeRemaining: integer("estimated_time_remaining"),
+	
+	// Statistics fields
 	productsProcessed: integer("products_processed").default(0),
 	productsCreated: integer("products_created").default(0),
 	productsUpdated: integer("products_updated").default(0),
@@ -87,14 +97,19 @@ export const syncLogs = pgTable("sync_logs", {
 	variantsCreated: integer("variants_created").default(0),
 	variantsUpdated: integer("variants_updated").default(0),
 	variantsDeleted: integer("variants_deleted").default(0),
+	
+	// Error and timing fields
 	errorMessage: text("error_message"),
+	warnings: text("warnings"),
 	startedAt: timestamp("started_at", { mode: 'string' }).defaultNow(),
 	completedAt: timestamp("completed_at", { mode: 'string' }),
 	duration: integer("duration"),
+	lastUpdated: timestamp("last_updated", { mode: 'string' }).defaultNow(),
 },
 (table) => {
 	return {
 		idxSyncLogsStartedAt: index("idx_sync_logs_started_at").on(table.startedAt),
+		idxSyncLogsLastUpdated: index("sync_logs_last_updated_idx").on(table.lastUpdated),
 	}
 });
 

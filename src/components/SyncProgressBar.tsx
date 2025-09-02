@@ -139,6 +139,54 @@ const SyncProgressDisplay: React.FC<SyncProgressDisplayProps> = ({ syncLog }) =>
         </div>
       )}
 
+      {/* Success message for completed syncs */}
+      {isCompleted && status === 'success' && (
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md p-3">
+          <div className="flex items-center space-x-2">
+            <span className="text-green-600 dark:text-green-400">✅</span>
+            <div className="text-sm text-green-800 dark:text-green-200 font-medium">
+              Sync completed successfully! This message will close automatically.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error message for failed syncs */}
+      {isCompleted && status === 'error' && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-3">
+          <div className="flex items-center space-x-2">
+            <span className="text-red-600 dark:text-red-400">❌</span>
+            <div className="text-sm text-red-800 dark:text-red-200 font-medium">
+              Sync failed. Check the error details below.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Partial success message */}
+      {isCompleted && status === 'partial' && (
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-3">
+          <div className="flex items-center space-x-2">
+            <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
+            <div className="text-sm text-yellow-800 dark:text-yellow-200 font-medium">
+              Sync completed with warnings. Check the details below.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancelled message */}
+      {isCompleted && status === 'cancelled' && (
+        <div className="bg-gray-50 dark:bg-gray-900/20 border border-gray-200 dark:border-gray-800 rounded-md p-3">
+          <div className="flex items-center space-x-2">
+            <span className="text-gray-600 dark:text-gray-400">🚫</span>
+            <div className="text-sm text-gray-800 dark:text-gray-200 font-medium">
+              Sync was cancelled. You can start a new sync when ready.
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Statistics */}
       <SyncStatistics syncLog={syncLog} />
 

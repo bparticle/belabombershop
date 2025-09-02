@@ -362,7 +362,9 @@ export class ProductService {
   }
 
   /**
-   * Create or update variants for a product
+   * Create or update variants for a product (SAFE VERSION - NO DELETION)
+   * Note: This method now only creates/updates variants. Deletion of obsolete variants
+   * should be handled separately in the safe sync process to prevent data loss.
    */
   async upsertVariants(productId: string, printfulVariants: PrintfulVariant[]): Promise<Variant[]> {
     const existingVariants = await db
@@ -370,18 +372,11 @@ export class ProductService {
       .from(variants)
       .where(eq(variants.productId, productId));
 
-    const existingVariantIds = existingVariants.map(v => v.printfulId);
-    const incomingVariantIds = printfulVariants.map(v => v.id);
+    // SAFE MODE: Do NOT delete variants here! 
+    // This was causing data loss during sync interruptions.
+    // Variant deletion should be handled separately in the safe sync process.
 
-    // Delete variants that no longer exist in Printful
-    const variantsToDelete = existingVariants.filter(v => !incomingVariantIds.includes(v.printfulId));
-    if (variantsToDelete.length > 0) {
-      await db
-        .delete(variants)
-        .where(inArray(variants.id, variantsToDelete.map(v => v.id)));
-    }
-
-    // Upsert variants
+    // Upsert variants (create or update only)
     const upsertedVariants: Variant[] = [];
 
     for (const printfulVariant of printfulVariants) {
@@ -426,6 +421,27 @@ export class ProductService {
     }
 
     return upsertedVariants;
+  }
+
+  /**
+   * SAFE method to delete obsolete variants for a product
+   * This should only be called after new variants are successfully created
+   */
+  async deleteObsoleteVariants(productId: string, currentPrintfulVariantIds: string[]): Promise<void> {
+    const existingVariants = await db
+      .select()
+      .from(variants)
+      .where(eq(variants.productId, productId));
+
+    const variantsToDelete = existingVariants.filter(v => !currentPrintfulVariantIds.includes(v.printfulId));
+    
+    if (variantsToDelete.length > 0) {
+      await db
+        .delete(variants)
+        .where(inArray(variants.id, variantsToDelete.map(v => v.id)));
+      
+      console.log(`🗑️ SAFELY deleted ${variantsToDelete.length} obsolete variants for product ${productId}`);
+    }
   }
 
   /**

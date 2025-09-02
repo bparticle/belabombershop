@@ -48,6 +48,7 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
   const [modalProduct, setModalProduct] = useState<ProductWithVariants | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isRefreshingProducts, setIsRefreshingProducts] = useState(false);
+  const [showCompletedSync, setShowCompletedSync] = useState(false);
 
   // Enhanced sync progress management
   const {
@@ -69,6 +70,8 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
 
   // Determine if there's an active sync
   const hasActiveSync = activeSyncLog && ['queued', 'fetching_products', 'processing_products', 'finalizing'].includes(activeSyncLog.status);
+  const hasCompletedSync = activeSyncLog && ['success', 'error', 'partial', 'cancelled'].includes(activeSyncLog.status);
+  const shouldShowSyncProgress = hasActiveSync || (hasCompletedSync && showCompletedSync);
   const isSyncing = hasActiveSync || isSyncLoading;
 
   // Check authentication on component mount
@@ -87,30 +90,42 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
     
     // Stop polling when sync completes
     if (isCompleted) {
-      console.log('🏁 Sync completed, stopping polling...');
+      console.log(`🏁 Sync completed with status: ${activeSyncLog.status}, stopping polling...`);
       stopPolling();
-    }
-    
-    // Only refresh if sync just completed and had some product changes
-    if (isCompleted && (
-      (activeSyncLog.productsCreated && activeSyncLog.productsCreated > 0) ||
-      (activeSyncLog.productsUpdated && activeSyncLog.productsUpdated > 0) ||
-      (activeSyncLog.productsDeleted && activeSyncLog.productsDeleted > 0)
-    )) {
-      // Small delay to ensure database updates are complete
-      const timeoutId = setTimeout(async () => {
-        console.log('🔄 Sync completed with product changes, refreshing data...');
-        setIsRefreshingProducts(true);
-        try {
-          await refreshData();
-        } catch (error) {
-          console.error('Error refreshing data:', error);
-        } finally {
-          setIsRefreshingProducts(false);
-        }
-      }, 1500); // Slightly longer delay for database consistency
       
-      return () => clearTimeout(timeoutId);
+      // Show completed sync status for different durations based on status
+      const displayDuration = activeSyncLog.status === 'cancelled' ? 2000 : 4000;
+      setShowCompletedSync(true);
+      
+      const hideTimeoutId = setTimeout(() => {
+        setShowCompletedSync(false);
+      }, displayDuration);
+      
+      // Only refresh if sync completed successfully with product changes
+      if (activeSyncLog.status === 'success' && (
+          (activeSyncLog.productsCreated && activeSyncLog.productsCreated > 0) ||
+          (activeSyncLog.productsUpdated && activeSyncLog.productsUpdated > 0) ||
+          (activeSyncLog.productsDeleted && activeSyncLog.productsDeleted > 0))) {
+        // Small delay to ensure database updates are complete
+        const refreshTimeoutId = setTimeout(async () => {
+          console.log('🔄 Sync completed with product changes, refreshing data...');
+          setIsRefreshingProducts(true);
+          try {
+            await refreshData();
+          } catch (error) {
+            console.error('Error refreshing data:', error);
+          } finally {
+            setIsRefreshingProducts(false);
+          }
+        }, 1500); // Slightly longer delay for database consistency
+        
+        return () => {
+          clearTimeout(hideTimeoutId);
+          clearTimeout(refreshTimeoutId);
+        };
+      }
+      
+      return () => clearTimeout(hideTimeoutId);
     }
   }, [activeSyncLog?.status, activeSyncLog?.productsCreated, activeSyncLog?.productsUpdated, activeSyncLog?.productsDeleted, stopPolling]);
 
@@ -121,6 +136,9 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
       return;
     }
 
+    // Clear any existing completed sync display when starting a new sync
+    setShowCompletedSync(false);
+    
     const result = await triggerSync();
     if (result.error) {
       console.error('Failed to trigger sync:', result.error);
@@ -137,11 +155,20 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
   const handleCancelSync = async () => {
     if (!activeSyncLog) return;
     
+    console.log('🔄 Cancelling sync:', activeSyncLog.id);
     const result = await cancelSync(activeSyncLog.id);
     if (result.error) {
-      console.error('Failed to cancel sync:', result.error);
+      console.error('❌ Failed to cancel sync:', result.error);
     } else {
-      console.log('Sync cancelled successfully');
+      console.log('✅ Sync cancelled successfully');
+      // Force stop polling and clear completed sync display
+      stopPolling();
+      setShowCompletedSync(true);
+      
+      // Hide the completed sync display after a short delay
+      setTimeout(() => {
+        setShowCompletedSync(false);
+      }, 3000);
     }
   };
 
@@ -351,11 +378,11 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
         </div>
 
         {/* Enhanced Sync Progress Display */}
-        {hasActiveSync && (
+        {shouldShowSyncProgress && (
           <div className="mb-6">
             <SyncProgressBar 
               syncLog={activeSyncLog} 
-              isActive={hasActiveSync}
+              isActive={shouldShowSyncProgress}
               className="shadow-lg"
             />
           </div>

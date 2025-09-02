@@ -143,10 +143,17 @@ export const useSyncProgress = (options: SyncProgressOptions = {}): UseSyncProgr
         activeSyncsResponse.json(),
       ]);
 
+      // Debug logging for progress tracking
+      const activeSync = activeSyncsData.activeSyncs?.[0] || null;
+      if (activeSync) {
+        console.log(`🔄 Active sync found: ${activeSync.id} (${activeSync.status}) - Progress: ${activeSync.progress}%`);
+        console.log(`📊 Step: ${activeSync.currentStep}`);
+      }
+
       setState(prev => ({
         ...prev,
         recentSyncLogs: syncLogsData.syncLogs || [],
-        activeSyncLog: activeSyncsData.activeSyncs?.[0] || null,
+        activeSyncLog: activeSync,
         error: null,
         lastUpdated: new Date(),
       }));

@@ -60,7 +60,7 @@ async function handleTriggerSync(req: NextApiRequest, res: NextApiResponse) {
   try {
     // Create a sync log entry
     const syncLog = await productService.createSyncLog({
-      operation: 'manual_sync',
+      operation: 'safe_manual_sync',
       status: 'queued',
       currentStep: 'Sync queued for processing',
       progress: 0,
@@ -74,15 +74,14 @@ async function handleTriggerSync(req: NextApiRequest, res: NextApiResponse) {
       variantsDeleted: 0,
     });
 
-    // Start the sync process in the background
-    // Note: In a production environment, you'd want to use a job queue
-    // like Bull/BullMQ or similar for handling long-running tasks
+    // Start the SAFE sync process in the background
+    // Using the new data-loss prevention sync script
     process.nextTick(async () => {
       try {
-        // Import and run the sync
-        const { ProductSync } = await import('../../../../scripts/sync-products');
-        const sync = new ProductSync();
-        await sync.syncProducts();
+        // Import and run the SAFE sync with the existing sync log ID
+        const { SafeProductSync } = await import('../../../../scripts/sync-products-safe');
+        const sync = new SafeProductSync();
+        await sync.syncProducts(syncLog.id); // Pass the sync log ID!
       } catch (error) {
         console.error('Background sync failed:', error);
         
@@ -91,6 +90,7 @@ async function handleTriggerSync(req: NextApiRequest, res: NextApiResponse) {
           status: 'error',
           errorMessage: error instanceof Error ? error.message : String(error),
           duration: Date.now() - (syncLog.startedAt?.getTime() || Date.now()),
+          currentStep: 'Sync failed - check logs for details',
         });
       }
     });
