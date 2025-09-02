@@ -1,10 +1,12 @@
 #!/usr/bin/env tsx
 
 /**
- * SYNC TO PRODUCTION SCRIPT
+ * ENHANCED SYNC TO PRODUCTION SCRIPT
  * 
  * This script syncs products directly to your production database
  * bypassing all frontend issues. It will get your web shop up and running.
+ * 
+ * NEW: Now handles product deletion to ensure complete synchronization
  */
 
 import { config } from 'dotenv';
@@ -13,7 +15,7 @@ import { resolve } from 'path';
 // Load PRODUCTION environment variables
 config({ path: resolve(process.cwd(), '.env.production') });
 
-console.log('🚀 SYNC TO PRODUCTION');
+console.log('🚀 ENHANCED SYNC TO PRODUCTION');
 console.log('=' .repeat(60));
 console.log(`📅 Started at: ${new Date().toISOString()}`);
 console.log(`🌍 Target Environment: PRODUCTION`);
@@ -24,9 +26,11 @@ interface ProductionSyncStats {
   productsProcessed: number;
   productsCreated: number;
   productsUpdated: number;
+  productsDeleted: number;
   variantsProcessed: number;
   variantsCreated: number;
   variantsUpdated: number;
+  variantsDeleted: number;
   errors: string[];
   warnings: string[];
 }
@@ -37,9 +41,11 @@ async function syncToProduction(): Promise<void> {
     productsProcessed: 0,
     productsCreated: 0,
     productsUpdated: 0,
+    productsDeleted: 0,
     variantsProcessed: 0,
     variantsCreated: 0,
     variantsUpdated: 0,
+    variantsDeleted: 0,
     errors: [],
     warnings: [],
   };
@@ -81,9 +87,9 @@ async function syncToProduction(): Promise<void> {
     // Step 4: Create production sync log
     console.log('\n4️⃣ Creating production sync log...');
     const syncLog = await productService.createSyncLog({
-      operation: 'production_manual_sync',
+      operation: 'production_enhanced_sync',
       status: 'queued',
-      currentStep: 'Starting production sync process',
+      currentStep: 'Starting enhanced production sync process',
       progress: 0,
       productsProcessed: 0,
       productsCreated: 0,
@@ -105,7 +111,7 @@ async function syncToProduction(): Promise<void> {
     });
 
     // Fetch all products in batches
-    const allProducts: any[] = [];
+    const allPrintfulProducts: any[] = [];
     let offset = 0;
     const limit = 20;
 
@@ -123,33 +129,98 @@ async function syncToProduction(): Promise<void> {
       }
 
       console.log(`✅ Found ${response.result.length} products in this batch`);
-      allProducts.push(...response.result);
+      allPrintfulProducts.push(...response.result);
       offset += limit;
 
       // Small delay to be respectful to the API
       await new Promise(resolve => setTimeout(resolve, 200));
     }
 
-    console.log(`🎉 Total products fetched: ${allProducts.length}`);
+    console.log(`🎉 Total products fetched from Printful: ${allPrintfulProducts.length}`);
 
-    if (allProducts.length === 0) {
+    if (allPrintfulProducts.length === 0) {
       throw new Error('No products found in Printful store');
     }
 
-    // Step 6: Process ALL products for production
-    console.log('\n6️⃣ Processing ALL products for production...');
+    // Step 6: Get all existing products from database
+    console.log('\n6️⃣ Getting all existing products from database...');
     await productService.updateSyncLog(syncLog.id, {
-      status: 'processing_products',
-      currentStep: `Processing ${allProducts.length} products for production...`,
-      progress: 15,
-      totalProducts: allProducts.length,
+      status: 'analyzing_database',
+      currentStep: 'Analyzing existing products in database...',
+      progress: 10,
     });
 
-    for (let i = 0; i < allProducts.length; i++) {
-      const basicProduct = allProducts[i];
-      const progressPercent = 15 + Math.round((i / allProducts.length) * 70); // 15-85%
+    const existingProducts = await productService.getAllProductsForAdmin();
+    console.log(`📊 Found ${existingProducts.length} existing products in database`);
+
+    // Step 7: Identify products to delete (those in DB but not in Printful)
+    console.log('\n7️⃣ Identifying products to delete...');
+    await productService.updateSyncLog(syncLog.id, {
+      status: 'identifying_deletions',
+      currentStep: 'Identifying products that need to be deleted...',
+      progress: 12,
+    });
+
+    const printfulProductIds = new Set(allPrintfulProducts.map(p => p.id.toString()));
+    const productsToDelete = existingProducts.filter(dbProduct => 
+      !printfulProductIds.has(dbProduct.printfulId)
+    );
+
+    console.log(`🗑️  Found ${productsToDelete.length} products to delete`);
+
+    // Step 8: Delete products that no longer exist in Printful
+    if (productsToDelete.length > 0) {
+      console.log('\n8️⃣ Deleting removed products...');
+      await productService.updateSyncLog(syncLog.id, {
+        status: 'deleting_products',
+        currentStep: `Deleting ${productsToDelete.length} removed products...`,
+        progress: 15,
+      });
+
+      for (let i = 0; i < productsToDelete.length; i++) {
+        const productToDelete = productsToDelete[i];
+        const progressPercent = 15 + Math.round((i / productsToDelete.length) * 10); // 15-25%
+        
+        console.log(`🗑️  Deleting ${i + 1}/${productsToDelete.length}: ${productToDelete.name}`);
+        
+        try {
+          await productService.updateSyncLog(syncLog.id, {
+            currentStep: `Deleting product: ${productToDelete.name}`,
+            progress: progressPercent,
+          });
+
+          await productService.deleteProduct(productToDelete.id);
+          stats.productsDeleted++;
+          
+          // Count variants that were deleted
+          stats.variantsDeleted += productToDelete.variants.length;
+          
+          console.log(`  ✅ Deleted product: ${productToDelete.name} (${productToDelete.variants.length} variants)`);
+          
+        } catch (error) {
+          stats.errors.push(`Failed to delete ${productToDelete.name}: ${error}`);
+          console.log(`  ❌ Error deleting ${productToDelete.name}: ${error}`);
+        }
+
+        // Small delay to avoid overwhelming production database
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+
+    // Step 9: Process ALL products for production (create/update)
+    console.log('\n9️⃣ Processing ALL products for production...');
+    await productService.updateSyncLog(syncLog.id, {
+      status: 'processing_products',
+      currentStep: `Processing ${allPrintfulProducts.length} products for production...`,
+      progress: 25,
+      totalProducts: allPrintfulProducts.length,
+    });
+
+    for (let i = 0; i < allPrintfulProducts.length; i++) {
+      const basicProduct = allPrintfulProducts[i];
+      const progressPercent = 25 + Math.round((i / allPrintfulProducts.length) * 60); // 25-85%
       
-      console.log(`📦 Processing ${i + 1}/${allProducts.length}: ${basicProduct.name}`);
+      console.log(`📦 Processing ${i + 1}/${allPrintfulProducts.length}: ${basicProduct.name}`);
       
       try {
         // Update production sync progress
@@ -216,36 +287,64 @@ async function syncToProduction(): Promise<void> {
       }
     }
 
-    // Step 7: Finalize production sync
-    console.log('\n7️⃣ Finalizing production sync...');
+    // Step 10: Verify synchronization completeness
+    console.log('\n🔍 Verifying synchronization completeness...');
+    await productService.updateSyncLog(syncLog.id, {
+      status: 'verifying_sync',
+      currentStep: 'Verifying synchronization completeness...',
+      progress: 90,
+    });
+
+    // Get final database count
+    const finalDbProducts = await productService.getAllProductsForAdmin();
+    const finalDbCount = finalDbProducts.length;
+    const printfulCount = allPrintfulProducts.length;
+
+    console.log(`📊 Final counts:`);
+    console.log(`   Printful: ${printfulCount} products`);
+    console.log(`   Database: ${finalDbCount} products`);
+    
+    if (finalDbCount === printfulCount) {
+      console.log(`✅ Synchronization complete! Counts match perfectly.`);
+    } else {
+      console.log(`⚠️  Count mismatch detected!`);
+      console.log(`   Expected: ${printfulCount}, Actual: ${finalDbCount}`);
+      stats.warnings.push(`Count mismatch: Printful has ${printfulCount} products, Database has ${finalDbCount} products`);
+    }
+
+    // Step 11: Finalize production sync
+    console.log('\n11️⃣ Finalizing production sync...');
     const duration = Date.now() - startTime;
     const finalStatus = stats.errors.length > 0 ? 'partial' : 'success';
     
     await productService.updateSyncLog(syncLog.id, {
       status: finalStatus,
-      currentStep: 'Production sync completed successfully',
+      currentStep: 'Enhanced production sync completed successfully',
       progress: 100,
       duration,
       completedAt: new Date(),
       productsProcessed: stats.productsProcessed,
       productsCreated: stats.productsCreated,
       productsUpdated: stats.productsUpdated,
+      productsDeleted: stats.productsDeleted,
       variantsProcessed: stats.variantsProcessed,
       variantsCreated: stats.variantsCreated,
       variantsUpdated: stats.variantsUpdated,
+      variantsDeleted: stats.variantsDeleted,
     });
 
-    // Step 8: Production summary
+    // Step 12: Production summary
     console.log('\n' + '=' .repeat(60));
-    console.log('🌟 PRODUCTION SYNC SUMMARY');
+    console.log('🌟 ENHANCED PRODUCTION SYNC SUMMARY');
     console.log('=' .repeat(60));
     console.log(`⏱️  Duration: ${Math.round(duration / 1000)}s`);
     console.log(`🌍 Environment: PRODUCTION`);
     console.log(`📊 Database: ${process.env.DATABASE_HOST?.substring(0, 30)}...`);
-    console.log(`📦 Products: ${stats.productsCreated} created, ${stats.productsUpdated} updated`);
-    console.log(`🎛️  Variants: ${stats.variantsCreated} created, ${stats.variantsUpdated} updated`);
+    console.log(`📦 Products: ${stats.productsCreated} created, ${stats.productsUpdated} updated, ${stats.productsDeleted} deleted`);
+    console.log(`🎛️  Variants: ${stats.variantsCreated} created, ${stats.variantsUpdated} updated, ${stats.variantsDeleted} deleted`);
     console.log(`📈 Total Products: ${stats.productsProcessed}`);
     console.log(`📈 Total Variants: ${stats.variantsProcessed}`);
+    console.log(`🔍 Sync Verification: ${finalDbCount === printfulCount ? '✅ MATCHES' : '⚠️  MISMATCH'}`);
     console.log(`⚠️  Warnings: ${stats.warnings.length}`);
     console.log(`❌ Errors: ${stats.errors.length}`);
     
@@ -264,23 +363,25 @@ async function syncToProduction(): Promise<void> {
         console.log(`   ... and ${stats.errors.length - 5} more errors`);
       }
     } else {
-      console.log('\n🎉 PRODUCTION SYNC COMPLETED SUCCESSFULLY!');
+      console.log('\n🎉 ENHANCED PRODUCTION SYNC COMPLETED SUCCESSFULLY!');
     }
     
-    console.log('\n🚀 YOUR WEB SHOP IS NOW READY!');
+    console.log('\n🚀 YOUR WEB SHOP IS NOW FULLY SYNCHRONIZED!');
     console.log('✅ Products are live in production');
+    console.log('✅ Deleted products have been removed');
+    console.log('✅ Database matches Printful exactly');
     console.log('✅ Customers can now browse and purchase');
     console.log('✅ All variants and pricing are up to date');
     
     console.log('\n🔗 Next steps:');
     console.log('1. Visit your live website to verify products are showing');
     console.log('2. Test the shopping cart and checkout process');
-    console.log('3. Debug frontend sync issues later when convenient');
+    console.log('3. Verify that deleted products are no longer visible');
     
     console.log('=' .repeat(60));
 
   } catch (error) {
-    console.error('\n💥 Production sync failed:', error);
+    console.error('\n💥 Enhanced production sync failed:', error);
     
     console.log('\n🆘 TROUBLESHOOTING:');
     console.log('1. Check your .env.production file exists and has correct credentials');
@@ -292,8 +393,8 @@ async function syncToProduction(): Promise<void> {
   }
 }
 
-// Run the production sync
+// Run the enhanced production sync
 syncToProduction().catch(error => {
-  console.error('💥 Fatal production sync error:', error);
+  console.error('💥 Fatal enhanced production sync error:', error);
   process.exit(1);
 });

@@ -27,6 +27,54 @@
 
 You'll first need to setup Snipcart & Printful before you can run the storefront locally, or deploy.
 
+### 🚀 Quick Start with Sync Scripts
+
+If you already have products in Printful and want to sync them to your database:
+
+#### Unix/Linux/macOS (bash/zsh)
+```bash
+# Check current product counts
+npm run check:counts
+
+# Run complete synchronization (development)
+npm run sync:complete:dry    # Test first
+npm run sync:complete        # Full sync
+
+# Run in production environment
+NODE_ENV=production npm run sync:complete:dry    # Test first
+NODE_ENV=production npm run sync:complete        # Full sync
+```
+
+#### Windows PowerShell
+```powershell
+# Check current product counts
+npm run check:counts
+
+# Run complete synchronization (development)
+npm run sync:complete:dry    # Test first
+npm run sync:complete        # Full sync
+
+# Run in production environment
+$env:NODE_ENV="production"; npm run sync:complete:dry    # Test first
+$env:NODE_ENV="production"; npm run sync:complete        # Full sync
+```
+
+#### Windows Command Prompt (cmd)
+```cmd
+# Check current product counts
+npm run check:counts
+
+# Run complete synchronization (development)
+npm run sync:complete:dry    # Test first
+npm run sync:complete        # Full sync
+
+# Run in production environment
+set NODE_ENV=production && npm run sync:complete:dry    # Test first
+set NODE_ENV=production && npm run sync:complete        # Full sync
+```
+
+📚 **See [ENVIRONMENT_SYNC_GUIDE.md](./ENVIRONMENT_SYNC_GUIDE.md) for detailed environment management**
+
 ### 1. Setup Printful
 
 <details>

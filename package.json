@@ -41,7 +41,11 @@
     "sync:quick-fix": "tsx scripts/quick-sync-fix.ts",
     "sync:improved": "tsx scripts/sync-products-working.ts",
     "env:check": "tsx scripts/check-environment.ts",
-    "sync:production": "tsx scripts/sync-to-production.ts"
+    "sync:production": "tsx scripts/sync-to-production.ts",
+    "sync:complete": "tsx scripts/sync-products-complete.ts",
+    "sync:complete:dry": "tsx scripts/sync-products-complete.ts --dry-run",
+    "sync:complete:force": "tsx scripts/sync-products-complete.ts --force-delete",
+    "check:counts": "tsx scripts/check-product-counts.ts"
   },
   "author": "Jamie Barton <jamie@notrab.dev> (https://notrab.dev)",
   "dependencies": {

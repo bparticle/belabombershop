@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
 import type { ProductWithVariants } from '../../lib/database/services/product-service';
@@ -50,6 +50,14 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isRefreshingProducts, setIsRefreshingProducts] = useState(false);
   const [showCompletedSync, setShowCompletedSync] = useState(false);
+  
+  // Refs for timeout cleanup to prevent memory leaks
+  const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const cancelSyncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Ref to track if component is mounted to prevent setting state on unmounted component
+  const isMountedRef = useRef(true);
 
   // Enhanced sync progress management
   const {
@@ -69,11 +77,42 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
     autoStart: false, // Don't auto-start polling, only poll when manually triggered
   });
 
-  // Determine if there's an active sync
-  const hasActiveSync = activeSyncLog && ['queued', 'fetching_products', 'processing_products', 'finalizing'].includes(activeSyncLog.status);
-  const hasCompletedSync = activeSyncLog && ['success', 'error', 'partial', 'cancelled'].includes(activeSyncLog.status);
-  const shouldShowSyncProgress = hasActiveSync || (hasCompletedSync && showCompletedSync);
-  const isSyncing = hasActiveSync || isSyncLoading;
+  // Memoized computed values to prevent unnecessary recalculations
+  const hasActiveSync = useMemo(() => 
+    activeSyncLog && ['queued', 'fetching_products', 'processing_products', 'finalizing'].includes(activeSyncLog.status),
+    [activeSyncLog?.status]
+  );
+  
+  const hasCompletedSync = useMemo(() => 
+    activeSyncLog && ['success', 'error', 'partial', 'cancelled'].includes(activeSyncLog.status),
+    [activeSyncLog?.status]
+  );
+  
+  const shouldShowSyncProgress = useMemo(() => 
+    hasActiveSync || (hasCompletedSync && showCompletedSync),
+    [hasActiveSync, hasCompletedSync, showCompletedSync]
+  );
+  
+  const isSyncing = useMemo(() => 
+    hasActiveSync || isSyncLoading,
+    [hasActiveSync, isSyncLoading]
+  );
+
+  // Helper function to clear all timeouts
+  const clearAllTimeouts = useCallback(() => {
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current);
+      hideTimeoutRef.current = null;
+    }
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current);
+      refreshTimeoutRef.current = null;
+    }
+    if (cancelSyncTimeoutRef.current) {
+      clearTimeout(cancelSyncTimeoutRef.current);
+      cancelSyncTimeoutRef.current = null;
+    }
+  }, []);
 
   // Check authentication on component mount
   useEffect(() => {
@@ -82,6 +121,18 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
       router.push('/admin/login');
     }
   }, [router]);
+
+  // Cleanup all timeouts and sync progress on component unmount
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      clearAllTimeouts();
+      stopPolling();
+      // Ensure we're not in the middle of any async operations
+      setIsRefreshingProducts(false);
+      setShowCompletedSync(false);
+    };
+  }, [clearAllTimeouts, stopPolling]);
 
   // Auto-refresh product data when sync completes
   useEffect(() => {
@@ -94,12 +145,18 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
       console.log(`🏁 Sync completed with status: ${activeSyncLog.status}, stopping polling...`);
       stopPolling();
       
+      // Clear any existing timeouts first
+      clearAllTimeouts();
+      
       // Show completed sync status for different durations based on status
       const displayDuration = activeSyncLog.status === 'cancelled' ? 2000 : 4000;
       setShowCompletedSync(true);
       
-      const hideTimeoutId = setTimeout(() => {
-        setShowCompletedSync(false);
+      hideTimeoutRef.current = setTimeout(() => {
+        if (isMountedRef.current) {
+          setShowCompletedSync(false);
+        }
+        hideTimeoutRef.current = null;
       }, displayDuration);
       
       // Only refresh if sync completed successfully with product changes
@@ -108,7 +165,9 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
           (activeSyncLog.productsUpdated && activeSyncLog.productsUpdated > 0) ||
           (activeSyncLog.productsDeleted && activeSyncLog.productsDeleted > 0))) {
         // Small delay to ensure database updates are complete
-        const refreshTimeoutId = setTimeout(async () => {
+        refreshTimeoutRef.current = setTimeout(async () => {
+          if (!isMountedRef.current) return;
+          
           console.log('🔄 Sync completed with product changes, refreshing data...');
           setIsRefreshingProducts(true);
           try {
@@ -116,19 +175,20 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
           } catch (error) {
             console.error('Error refreshing data:', error);
           } finally {
-            setIsRefreshingProducts(false);
+            if (isMountedRef.current) {
+              setIsRefreshingProducts(false);
+            }
           }
+          refreshTimeoutRef.current = null;
         }, 1500); // Slightly longer delay for database consistency
-        
-        return () => {
-          clearTimeout(hideTimeoutId);
-          clearTimeout(refreshTimeoutId);
-        };
       }
-      
-      return () => clearTimeout(hideTimeoutId);
     }
-  }, [activeSyncLog?.status, activeSyncLog?.productsCreated, activeSyncLog?.productsUpdated, activeSyncLog?.productsDeleted, stopPolling]);
+    
+    // Cleanup function to clear timeouts when component unmounts or dependencies change
+    return () => {
+      clearAllTimeouts();
+    };
+  }, [activeSyncLog?.status, activeSyncLog?.productsCreated, activeSyncLog?.productsUpdated, activeSyncLog?.productsDeleted, stopPolling, clearAllTimeouts]);
 
   const handleTriggerSync = async () => {
     const token = getAdminToken();
@@ -166,21 +226,37 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
       stopPolling();
       setShowCompletedSync(true);
       
+      // Clear any existing timeouts first
+      clearAllTimeouts();
+      
       // Hide the completed sync display after a short delay
-      setTimeout(() => {
-        setShowCompletedSync(false);
+      cancelSyncTimeoutRef.current = setTimeout(() => {
+        if (isMountedRef.current) {
+          setShowCompletedSync(false);
+        }
+        cancelSyncTimeoutRef.current = null;
       }, 3000);
     }
   };
 
-  const refreshData = async () => {
+  const refreshData = useCallback(async () => {
     const token = getAdminToken();
     if (!token) {
       router.push('/admin/login');
       return;
     }
 
+    // Prevent multiple simultaneous refresh calls
+    if (isRefreshingProducts) {
+      console.log('🔄 Refresh already in progress, skipping...');
+      return;
+    }
+
     try {
+      if (isMountedRef.current) {
+        setIsRefreshingProducts(true);
+      }
+      
       const productsResponse = await fetch('/api/admin/products?includeInactive=true', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -189,15 +265,25 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
 
       if (productsResponse.ok) {
         const productsData = await productsResponse.json();
-        setProducts(productsData.products);
+        if (isMountedRef.current) {
+          setProducts(productsData.products);
+        }
+      } else {
+        console.error('Failed to refresh products:', productsResponse.status);
       }
 
       // Refresh sync data through the hook
-      await refreshSyncData();
+      if (isMountedRef.current) {
+        await refreshSyncData();
+      }
     } catch (error) {
       console.error('Error refreshing data:', error);
+    } finally {
+      if (isMountedRef.current) {
+        setIsRefreshingProducts(false);
+      }
     }
-  };
+  }, [isRefreshingProducts, refreshSyncData]);
 
   const toggleProductVisibility = async (productId: string) => {
     const token = getAdminToken();
@@ -228,8 +314,8 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
       if (response.ok) {
         const result = await response.json();
         console.log('Product visibility toggled successfully:', result);
-        // Refresh data to ensure consistency
-        refreshData();
+        // No need to refresh data since we already updated optimistically
+        // The optimistic update is sufficient for UI consistency
       } else {
         const errorData = await response.json();
         console.error('Failed to toggle product visibility:', response.status, errorData);
@@ -300,7 +386,7 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
     setIsModalOpen(true);
   };
 
-  const handleProductUpdate = (updatedProduct: ProductWithVariants) => {
+  const handleProductUpdate = useCallback((updatedProduct: ProductWithVariants) => {
     // Update the products in state without triggering sync refresh
     setProducts(prevProducts => 
       prevProducts.map(p => 
@@ -315,7 +401,7 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
         } as SerializedProductWithVariants : p
       )
     );
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">

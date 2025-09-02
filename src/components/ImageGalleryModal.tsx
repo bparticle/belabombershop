@@ -99,7 +99,7 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
   // Create portal to render modal outside of normal DOM hierarchy
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-2 sm:p-4"
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
@@ -107,9 +107,9 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
       aria-describedby="gallery-description"
     >
       {/* Modal Container */}
-      <div className="relative bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+      <div className="relative bg-white rounded-lg shadow-2xl w-[95vw] h-[95vh] max-w-7xl max-h-[95vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 sm:p-5 lg:p-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
             <h2 id="gallery-title" className="text-lg font-semibold text-gray-900 dark:text-white">
               Product Gallery
@@ -132,25 +132,25 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
         </div>
 
         {/* Image Container */}
-        <div className="relative flex-1 flex items-center justify-center p-6">
+        <div className="relative flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
           {/* Navigation buttons */}
           {images.length > 1 && (
             <>
               <button
                 onClick={goToPrevious}
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 p-2 text-gray-600 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-full bg-white bg-opacity-90 backdrop-blur-sm shadow-sm"
+                className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 z-10 p-2 text-gray-600 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-full bg-white bg-opacity-90 backdrop-blur-sm shadow-sm"
                 aria-label="Previous image"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
               <button
                 onClick={goToNext}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 p-2 text-gray-600 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-full bg-white bg-opacity-90 backdrop-blur-sm shadow-sm"
+                className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 z-10 p-2 text-gray-600 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-full bg-white bg-opacity-90 backdrop-blur-sm shadow-sm"
                 aria-label="Next image"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
@@ -162,7 +162,7 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
             <SafeImage
               src={currentImage.url}
               alt={currentImage.alt}
-              className="max-w-full max-h-[60vh] object-contain rounded"
+              className="max-w-full max-h-[75vh] sm:max-h-[80vh] lg:max-h-[85vh] object-contain rounded"
               useDownsized={true}
             />
           </div>
@@ -170,7 +170,7 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
 
         {/* Image Info */}
         {(currentImage.caption || currentImage.alt) && (
-          <div className="px-6 pb-4 border-t border-gray-200 pt-4">
+          <div className="px-4 sm:px-6 lg:px-8 pb-4 border-t border-gray-200 pt-4">
             <div className="text-gray-900">
               {currentImage.caption && (
                 <p className="text-sm font-medium mb-1">{currentImage.caption}</p>
@@ -184,7 +184,7 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = ({
 
         {/* Thumbnail Navigation */}
         {images.length > 1 && (
-          <div className="px-6 pb-4">
+          <div className="px-4 sm:px-6 lg:px-8 pb-4">
             <div className="flex space-x-2 max-w-full overflow-x-auto">
               {images.map((image, index) => (
                 <button
