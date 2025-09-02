@@ -61,7 +61,9 @@ async function handleTriggerSync(req: NextApiRequest, res: NextApiResponse) {
     // Create a sync log entry
     const syncLog = await productService.createSyncLog({
       operation: 'manual_sync',
-      status: 'running',
+      status: 'queued',
+      currentStep: 'Sync queued for processing',
+      progress: 0,
       productsProcessed: 0,
       productsCreated: 0,
       productsUpdated: 0,

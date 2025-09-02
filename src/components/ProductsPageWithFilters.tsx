@@ -41,8 +41,8 @@ const CheckboxFilter: React.FC<CheckboxFilterProps> = ({
                 }
               `}
               style={{
-                backgroundColor: isSelected ? `${category.color}15` : 'transparent',
-                borderColor: isSelected ? category.color : undefined,
+                backgroundColor: isSelected ? `${category.color || '#000000'}15` : 'transparent',
+                borderColor: isSelected ? (category.color || undefined) : undefined,
               }}
             >
               <input
@@ -53,7 +53,7 @@ const CheckboxFilter: React.FC<CheckboxFilterProps> = ({
               />
               <div 
                 className="w-4 h-4 rounded-full mr-3" 
-                style={{ backgroundColor: category.color }}
+                style={{ backgroundColor: category.color || 'transparent' }}
                 aria-hidden="true"
               />
               <span 
@@ -67,8 +67,8 @@ const CheckboxFilter: React.FC<CheckboxFilterProps> = ({
                   ${isSelected ? 'border-white bg-white' : 'border-gray-300'}
                 `}
                 style={{
-                  borderColor: isSelected ? category.color : undefined,
-                  backgroundColor: isSelected ? category.color : 'transparent',
+                  borderColor: isSelected ? (category.color || undefined) : undefined,
+                  backgroundColor: isSelected ? (category.color || 'transparent') : 'transparent',
                 }}
               >
                 {isSelected && (
@@ -176,7 +176,7 @@ const ProductsPageWithFilters: React.FC<ProductsPageWithFiltersProps> = ({
             )}
           </div>
           <CheckboxFilter
-            categories={availableCategories}
+            categories={availableCategories as any}
             selectedCategories={selectedCategories}
             onCategoryChange={handleCategoryChange}
           />

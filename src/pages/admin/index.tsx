@@ -58,10 +58,13 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
     triggerSync,
     cancelSync,
     refresh: refreshSyncData,
+    startPolling,
+    stopPolling,
   } = useSyncProgress({
     activePollInterval: 2000, // Poll every 2 seconds during active sync
     inactivePollInterval: 10000, // Poll every 10 seconds when inactive
     maxRecentLogs: 5,
+    autoStart: false, // Don't auto-start polling, only poll when manually triggered
   });
 
   // Determine if there's an active sync
@@ -81,6 +84,12 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
     if (!activeSyncLog) return;
     
     const isCompleted = ['success', 'error', 'partial', 'cancelled'].includes(activeSyncLog.status);
+    
+    // Stop polling when sync completes
+    if (isCompleted) {
+      console.log('🏁 Sync completed, stopping polling...');
+      stopPolling();
+    }
     
     // Only refresh if sync just completed and had some product changes
     if (isCompleted && (
@@ -103,7 +112,7 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
       
       return () => clearTimeout(timeoutId);
     }
-  }, [activeSyncLog?.status, activeSyncLog?.productsCreated, activeSyncLog?.productsUpdated, activeSyncLog?.productsDeleted]);
+  }, [activeSyncLog?.status, activeSyncLog?.productsCreated, activeSyncLog?.productsUpdated, activeSyncLog?.productsDeleted, stopPolling]);
 
   const handleTriggerSync = async () => {
     const token = getAdminToken();
@@ -118,6 +127,8 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
       // Show error to user - you might want to add a toast notification here
     } else {
       console.log('Sync started successfully:', result.syncLogId);
+      // Start polling to monitor the sync progress
+      startPolling();
       // Note: refreshData() will be called automatically when sync completes
       // via the useEffect that watches for sync completion
     }
@@ -262,8 +273,20 @@ export default function AdminDashboard({ products: initialProducts, syncLogs: in
   };
 
   const handleProductUpdate = (updatedProduct: ProductWithVariants) => {
-    // Refresh the data to get the latest state
-    refreshData();
+    // Update the products in state without triggering sync refresh
+    setProducts(prevProducts => 
+      prevProducts.map(p => 
+        p.id === updatedProduct.id ? 
+        {
+          ...p,
+          enhancement: updatedProduct.enhancement ? {
+            ...updatedProduct.enhancement,
+            createdAt: updatedProduct.enhancement.createdAt?.toISOString() || null,
+            updatedAt: updatedProduct.enhancement.updatedAt?.toISOString() || null,
+          } : null
+        } as SerializedProductWithVariants : p
+      )
+    );
   };
 
   return (

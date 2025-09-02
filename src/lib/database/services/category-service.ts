@@ -261,15 +261,28 @@ export class CategoryService {
    * Get all categories for a product
    */
   async getCategoriesForProduct(productId: string): Promise<Array<Category & { isPrimary: boolean }>> {
-    return await db
+    const result = await db
       .select({
-        ...categories,
-        isPrimary: productCategories.isPrimary,
+        id: categories.id,
+        name: categories.name,
+        description: categories.description,
+        slug: categories.slug,
+        color: categories.color,
+        icon: categories.icon,
+        parentId: categories.parentId,
+        sortOrder: categories.sortOrder,
+        isActive: categories.isActive,
+        isSystem: categories.isSystem,
+        createdAt: categories.createdAt,
+        updatedAt: categories.updatedAt,
+        isPrimary: productCategories.isPrimary ?? false,
       })
       .from(productCategories)
       .innerJoin(categories, eq(productCategories.categoryId, categories.id))
       .where(eq(productCategories.productId, productId))
       .orderBy(desc(productCategories.isPrimary), asc(categories.name));
+      
+    return result as Array<Category & { isPrimary: boolean }>;
   }
 
   /**
@@ -277,7 +290,20 @@ export class CategoryService {
    */
   async getPrimaryCategoryForProduct(productId: string): Promise<Category | null> {
     const result = await db
-      .select(categories)
+      .select({
+        id: categories.id,
+        name: categories.name,
+        description: categories.description,
+        slug: categories.slug,
+        color: categories.color,
+        icon: categories.icon,
+        parentId: categories.parentId,
+        sortOrder: categories.sortOrder,
+        isActive: categories.isActive,
+        isSystem: categories.isSystem,
+        createdAt: categories.createdAt,
+        updatedAt: categories.updatedAt,
+      })
       .from(productCategories)
       .innerJoin(categories, eq(productCategories.categoryId, categories.id))
       .where(and(

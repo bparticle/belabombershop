@@ -83,7 +83,7 @@ class ProductSync {
       });
 
       const printfulProducts = await this.fetchAllProducts();
-      this.logWithIcon('📦', `Found ${printfulProducts.length} products in Printful`);
+      this.logWithIcon('📦', `Found ${printfulProducts.length} products with variants from Printful`);
 
       // Phase 2: Initialize progress tracker
       const initUpdate = this.progressTracker!.initialize(printfulProducts.length);
@@ -92,7 +92,7 @@ class ProductSync {
       // Phase 3: Analyze existing products
       await this.updateProgress({
         currentStep: 'Analyzing existing products...',
-        progress: 10,
+        progress: 16,
       });
 
       // Get ALL products (not just active) to properly detect deletions
@@ -117,7 +117,7 @@ class ProductSync {
       if (productsToDelete.length > 0) {
         await this.updateProgress({
           currentStep: `Removing ${productsToDelete.length} obsolete products...`,
-          progress: 15,
+          progress: 18,
         });
 
         await this.deleteObsoleteProducts(productsToDelete);
@@ -267,15 +267,103 @@ class ProductSync {
   }
 
   /**
-   * Fetch all products from Printful
+   * Fetch all products from Printful with their variants
    */
   private async fetchAllProducts(): Promise<PrintfulProduct[]> {
     try {
       console.log('Fetching products from Printful store...');
       const response = await printful.get('store/products');
-      const products = response.result as PrintfulProduct[];
-      console.log(`Found ${products.length} products in store`);
-      return products;
+      const basicProducts = response.result as Array<{
+        id: string;
+        external_id: string;
+        name: string;
+        thumbnail_url: string;
+        is_ignored: boolean;
+      }>;
+      console.log(`Found ${basicProducts.length} products in store`);
+
+      // Now fetch each product with its variants
+      const productsWithVariants: PrintfulProduct[] = [];
+      
+      for (let i = 0; i < basicProducts.length; i++) {
+        const basicProduct = basicProducts[i];
+        
+        // Update progress during variant fetching
+        const fetchProgress = 5 + Math.round((i / basicProducts.length) * 10); // Progress 5-15%
+        await this.updateProgress({
+          status: 'fetching_products',
+          currentStep: `Fetching variants for product ${i + 1}/${basicProducts.length}: ${basicProduct.name}`,
+          progress: fetchProgress,
+        });
+        
+        try {
+          console.log(`🔍 Fetching variants for product ${i + 1}/${basicProducts.length}: ${basicProduct.name}`);
+          const productResponse = await printful.get(`store/products/${basicProduct.id}`);
+          const fullProduct = productResponse.result as {
+            sync_product: {
+              id: string;
+              external_id: string;
+              name: string;
+              thumbnail_url: string;
+              is_ignored: boolean;
+            };
+            sync_variants: Array<{
+              id: number;
+              external_id: string;
+              name: string;
+              retail_price: string;
+              currency: string;
+              files: Array<{
+                id: number;
+                type: string;
+                url: string;
+                preview_url: string;
+              }>;
+              options: Array<{
+                id: string;
+                value: string;
+              }>;
+              size: string | null;
+              color: string | null;
+              is_enabled: boolean;
+              in_stock: boolean;
+              is_ignored: boolean;
+            }>;
+          };
+
+          // Convert to our expected format
+          const printfulProduct: PrintfulProduct = {
+            id: fullProduct.sync_product.id,
+            external_id: fullProduct.sync_product.external_id,
+            name: fullProduct.sync_product.name,
+            thumbnail_url: fullProduct.sync_product.thumbnail_url,
+            is_ignored: fullProduct.sync_product.is_ignored,
+            variants: fullProduct.sync_variants || []
+          };
+
+          productsWithVariants.push(printfulProduct);
+          console.log(`✅ Fetched ${fullProduct.sync_variants?.length || 0} variants for ${basicProduct.name}`);
+          
+          // Small delay to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+        } catch (error) {
+          console.error(`❌ Failed to fetch variants for product ${basicProduct.name}:`, error);
+          // Add product without variants as fallback
+          productsWithVariants.push({
+            id: basicProduct.id,
+            external_id: basicProduct.external_id,
+            name: basicProduct.name,
+            thumbnail_url: basicProduct.thumbnail_url,
+            is_ignored: basicProduct.is_ignored,
+            variants: []
+          });
+        }
+      }
+
+      console.log(`📦 Successfully fetched ${productsWithVariants.length} products with variants`);
+      return productsWithVariants;
+      
     } catch (error) {
       console.error(`❌ Failed to fetch products:`, error);
       throw error;

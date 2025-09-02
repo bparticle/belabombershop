@@ -105,7 +105,7 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ category, products }) => {
           <div className="flex items-center justify-center mb-6">
             <div 
               className="w-16 h-16 md:w-20 md:h-20 rounded-full mr-4"
-              style={{ backgroundColor: category.color }}
+              style={{ backgroundColor: category.color || 'transparent' }}
               aria-hidden="true"
             >
             </div>
@@ -156,20 +156,29 @@ const CategoryPage: React.FC<CategoryPageProps> = ({ category, products }) => {
 };
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  // Generate paths for all active categories from database
-  const categories = await categoryService.getAllCategories({
-    includeInactive: false,
-    includeSystem: true,
-  });
+  try {
+    // Generate paths for all active categories from database
+    const categories = await categoryService.getAllCategories({
+      includeInactive: false,
+      includeSystem: true,
+    });
 
-  const paths = categories.map((category) => ({
-    params: { slug: category.slug },
-  }));
+    const paths = categories.map((category) => ({
+      params: { slug: category.slug },
+    }));
 
-  return {
-    paths,
-    fallback: 'blocking', // Allow new categories to be generated at runtime
-  };
+    return {
+      paths,
+      fallback: 'blocking', // Allow new categories to be generated at runtime
+    };
+  } catch (error) {
+    console.warn('Database not available during build, using fallback for category paths:', error);
+    // Return empty paths and use fallback for all categories
+    return {
+      paths: [],
+      fallback: 'blocking', // Generate all pages at runtime
+    };
+  }
 };
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {

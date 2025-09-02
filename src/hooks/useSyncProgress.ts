@@ -50,7 +50,7 @@ interface SyncProgressOptions {
   
   /**
    * Whether to start polling immediately
-   * @default true
+   * @default false
    */
   autoStart?: boolean;
 }
@@ -92,7 +92,7 @@ export const useSyncProgress = (options: SyncProgressOptions = {}): UseSyncProgr
     activePollInterval = 2000,
     inactivePollInterval = 10000,
     maxRecentLogs = 5,
-    autoStart = true,
+    autoStart = false,
   } = options;
 
   const [state, setState] = useState<SyncProgressState>({

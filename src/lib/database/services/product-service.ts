@@ -28,7 +28,7 @@ import { SyncProgressUpdate, DEFAULT_SYNC_PROGRESS, type SyncStatus } from '../.
 export interface ProductWithVariants extends Omit<Product, 'tags'> {
   variants: Variant[];
   enhancement?: DBProductEnhancement;
-  categories: Array<{ id: string; name: string; slug: string; color?: string; isPrimary: boolean }>;
+  categories: Array<{ id: string; name: string; slug: string; color: string | null; isPrimary: boolean }>;
   tags: Tag[];
 }
 
@@ -761,16 +761,15 @@ export class ProductService {
    * Get recent sync logs with enhanced filtering
    */
   async getRecentSyncLogs(limit: number = 10, includeActive: boolean = true): Promise<SyncLog[]> {
-    let query = db
+    const baseQuery = db
       .select()
-      .from(syncLogs)
-      .orderBy(desc(syncLogs.startedAt));
+      .from(syncLogs);
 
-    if (!includeActive) {
-      query = query.where(
-        inArray(syncLogs.status, ['success', 'error', 'partial', 'cancelled'])
-      );
-    }
+    const query = includeActive 
+      ? baseQuery.orderBy(desc(syncLogs.startedAt))
+      : baseQuery
+          .where(inArray(syncLogs.status, ['success', 'error', 'partial', 'cancelled']))
+          .orderBy(desc(syncLogs.startedAt));
 
     return query.limit(limit);
   }
